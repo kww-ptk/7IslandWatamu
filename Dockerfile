@@ -15,3 +15,9 @@ WORKDIR /var/www/html
 # Allow .htaccess overrides
 RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/sites-available/000-default.conf \
     && a2enmod rewrite
+
+# Give Apache write access to upload and log directories
+RUN chown -R www-data:www-data /var/www/html/assets/img/rooms \
+    && chown -R www-data:www-data /var/www/html/logs \
+    && chmod -R 775 /var/www/html/assets/img/rooms \
+    && chmod -R 775 /var/www/html/logs
