@@ -17,7 +17,6 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/sites-availabl
     && a2enmod rewrite
 
 # Give Apache write access to upload and log directories
-RUN chown -R www-data:www-data /var/www/html/assets/img/rooms \
-    && chown -R www-data:www-data /var/www/html/logs \
-    && chmod -R 775 /var/www/html/assets/img/rooms \
-    && chmod -R 775 /var/www/html/logs
+RUN mkdir -p /var/www/html/assets/img/rooms /var/www/html/logs \
+    && chown -R www-data:www-data /var/www/html/assets/img/rooms /var/www/html/logs \
+    && chmod -R 775 /var/www/html/assets/img/rooms /var/www/html/logs
