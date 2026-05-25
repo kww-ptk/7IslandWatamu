@@ -1,0 +1,25 @@
+# macOS artifacts
+__MACOSX/
+.DS_Store
+._*
+
+# Database (keep schema, ignore the live DB file)
+db/*.sqlite
+db/*.sqlite-journal
+db/*.sqlite-wal
+db/*.sqlite-shm
+
+# Admin credentials / env config
+.env
+admin/config.local.php
+
+# PHP dependencies (if added later)
+vendor/
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json
+
+# Editor
+.vscode/
+.idea/
+*.swp

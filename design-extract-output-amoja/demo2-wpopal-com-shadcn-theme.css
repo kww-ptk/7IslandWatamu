@@ -1,0 +1,19 @@
+/* shadcn/ui Theme — extracted from https://demo2.wpopal.com/amoja/ */
+/* Paste into your globals.css */
+
+@layer base {
+  :root {
+    --background: 60 19% 94%;
+    --foreground: 0 0% 0%;
+    --primary: 29 73% 61%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 196 56% 19%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 208 23% 84%;
+    --muted-foreground: 0 0% 100%;
+    --border: 0 0% 93%;
+    --radius: 10px;
+  }
+}

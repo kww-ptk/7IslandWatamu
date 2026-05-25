@@ -1,0 +1,49 @@
+{
+  "pageIntent": {
+    "type": "blog-post",
+    "confidence": 0.35,
+    "path": "/item/amoja-resort-hotel-wordpress-theme/full_screen_preview/55554176",
+    "title": "Just a moment...",
+    "description": "",
+    "signals": [
+      {
+        "kind": "dom",
+        "type": "blog-post",
+        "weight": 0.35,
+        "detail": "byline|min-read"
+      }
+    ],
+    "alternates": [],
+    "needsSmart": true
+  },
+  "sectionRoles": {
+    "sections": [
+      {
+        "index": 0,
+        "tag": "div",
+        "role": "footer",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": null,
+        "bounds": {
+          "x": 160,
+          "y": 731,
+          "w": 960,
+          "h": 69
+        },
+        "buttonCount": 0,
+        "cardCount": 0,
+        "slots": {
+          "lede": "Ray ID: 9fcbe811ebf5a141\nPerformance and Security by Cloudflare\nPrivacy"
+        },
+        "needsSmart": true
+      }
+    ],
+    "counts": {
+      "footer": 1
+    },
+    "readingOrder": [
+      "footer"
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "openGraph": {
+    "locale": "en_US",
+    "type": "website",
+    "title": "Home 1 - Amoja - Resort & Hotel WP Theme",
+    "description": "Relax under swaying palms and walk along the pristine white-sand beach. A Sanctuary For Your Senses Guests Adult 0 Children 0 Search 01 the resort Enjoy summer in the lap of luxury Welcome to our oasis of luxury and tranquility, where every aspect of your experience is meticulously crafted to exceed your expectations. Our resort […]",
+    "url": "https://demo2.wpopal.com/amoja/",
+    "site_name": "Amoja - Resort & Hotel WP Theme",
+    "image": "https://demo2.wpopal.com/amoja/wp-content/uploads/2024/11/h1_img1.jpg",
+    "image:width": "410",
+    "image:height": "470",
+    "image:type": "image/jpeg"
+  },
+  "twitter": {
+    "card": "summary_large_image"
+  },
+  "description": null,
+  "canonical": null,
+  "themeColor": null,
+  "viewport": "width=device-width, initial-scale=1.0, maximum-scale=1.0",
+  "favicons": [],
+  "manifest": null,
+  "structuredData": [
+    {
+      "type": "Thing",
+      "name": null,
+      "sample": "{\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"WebPage\",\"@id\":\"https://demo2.wpopal.com/amoja/\",\"url\":\"https://demo2.wpopal.com/amoja/\",\"name\":\"Home 1 - Amoja - Resort &amp; Hotel WP Theme\",\"isPartOf\":{\"@id\":\"https://demo2.wpopal.com/amoja/#website\"},\"about\":{\"@id\":\"https://demo2.wpopal.com/amoja/#organization\"},\"primaryImageOfPage\":{\"@id\":\"https://demo2.wpopal.com/amoja/#primaryimage\"},\"ima"
+    }
+  ],
+  "score": {
+    "hasOg": true,
+    "hasTwitter": true,
+    "hasDescription": false,
+    "hasCanonical": false,
+    "hasStructuredData": true,
+    "hasFavicon": false,
+    "hasThemeColor": false
+  }
+}

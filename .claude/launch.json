@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "7IslandWatamu",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["-S", "localhost:8765", "-t", "D:\\7IslandWatamu"],
+      "port": 8765
+    }
+  ]
+}

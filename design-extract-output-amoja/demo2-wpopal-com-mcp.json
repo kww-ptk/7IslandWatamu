@@ -1,0 +1,1133 @@
+{
+  "colors": {
+    "all": [
+      {
+        "hex": "#153d4b",
+        "rgb": {
+          "r": 21,
+          "g": 61,
+          "b": 75,
+          "a": 1
+        },
+        "hsl": {
+          "h": 196,
+          "s": 56,
+          "l": 19
+        },
+        "count": 2466,
+        "contexts": [
+          "text",
+          "border",
+          "background"
+        ]
+      },
+      {
+        "hex": "#ffffff",
+        "rgb": {
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 0.01
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 100
+        },
+        "count": 636,
+        "contexts": [
+          "background",
+          "border",
+          "text"
+        ]
+      },
+      {
+        "hex": "#000000",
+        "rgb": {
+          "r": 0,
+          "g": 0,
+          "b": 0,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 0
+        },
+        "count": 320,
+        "contexts": [
+          "text",
+          "border",
+          "background"
+        ]
+      },
+      {
+        "hex": "#838a8d",
+        "rgb": {
+          "r": 131,
+          "g": 138,
+          "b": 141,
+          "a": 1
+        },
+        "hsl": {
+          "h": 198,
+          "s": 4,
+          "l": 53
+        },
+        "count": 200,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#e49951",
+        "rgb": {
+          "r": 228,
+          "g": 153,
+          "b": 81,
+          "a": 1
+        },
+        "hsl": {
+          "h": 29,
+          "s": 73,
+          "l": 61
+        },
+        "count": 87,
+        "contexts": [
+          "border",
+          "text",
+          "background"
+        ]
+      },
+      {
+        "hex": "#e0dfd8",
+        "rgb": {
+          "r": 224,
+          "g": 223,
+          "b": 216,
+          "a": 1
+        },
+        "hsl": {
+          "h": 53,
+          "s": 11,
+          "l": 86
+        },
+        "count": 52,
+        "contexts": [
+          "border",
+          "text"
+        ]
+      },
+      {
+        "hex": "#eeeeee",
+        "rgb": {
+          "r": 238,
+          "g": 238,
+          "b": 238,
+          "a": 0.9
+        },
+        "hsl": {
+          "h": 0,
+          "s": 0,
+          "l": 93
+        },
+        "count": 11,
+        "contexts": [
+          "background",
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#ccd6df",
+        "rgb": {
+          "r": 204,
+          "g": 214,
+          "b": 223,
+          "a": 1
+        },
+        "hsl": {
+          "h": 208,
+          "s": 23,
+          "l": 84
+        },
+        "count": 10,
+        "contexts": [
+          "text",
+          "border"
+        ]
+      },
+      {
+        "hex": "#ff0000",
+        "rgb": {
+          "r": 255,
+          "g": 0,
+          "b": 0,
+          "a": 1
+        },
+        "hsl": {
+          "h": 0,
+          "s": 100,
+          "l": 50
+        },
+        "count": 2,
+        "contexts": [
+          "background"
+        ]
+      }
+    ]
+  },
+  "regions": [
+    {
+      "role": "nav",
+      "tag": "header",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 0
+      },
+      "heading": null,
+      "buttonCount": 12,
+      "cardCount": 43,
+      "className": null
+    },
+    {
+      "role": "nav",
+      "tag": "nav",
+      "bounds": {
+        "x": -5,
+        "y": 111,
+        "w": 1290,
+        "h": 60
+      },
+      "heading": null,
+      "buttonCount": 0,
+      "cardCount": 26,
+      "className": "main-navigation"
+    },
+    {
+      "role": "content",
+      "tag": "main",
+      "bounds": {
+        "x": 0,
+        "y": 0,
+        "w": 1280,
+        "h": 8904.5
+      },
+      "heading": "A Sanctuary For Your Senses",
+      "buttonCount": 120,
+      "cardCount": 163,
+      "className": "site-main"
+    },
+    {
+      "role": "footer",
+      "tag": "footer",
+      "bounds": {
+        "x": 0,
+        "y": 8904.5,
+        "w": 1280,
+        "h": 640.453125
+      },
+      "heading": "Award-winning resort in the paradise island",
+      "buttonCount": 1,
+      "cardCount": 6,
+      "className": null
+    },
+    {
+      "role": "nav",
+      "tag": "nav",
+      "bounds": {
+        "x": -410,
+        "y": 70,
+        "w": 410,
+        "h": 434
+      },
+      "heading": null,
+      "buttonCount": 4,
+      "cardCount": 29,
+      "className": "mobile-menu-tab mobile-navigation mobile-pages-menu active"
+    }
+  ],
+  "componentClusters": [
+    {
+      "kind": "button",
+      "structuralHash": "div>div",
+      "instanceCount": 10,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 10
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>button",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button>span",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "5px 0px 5px 0px",
+            "borderRadius": "30px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>div>div",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "110px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(21, 61, 75)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>a",
+      "instanceCount": 22,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 6
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 16
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "a>span",
+      "instanceCount": 22,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "15px 35px 15px 35px",
+            "borderRadius": "30px",
+            "border": "1px solid rgba(255, 255, 255, 0.2)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "15px 35px 15px 35px",
+            "borderRadius": "30px",
+            "border": "1px solid rgb(224, 223, 216)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 21
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "span>span>span",
+      "instanceCount": 5,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 4
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "span>i",
+      "instanceCount": 9,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "11px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 8
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "span",
+      "instanceCount": 22,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 17
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 5
+        }
+      ]
+    },
+    {
+      "kind": "input",
+      "structuralHash": "input",
+      "instanceCount": 3,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "8px 0px 8px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 2
+        },
+        {
+          "css": {
+            "background": "rgba(255, 255, 255, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "24px 30px 20px 30px",
+            "borderRadius": "0px",
+            "border": "0px 0px 1px solid rgb(255, 255, 255)",
+            "fontSize": "10px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button>span>i",
+      "instanceCount": 1,
+      "variants": [
+        {
+          "css": {
+            "background": "rgb(228, 153, 81)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "16px 15px 16px 15px",
+            "borderRadius": "30px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>i>span",
+      "instanceCount": 4,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(255, 255, 255, 0.5)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "50%",
+            "border": "0px solid rgba(255, 255, 255, 0.5)",
+            "fontSize": "24px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 2
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgba(238, 238, 238, 0.9)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "50%",
+            "border": "1px solid rgb(224, 223, 216)",
+            "fontSize": "24px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 2
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "span>span",
+      "instanceCount": 17,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(0, 0, 0)",
+            "padding": "0px 0px 0px 0px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(0, 0, 0)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 17
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "div>div>a>div",
+      "instanceCount": 16,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(21, 61, 75)",
+            "padding": "40px 40px 30px 40px",
+            "borderRadius": "0px",
+            "border": "0px none rgb(21, 61, 75)",
+            "fontSize": "18px",
+            "fontWeight": "400"
+          },
+          "instanceCount": 16
+        }
+      ]
+    },
+    {
+      "kind": "button",
+      "structuralHash": "button",
+      "instanceCount": 5,
+      "variants": [
+        {
+          "css": {
+            "background": "rgba(255, 255, 255, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "20px 0px 20px 0px",
+            "borderRadius": "0px",
+            "border": "0px 0px 1px solid rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 1
+        },
+        {
+          "css": {
+            "background": "rgba(0, 0, 0, 0)",
+            "color": "rgb(255, 255, 255)",
+            "padding": "7px 0px 7px 0px",
+            "borderRadius": "30px",
+            "border": "0px none rgb(255, 255, 255)",
+            "fontSize": "12px",
+            "fontWeight": "600"
+          },
+          "instanceCount": 4
+        }
+      ]
+    }
+  ],
+  "accessibility": {
+    "remediation": [
+      {
+        "fg": "#ffffff",
+        "bg": "#ff0000",
+        "ratio": 4,
+        "rule": "AA-normal",
+        "suggestion": {
+          "replace": "fg",
+          "color": "#000000",
+          "newRatio": 5.25
+        }
+      },
+      {
+        "fg": "#ffffff",
+        "bg": "#e49951",
+        "ratio": 2.34,
+        "rule": "AA-normal",
+        "suggestion": {
+          "replace": "fg",
+          "color": "#000000",
+          "newRatio": 8.97
+        }
+      }
+    ]
+  },
+  "cssHealth": {
+    "sheets": [
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/themes/amoja/assets/css/base/elementor.css?ver=1.0.0",
+        "totalBytes": 94968,
+        "usedBytes": 14878,
+        "unusedBytes": 80090,
+        "unusedPercent": 84
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/",
+        "totalBytes": 86,
+        "usedBytes": 0,
+        "unusedBytes": 86,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-divider.min.css?ver=3.25.9",
+        "totalBytes": 4296,
+        "usedBytes": 833,
+        "unusedBytes": 3463,
+        "unusedPercent": 81
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/post-4.css?ver=1732354894",
+        "totalBytes": 1860,
+        "usedBytes": 1053,
+        "unusedBytes": 807,
+        "unusedPercent": 43
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/css/daterangepicker.css?ver=1.6.20",
+        "totalBytes": 7659,
+        "usedBytes": 2718,
+        "unusedBytes": 4941,
+        "unusedPercent": 65
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/lib/swiper/v8/css/swiper.min.css?ver=8.4.5",
+        "totalBytes": 16471,
+        "usedBytes": 1864,
+        "unusedBytes": 14607,
+        "unusedPercent": 89
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/lib/font-awesome/css/v4-shims.min.css?ver=3.25.9",
+        "totalBytes": 26702,
+        "usedBytes": 0,
+        "unusedBytes": 26702,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-rating.min.css?ver=3.25.9",
+        "totalBytes": 1322,
+        "usedBytes": 1146,
+        "unusedBytes": 176,
+        "unusedPercent": 13
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-counter.min.css?ver=3.25.9",
+        "totalBytes": 793,
+        "usedBytes": 581,
+        "unusedBytes": 212,
+        "unusedPercent": 27
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/css/babe-modal.css?ver=1.6.20",
+        "totalBytes": 5516,
+        "usedBytes": 0,
+        "unusedBytes": 5516,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/fonts/fontawesome-free/css/all.min.css?ver=1.6.20",
+        "totalBytes": 56842,
+        "usedBytes": 329,
+        "unusedBytes": 56513,
+        "unusedPercent": 99
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/post-137.css?ver=1732354895",
+        "totalBytes": 15030,
+        "usedBytes": 9029,
+        "unusedBytes": 6001,
+        "unusedPercent": 40
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/custom-widget-icon-box.min.css?ver=1732354894",
+        "totalBytes": 10065,
+        "usedBytes": 644,
+        "unusedBytes": 9421,
+        "unusedPercent": 94
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/custom-frontend.min.css?ver=1732354894",
+        "totalBytes": 60719,
+        "usedBytes": 9330,
+        "unusedBytes": 51389,
+        "unusedPercent": 85
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/conditionals/e-swiper.min.css?ver=3.25.9",
+        "totalBytes": 10260,
+        "usedBytes": 4084,
+        "unusedBytes": 6176,
+        "unusedPercent": 60
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=6.0",
+        "totalBytes": 2894,
+        "usedBytes": 0,
+        "unusedBytes": 2894,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/post-143.css?ver=1756356146",
+        "totalBytes": 13068,
+        "usedBytes": 6949,
+        "unusedBytes": 6119,
+        "unusedPercent": 47
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/",
+        "totalBytes": 9152,
+        "usedBytes": 3043,
+        "unusedBytes": 6109,
+        "unusedPercent": 67
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/themes/amoja/style.css?ver=1.0.0",
+        "totalBytes": 331286,
+        "usedBytes": 29609,
+        "unusedBytes": 301677,
+        "unusedPercent": 91
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/",
+        "totalBytes": 293,
+        "usedBytes": 0,
+        "unusedBytes": 293,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/css/select2.min.css?ver=1.6.20",
+        "totalBytes": 15196,
+        "usedBytes": 0,
+        "unusedBytes": 15196,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/js/ion.rangeSlider/ion.rangeSlider.min.css?ver=1.6.20",
+        "totalBytes": 11083,
+        "usedBytes": 0,
+        "unusedBytes": 11083,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/css/jquery-ui.min.css?ver=1.6.20",
+        "totalBytes": 30784,
+        "usedBytes": 0,
+        "unusedBytes": 30784,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/",
+        "totalBytes": 168,
+        "usedBytes": 166,
+        "unusedBytes": 2,
+        "unusedPercent": 1
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/",
+        "totalBytes": 296,
+        "usedBytes": 0,
+        "unusedBytes": 296,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/",
+        "totalBytes": 722,
+        "usedBytes": 431,
+        "unusedBytes": 291,
+        "unusedPercent": 40
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/opal-demo/style.css?ver=6.7.1",
+        "totalBytes": 646,
+        "usedBytes": 0,
+        "unusedBytes": 646,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/themes/amoja/assets/css/base/gutenberg-blocks.css?ver=1.0.0",
+        "totalBytes": 52444,
+        "usedBytes": 0,
+        "unusedBytes": 52444,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-google_maps.min.css?ver=3.25.9",
+        "totalBytes": 232,
+        "usedBytes": 192,
+        "unusedBytes": 40,
+        "unusedPercent": 17
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/post-87.css?ver=1732354895",
+        "totalBytes": 102367,
+        "usedBytes": 63403,
+        "unusedBytes": 38964,
+        "unusedPercent": 38
+      },
+      {
+        "url": "https://fonts.googleapis.com/css2?family=Jost:wght@400..600&subset=latin%2Clatin-ext&display=swap",
+        "totalBytes": 1129,
+        "usedBytes": 0,
+        "unusedBytes": 1129,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/post-4789.css?ver=1732354894",
+        "totalBytes": 5576,
+        "usedBytes": 3122,
+        "unusedBytes": 2454,
+        "unusedPercent": 44
+      },
+      {
+        "url": "https://fonts.googleapis.com/css?family=Jost%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic&display=swap&ver=6.7.1",
+        "totalBytes": 20169,
+        "usedBytes": 0,
+        "unusedBytes": 20169,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/lib/animations/styles/e-animation-grow.min.css?ver=3.25.9",
+        "totalBytes": 198,
+        "usedBytes": 80,
+        "unusedBytes": 118,
+        "unusedPercent": 60
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/lib/font-awesome/css/all.min.css?ver=3.25.9",
+        "totalBytes": 59344,
+        "usedBytes": 329,
+        "unusedBytes": 59015,
+        "unusedPercent": 99
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-text-editor.min.css?ver=3.25.9",
+        "totalBytes": 704,
+        "usedBytes": 0,
+        "unusedBytes": 704,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-image.min.css?ver=3.25.9",
+        "totalBytes": 254,
+        "usedBytes": 113,
+        "unusedBytes": 141,
+        "unusedPercent": 56
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/css/widget-heading.min.css?ver=3.25.9",
+        "totalBytes": 600,
+        "usedBytes": 129,
+        "unusedBytes": 471,
+        "unusedPercent": 79
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/elementor/assets/lib/animations/styles/e-animation-float.min.css?ver=3.25.9",
+        "totalBytes": 244,
+        "usedBytes": 117,
+        "unusedBytes": 127,
+        "unusedPercent": 52
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/themes/amoja/assets/css/libs/magnific-popup.css?ver=1.0.0",
+        "totalBytes": 9893,
+        "usedBytes": 43,
+        "unusedBytes": 9850,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/post-3115.css?ver=1774864848",
+        "totalBytes": 7886,
+        "usedBytes": 3771,
+        "unusedBytes": 4115,
+        "unusedPercent": 52
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/plugins/ba-book-everything/css/admin/babe-admin-elementor.css?ver=6.7.1",
+        "totalBytes": 93,
+        "usedBytes": 0,
+        "unusedBytes": 93,
+        "unusedPercent": 100
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/custom-widget-icon-list.min.css?ver=1732354894",
+        "totalBytes": 9900,
+        "usedBytes": 1884,
+        "unusedBytes": 8016,
+        "unusedPercent": 81
+      },
+      {
+        "url": "https://demo2.wpopal.com/amoja/wp-content/uploads/elementor/css/custom-widget-image-box.min.css?ver=1732354894",
+        "totalBytes": 1369,
+        "usedBytes": 464,
+        "unusedBytes": 905,
+        "unusedPercent": 66
+      }
+    ],
+    "totalBytes": 1000579,
+    "usedBytes": 160334,
+    "unusedBytes": 840245,
+    "unusedPercent": 84,
+    "importantCount": 196,
+    "duplicates": 11147,
+    "vendorPrefixes": {
+      "webkit": 462,
+      "moz": 189,
+      "ms": 202,
+      "o": 110
+    },
+    "keyframes": [
+      {
+        "name": "opalMoveUp",
+        "steps": 2
+      },
+      {
+        "name": "opalMoveDown",
+        "steps": 2
+      },
+      {
+        "name": "opalMoveLeft",
+        "steps": 2
+      },
+      {
+        "name": "opalMoveRight",
+        "steps": 2
+      },
+      {
+        "name": "opalScaleUp",
+        "steps": 2
+      },
+      {
+        "name": "opalFlip",
+        "steps": 2
+      },
+      {
+        "name": "rotate",
+        "steps": 2
+      },
+      {
+        "name": "opalHelix",
+        "steps": 2
+      },
+      {
+        "name": "opalPopup",
+        "steps": 3
+      },
+      {
+        "name": "invisibleMoveDown",
+        "steps": 2
+      },
+      {
+        "name": "link-showcase-active-image",
+        "steps": 3
+      },
+      {
+        "name": "toRightFromLeft",
+        "steps": 3
+      },
+      {
+        "name": "marquee",
+        "steps": 1
+      },
+      {
+        "name": "marquee",
+        "steps": 1
+      },
+      {
+        "name": "marqueeltr",
+        "steps": 1
+      },
+      {
+        "name": "rotate",
+        "steps": 2
+      },
+      {
+        "name": "toRightFromLeft",
+        "steps": 3
+      },
+      {
+        "name": "animateIcon",
+        "steps": 4
+      },
+      {
+        "name": "animateIconRevese",
+        "steps": 4
+      },
+      {
+        "name": "spin",
+        "steps": 2
+      },
+      {
+        "name": "blink",
+        "steps": 3
+      },
+      {
+        "name": "opal-draw",
+        "steps": 3
+      },
+      {
+        "name": "cover_search_fade_out",
+        "steps": 2
+      },
+      {
+        "name": "cover_search_fade_in",
+        "steps": 2
+      },
+      {
+        "name": "fa-spin",
+        "steps": 2
+      },
+      {
+        "name": "mf-spin-fast",
+        "steps": 3
+      },
+      {
+        "name": "spin",
+        "steps": 2
+      }
+    ],
+    "specificity": {
+      "max": [
+        3,
+        32,
+        60
+      ],
+      "average": [
+        0.04,
+        2.41,
+        0.39
+      ],
+      "count": 11459
+    },
+    "issues": [
+      "196 !important rules",
+      "11147 duplicate declarations",
+      "84% unused CSS"
+    ]
+  }
+}

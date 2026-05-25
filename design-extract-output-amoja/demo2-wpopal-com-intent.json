@@ -1,0 +1,140 @@
+{
+  "pageIntent": {
+    "type": "unknown",
+    "confidence": 0,
+    "path": "/amoja",
+    "title": "Home 1 - Amoja - Resort & Hotel WP Theme",
+    "description": "",
+    "signals": [],
+    "alternates": [],
+    "needsSmart": true
+  },
+  "sectionRoles": {
+    "sections": [
+      {
+        "index": 0,
+        "tag": "header",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.4,
+        "heading": null,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 0
+        },
+        "buttonCount": 12,
+        "cardCount": 43,
+        "slots": {
+          "ctaCount": 12,
+          "lede": "1-800-123-4567\nBOOK YOUR STAY\nDemos\n \nRooms & Suites\n \nDining\n \nWellness\n \nExperiences\n \nWeddings & Events\n \nNews\n \nPages"
+        },
+        "needsSmart": true
+      },
+      {
+        "index": 1,
+        "tag": "nav",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": null,
+        "bounds": {
+          "x": -5,
+          "y": 111,
+          "w": 1290,
+          "h": 60
+        },
+        "buttonCount": 0,
+        "cardCount": 26,
+        "slots": {
+          "lede": "Demos\n \nRooms & Suites\n \nDining\n \nWellness\n \nExperiences\n \nWeddings & Events\n \nNews\n \nPages"
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 2,
+        "tag": "main",
+        "role": "pricing-table",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": "A Sanctuary For Your Senses",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 8904.5
+        },
+        "buttonCount": 120,
+        "cardCount": 163,
+        "slots": {
+          "heading": "A Sanctuary For Your Senses",
+          "subheadings": [
+            "Enjoy summer in the lap of luxury",
+            "Discover our rooms",
+            "Rebalance yourself in a timeless space",
+            "Rebalance yourself in a timeless space"
+          ],
+          "ctaCount": 120,
+          "lede": "Relax under swaying palms and walk along the pristine white-sand beach."
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 3,
+        "tag": "footer",
+        "role": "footer",
+        "subrole": null,
+        "confidence": 0.95,
+        "heading": "Award-winning resort in the paradise island",
+        "bounds": {
+          "x": 0,
+          "y": 8904.5,
+          "w": 1280,
+          "h": 640.453125
+        },
+        "buttonCount": 1,
+        "cardCount": 6,
+        "slots": {
+          "heading": "Award-winning resort in the paradise island",
+          "ctaCount": 1,
+          "lede": "Award-winning resort in the paradise island\nSubscribe to the Newsletter\nStay Updated with Resort News\nSUBSCRIBE\nContact Info"
+        },
+        "needsSmart": false
+      },
+      {
+        "index": 4,
+        "tag": "nav",
+        "role": "nav",
+        "subrole": null,
+        "confidence": 0.9,
+        "heading": null,
+        "bounds": {
+          "x": -410,
+          "y": 70,
+          "w": 410,
+          "h": 434
+        },
+        "buttonCount": 4,
+        "cardCount": 29,
+        "slots": {
+          "ctaCount": 4,
+          "lede": "Demos\nRooms & Suites\nDining\nWellness\nExperiences\nWeddings & Events\nNews\nPages"
+        },
+        "needsSmart": false
+      }
+    ],
+    "counts": {
+      "nav": 3,
+      "pricing-table": 1,
+      "footer": 1
+    },
+    "readingOrder": [
+      "nav",
+      "pricing-table",
+      "nav",
+      "nav",
+      "footer"
+    ]
+  }
+}

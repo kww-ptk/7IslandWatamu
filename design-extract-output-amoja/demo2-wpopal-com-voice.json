@@ -1,0 +1,122 @@
+{
+  "tone": "friendly",
+  "pronoun": "third-person",
+  "headingStyle": "Sentence case",
+  "headingLengthClass": "balanced",
+  "ctaVerbs": [
+    {
+      "value": "learn",
+      "count": 50
+    },
+    {
+      "value": "explore",
+      "count": 25
+    },
+    {
+      "value": "view",
+      "count": 15
+    },
+    {
+      "value": "book",
+      "count": 5
+    },
+    {
+      "value": "discover",
+      "count": 5
+    },
+    {
+      "value": "home",
+      "count": 3
+    },
+    {
+      "value": "previous",
+      "count": 2
+    },
+    {
+      "value": "next",
+      "count": 2
+    },
+    {
+      "value": "snack",
+      "count": 2
+    },
+    {
+      "value": "japanese",
+      "count": 2
+    }
+  ],
+  "buttonPatterns": [
+    {
+      "value": "learn more",
+      "count": 48
+    },
+    {
+      "value": "explore offer",
+      "count": 16
+    },
+    {
+      "value": "book your stay",
+      "count": 5
+    },
+    {
+      "value": "explore more",
+      "count": 5
+    },
+    {
+      "value": "view all rooms",
+      "count": 5
+    },
+    {
+      "value": "discover more",
+      "count": 5
+    },
+    {
+      "value": "view all reviews",
+      "count": 5
+    },
+    {
+      "value": "view all blog",
+      "count": 5
+    },
+    {
+      "value": "home 01",
+      "count": 3
+    },
+    {
+      "value": "previous",
+      "count": 2
+    },
+    {
+      "value": "next",
+      "count": 2
+    },
+    {
+      "value": "snack bar\nlight blue bar\n\nimmerse yourself in elegance with top-notch live music performances, expertly crafted cocktails and food, and exceptional service.\n\nle",
+      "count": 2
+    },
+    {
+      "value": "dining\nspices kitchen\n\nimmerse yourself in elegance with top-notch live music performances, expertly crafted cocktails and food, and exceptional service.\n\nlearn",
+      "count": 2
+    },
+    {
+      "value": "japanese cuisine\nouzaki restaurant\n\nimmerse yourself in elegance with top-notch live music performances, expertly crafted cocktails and food, and exceptional se",
+      "count": 2
+    },
+    {
+      "value": "dining\najoma restaurant\n\nimmerse yourself in elegance with top-notch live music performances, expertly crafted cocktails and food, and exceptional service.\n\nlea",
+      "count": 2
+    }
+  ],
+  "sampleHeadings": [
+    "A Sanctuary For Your Senses",
+    "Enjoy summer in the lap of luxury",
+    "Discover our rooms",
+    "Rebalance yourself in a timeless space",
+    "Rebalance yourself in a timeless space",
+    "Award-winning resort in the paradise island"
+  ],
+  "stats": {
+    "buttons": 121,
+    "headings": 6
+  }
+}
