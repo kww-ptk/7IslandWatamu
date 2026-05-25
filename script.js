@@ -325,4 +325,106 @@ document.addEventListener("DOMContentLoaded", () => {
     start();
   }
   initAboutHeroSlider();
+
+  // --- Form submission handlers ---
+
+  function showFeedback(el, ok, msg) {
+    if (!el) return;
+    el.hidden = false;
+    el.className = "form-feedback " + (ok ? "form-feedback--ok" : "form-feedback--err");
+    el.textContent = msg;
+  }
+
+  function collectFields(form) {
+    const data = {};
+    new FormData(form).forEach((v, k) => { data[k] = v; });
+    return data;
+  }
+
+  function highlightErrors(form, errors) {
+    form.querySelectorAll(".field-error").forEach((el) => el.remove());
+    Object.entries(errors).forEach(([name, msg]) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      if (!input) return;
+      input.classList.add("is-invalid");
+      const err = document.createElement("span");
+      err.className = "field-error";
+      err.textContent = msg;
+      input.closest(".field, .booking-field")?.appendChild(err);
+    });
+  }
+
+  function clearErrors(form) {
+    form.querySelectorAll(".is-invalid").forEach((el) => el.classList.remove("is-invalid"));
+    form.querySelectorAll(".field-error").forEach((el) => el.remove());
+  }
+
+  async function submitForm(endpoint, data, form, feedbackEl, successMsg) {
+    const btn = form.querySelector("[type=submit]");
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    clearErrors(form);
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+
+      if (json.ok) {
+        form.innerHTML = `<p class="form-success">${successMsg}</p>`;
+      } else if (json.errors) {
+        highlightErrors(form, json.errors);
+        showFeedback(feedbackEl, false, "Please fix the errors above.");
+        btn.disabled = false;
+        btn.textContent = "Send";
+      } else {
+        showFeedback(feedbackEl, false, json.error || "Something went wrong. Please try again.");
+        btn.disabled = false;
+        btn.textContent = "Send";
+      }
+    } catch {
+      showFeedback(feedbackEl, false, "Network error. Please check your connection and try again.");
+      btn.disabled = false;
+      btn.textContent = "Send";
+    }
+  }
+
+  // Room enquiry form
+  const roomForm = document.getElementById("roomEnquiryForm");
+  if (roomForm) {
+    const feedback = document.getElementById("roomEnquiryFeedback");
+    roomForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const data = collectFields(roomForm);
+      data.room_slug = roomForm.dataset.roomSlug || "";
+      data.room_name = roomForm.dataset.roomName || "";
+      submitForm("/api/submit-enquiry.php", data, roomForm, feedback,
+        "Thank you! We have received your enquiry and will be in touch shortly.");
+    });
+  }
+
+  // Contact form
+  const contactForm = document.getElementById("contactForm");
+  if (contactForm) {
+    const feedback = document.getElementById("contactFeedback");
+    contactForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitForm("/api/submit-contact.php", collectFields(contactForm), contactForm, feedback,
+        "Thank you for your message! We will get back to you as soon as possible.");
+    });
+  }
+
+  // Agency form
+  const agencyForm = document.getElementById("agencyForm");
+  if (agencyForm) {
+    const feedback = document.getElementById("agencyFeedback");
+    agencyForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitForm("/api/submit-agency.php", collectFields(agencyForm), agencyForm, feedback,
+        "Thank you! Your agency registration request has been received. We will be in touch shortly.");
+    });
+  }
 });

@@ -4,7 +4,7 @@
     {
       "name": "7IslandWatamu",
       "runtimeExecutable": "php",
-      "runtimeArgs": ["-S", "localhost:8765", "-t", "D:\\7IslandWatamu"],
+      "runtimeArgs": ["-S", "localhost:8765", "-t", "D:\\7IslandWatamu", "-d", "default_socket_timeout=3", "-d", "max_execution_time=5"],
       "port": 8765
     }
   ]

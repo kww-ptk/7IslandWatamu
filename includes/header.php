@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/tracking.php';
+
 $pageTitle   = $pageTitle   ?? 'Seven Islands Resort — Watamu, Kenya';
 $activeNav   = $activeNav   ?? '';
 $headerSolid = $headerSolid ?? true;

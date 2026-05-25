@@ -1,4 +1,19 @@
-<?php $pageTitle = 'Rooms &amp; Suites — Seven Islands Resort, Watamu'; $activeNav = 'rooms'; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+
+$pageTitle = 'Rooms &amp; Suites — Seven Islands Resort, Watamu';
+$activeNav = 'rooms';
+include __DIR__ . '/includes/header.php';
+
+$rooms = db_query(
+    'SELECT r.*,
+        (SELECT filename FROM room_images WHERE room_id = r.id AND is_hero = TRUE LIMIT 1) AS hero_img
+     FROM rooms r
+     WHERE r.is_published = TRUE
+     ORDER BY r.sort_order ASC'
+)->fetchAll();
+?>
 
   <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/7islands_resort_watamu14.webp') center/cover no-repeat;">
     <div class="page-hero__inner">
@@ -16,54 +31,28 @@
         <p>From a cosy double to a spacious family suite &mdash; every room opens onto the gardens or the Indian Ocean.</p>
       </div>
       <div class="other-rooms__grid rooms-grid">
+        <?php foreach ($rooms as $room): ?>
         <article class="other-room">
-          <a class="other-room__img" href="room.php">
-            <span class="other-room__price"><label>from</label><strong>$450</strong> per night</span>
-            <img src="assets/img/7islands_resort_watamu14.webp" alt="Standard room">
+          <a class="other-room__img" href="room.php?slug=<?= e($room['slug']) ?>">
+            <span class="other-room__price">
+              <label>from</label>
+              <strong><?= e($room['price_currency']) ?> <?= e(number_format((float)$room['price_amount'], 0)) ?></strong>
+              <?= e($room['price_unit']) ?>
+            </span>
+            <?php if ($room['hero_img']): ?>
+            <img src="assets/img/<?= e($room['hero_img']) ?>" alt="<?= e($room['name']) ?>">
+            <?php endif; ?>
           </a>
-          <h3 class="other-room__name"><a href="room.php">Standard Room</a></h3>
-          <p class="other-room__meta">55M&sup2; &middot; 1-6 person &middot; 2 beds</p>
+          <h3 class="other-room__name">
+            <a href="room.php?slug=<?= e($room['slug']) ?>"><?= e($room['name']) ?></a>
+          </h3>
+          <p class="other-room__meta">
+            <?= e($room['size_sqm']) ?>M&sup2; &middot;
+            1–<?= e($room['capacity']) ?> person &middot;
+            <?= e($room['bed_count']) ?> bed<?= $room['bed_count'] > 1 ? 's' : '' ?>
+          </p>
         </article>
-        <article class="other-room">
-          <a class="other-room__img" href="room.php">
-            <span class="other-room__price"><label>from</label><strong>$300</strong> per night</span>
-            <img src="assets/img/7islands_resort_watamu9.webp" alt="Double Room">
-          </a>
-          <h3 class="other-room__name"><a href="room.php">Double Room</a></h3>
-          <p class="other-room__meta">60M&sup2; &middot; 1-3 person &middot; 2 beds</p>
-        </article>
-        <article class="other-room">
-          <a class="other-room__img" href="room.php">
-            <span class="other-room__price"><label>from</label><strong>$500</strong> per night</span>
-            <img src="assets/img/7islands_resort_watamu10.webp" alt="King Size Room">
-          </a>
-          <h3 class="other-room__name"><a href="room.php">King Size Room</a></h3>
-          <p class="other-room__meta">80M&sup2; &middot; 1-7 person &middot; 3 beds</p>
-        </article>
-        <article class="other-room">
-          <a class="other-room__img" href="room.php">
-            <span class="other-room__price"><label>from</label><strong>$399</strong> per night</span>
-            <img src="assets/img/7islands_resort_watamu14.webp" alt="Junior Suite">
-          </a>
-          <h3 class="other-room__name"><a href="room.php">Junior Suite</a></h3>
-          <p class="other-room__meta">50M&sup2; &middot; 1-4 person &middot; 2 beds</p>
-        </article>
-        <article class="other-room">
-          <a class="other-room__img" href="room.php">
-            <span class="other-room__price"><label>from</label><strong>$250</strong> per night</span>
-            <img src="assets/img/7islands_resort_watamu9.webp" alt="Classic Single Room">
-          </a>
-          <h3 class="other-room__name"><a href="room.php">Classic Single Room</a></h3>
-          <p class="other-room__meta">45M&sup2; &middot; 1-2 person &middot; 2 beds</p>
-        </article>
-        <article class="other-room">
-          <a class="other-room__img" href="room.php">
-            <span class="other-room__price"><label>from</label><strong>$450</strong> per night</span>
-            <img src="assets/img/7islands_resort_watamu10.webp" alt="Luxury Suite">
-          </a>
-          <h3 class="other-room__name"><a href="room.php">Luxury Suite</a></h3>
-          <p class="other-room__meta">60M&sup2; &middot; 1-6 person &middot; 2 beds</p>
-        </article>
+        <?php endforeach; ?>
       </div>
     </div>
   </section>

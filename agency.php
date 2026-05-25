@@ -131,11 +131,59 @@
     </div>
   </section>
 
-  <section class="tour-cta" id="partner">
+  <section class="section" id="partner">
     <div class="container">
-      <h2 class="tour-cta__title">Become a partner</h2>
-      <p class="tour-cta__text">Email us your agency details and we will set you up with rates, materials and a dedicated contact.</p>
-      <a class="btn btn--primary" href="mailto:reservation@sevenislandswatamu.com">Email the trade desk</a>
+      <div class="contact-grid">
+        <div class="contact-form-wrap">
+          <p class="eyebrow">Partner Registration</p>
+          <h2 class="tour-h2">Become a partner</h2>
+          <form class="contact-form" id="agencyForm" novalidate>
+            <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+            <div class="contact-form__row">
+              <label class="field">
+                <span>Your name</span>
+                <input type="text" name="name" placeholder="Full name" required>
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" placeholder="Work email" required>
+              </label>
+            </div>
+            <div class="contact-form__row">
+              <label class="field">
+                <span>Agency name</span>
+                <input type="text" name="agency" placeholder="Your agency" required>
+              </label>
+              <label class="field">
+                <span>Phone</span>
+                <input type="tel" name="phone" placeholder="Your phone">
+              </label>
+            </div>
+            <div class="contact-form__row">
+              <label class="field">
+                <span>IATA / Registration number</span>
+                <input type="text" name="iata" placeholder="Optional">
+              </label>
+              <label class="field">
+                <span>Country</span>
+                <input type="text" name="country" placeholder="Your country">
+              </label>
+            </div>
+            <label class="field">
+              <span>Message</span>
+              <textarea name="message" rows="4" placeholder="Tell us about your agency and clients"></textarea>
+            </label>
+            <div class="form-feedback" id="agencyFeedback" hidden></div>
+            <button type="submit" class="btn btn--primary">Send Request <span aria-hidden="true">&rsaquo;</span></button>
+          </form>
+        </div>
+        <div class="contact-map">
+          <iframe
+            title="Seven Islands Resort location, Watamu"
+            src="https://www.google.com/maps?q=Watamu,+Kenya&output=embed"
+            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
     </div>
   </section>
 

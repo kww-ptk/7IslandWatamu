@@ -71,7 +71,8 @@
         <div class="contact-form-wrap">
           <p class="eyebrow">Enquiry</p>
           <h2 class="tour-h2">Send us a message</h2>
-          <form class="contact-form" onsubmit="return false">
+          <form class="contact-form" id="contactForm" novalidate>
+            <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
             <div class="contact-form__row">
               <label class="field">
                 <span>Full name</span>
@@ -96,6 +97,7 @@
               <span>Message</span>
               <textarea name="message" rows="5" placeholder="Tell us about your stay" required></textarea>
             </label>
+            <div class="form-feedback" id="contactFeedback" hidden></div>
             <button type="submit" class="btn btn--primary">Send Message <span aria-hidden="true">&rsaquo;</span></button>
           </form>
         </div>
