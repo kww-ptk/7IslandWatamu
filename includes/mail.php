@@ -26,7 +26,9 @@ function send_notification(array $sub): void {
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
 
-    if ($driver === 'smtp') {
+    if (!empty($env['RESEND_API_KEY'])) {
+        send_resend($to, $subject, $body, $from, $sub['guest_email'] ?? '', $env['RESEND_API_KEY']);
+    } elseif ($driver === 'smtp') {
         send_smtp($to, $subject, $body, $headers, $env);
     } else {
         if (!mail($to, $subject, $body, $headers)) {
@@ -69,9 +71,36 @@ function build_email_body(array $sub, string $site_url): string {
     return implode("\n", $lines);
 }
 
+function send_resend(string $to, string $subject, string $text, string $from, string $reply_to, string $api_key): void {
+    $payload = json_encode([
+        'from'     => $from,
+        'to'       => [$to],
+        'reply_to' => $reply_to ?: null,
+        'subject'  => $subject,
+        'text'     => $text,
+    ]);
+
+    $ctx = stream_context_create(['http' => [
+        'method'        => 'POST',
+        'header'        => implode("\r\n", [
+            'Authorization: Bearer ' . $api_key,
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($payload),
+        ]),
+        'content'       => $payload,
+        'ignore_errors' => true,
+    ]]);
+
+    $result = @file_get_contents('https://api.resend.com/emails', false, $ctx);
+    $status = isset($http_response_header) ? (int)explode(' ', $http_response_header[0])[1] : 0;
+
+    if ($status !== 200 && $status !== 201) {
+        log_mail_error("Resend API error {$status}: {$result}");
+    }
+}
+
 function send_smtp(string $to, string $subject, string $body, string $headers, array $env): void {
-    // PHPMailer swap-in point — for now log that SMTP is not yet configured
-    log_mail_error('SMTP driver selected but PHPMailer not installed. Falling back to mail().');
+    log_mail_error('SMTP driver selected but not implemented. Set RESEND_API_KEY instead.');
     if (!mail($to, $subject, $body, $headers)) {
         log_mail_error("mail() fallback also failed for: {$to}");
     }
