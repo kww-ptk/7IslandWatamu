@@ -40,7 +40,7 @@ $rooms = db_query(
               <?= e($room['price_unit']) ?>
             </span>
             <?php if ($room['hero_img']): ?>
-            <img src="assets/img/<?= e($room['hero_img']) ?>" alt="<?= e($room['name']) ?>">
+            <img src="<?= e(storage_url($room['hero_img'])) ?>" alt="<?= e($room['name']) ?>">
             <?php endif; ?>
           </a>
           <h3 class="other-room__name">

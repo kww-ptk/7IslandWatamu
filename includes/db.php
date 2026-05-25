@@ -100,3 +100,13 @@ function set_setting(string $key, string $value): void {
 function e(mixed $val): string {
     return htmlspecialchars((string)$val, ENT_QUOTES, 'UTF-8');
 }
+
+// Resolve a stored image filename/URL to a browser-usable URL.
+// R2 images: stored as full https:// URL — returned as-is.
+// Uploaded images: stored as "rooms/abc.jpg" → /assets/img/rooms/abc.jpg
+// Seeded images: stored as "hero.jpg" → /assets/img/hero.jpg
+function storage_url(string $filename): string {
+    if (empty($filename)) return '';
+    if (str_starts_with($filename, 'http')) return $filename;
+    return '/assets/img/' . $filename;
+}

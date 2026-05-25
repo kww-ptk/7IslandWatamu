@@ -65,7 +65,7 @@ include __DIR__ . '/_layout.php';
           <td style="cursor:grab;color:var(--muted);font-size:18px;text-align:center">&#8942;&#8942;</td>
           <td>
             <?php if ($room['hero_img']): ?>
-            <img src="/assets/img/<?= e($room['hero_img']) ?>" class="room-thumb" alt="<?= e($room['name']) ?>">
+            <img src="<?= e(storage_url($room['hero_img'])) ?>" class="room-thumb" alt="<?= e($room['name']) ?>">
             <?php else: ?>
             <div style="width:52px;height:40px;background:var(--border);border-radius:4px"></div>
             <?php endif; ?>

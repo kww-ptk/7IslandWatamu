@@ -36,7 +36,7 @@ $extraScripts  = ['room.js'];
 include __DIR__ . '/includes/header.php';
 ?>
 
-  <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/<?= e($hero_img) ?>') center/cover no-repeat;">
+  <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('<?= e(storage_url($hero_img)) ?>') center/cover no-repeat;">
     <div class="page-hero__inner">
       <p class="page-hero__eyebrow">Rooms &amp; Suites</p>
       <h1 class="page-hero__title"><?= e($room['name']) ?></h1>
@@ -75,7 +75,7 @@ include __DIR__ . '/includes/header.php';
     <div class="room-gallery__track" data-gal-track>
       <?php foreach ($images as $img): ?>
       <div class="room-gallery__slide">
-        <img src="assets/img/<?= e($img['filename']) ?>" alt="<?= e($img['alt_text'] ?: $room['name']) ?>">
+        <img src="<?= e(storage_url($img['filename'])) ?>" alt="<?= e($img['alt_text'] ?: $room['name']) ?>">
       </div>
       <?php endforeach; ?>
     </div>
@@ -190,7 +190,7 @@ include __DIR__ . '/includes/header.php';
           <a class="other-room__img" href="room.php?slug=<?= e($other['slug']) ?>">
             <span class="other-room__price"><label>from</label><strong><?= e($other['price_currency']) ?> <?= e(number_format((float)$other['price_amount'], 0)) ?></strong> <?= e($other['price_unit']) ?></span>
             <?php if ($other['hero_img']): ?>
-            <img src="assets/img/<?= e($other['hero_img']) ?>" alt="<?= e($other['name']) ?>">
+            <img src="<?= e(storage_url($other['hero_img'])) ?>" alt="<?= e($other['name']) ?>">
             <?php endif; ?>
           </a>
           <h3 class="other-room__name"><a href="room.php?slug=<?= e($other['slug']) ?>"><?= e($other['name']) ?></a></h3>

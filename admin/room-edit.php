@@ -94,9 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // ── POST: gallery upload ────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['gallery_upload'])) {
+    require_once __DIR__ . '/../includes/storage.php';
     verify_csrf();
     $allowed_mime = ['image/jpeg', 'image/png', 'image/webp'];
-    $upload_dir   = __DIR__ . '/../assets/img/rooms/';
     $uploaded     = 0;
     $errs         = [];
 
@@ -126,15 +126,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['gallery_upload'])) {
         }
 
         $filename = bin2hex(random_bytes(10)) . '.jpg';
-        imagejpeg($src, $upload_dir . $filename, 88);
+        $tmp_out  = sys_get_temp_dir() . '/' . $filename;
+        imagejpeg($src, $tmp_out, 88);
         imagedestroy($src);
+
+        $stored = storage_put($tmp_out, $filename);
+        @unlink($tmp_out);
+        if ($stored === false) { $errs[] = 'Storage error — could not save image.'; continue; }
 
         // First image for this room becomes hero
         $is_hero = empty($images) && $uploaded === 0;
         $max_order = db_query('SELECT COALESCE(MAX(sort_order),0) AS m FROM room_images WHERE room_id=:id', [':id'=>$id])->fetch()['m'];
         db_query(
             'INSERT INTO room_images (room_id,filename,alt_text,is_hero,sort_order) VALUES (:room_id,:filename,:alt,:hero,:order)',
-            [':room_id'=>$id, ':filename'=>$filename, ':alt'=>$room['name']??'', ':hero'=>$is_hero?'TRUE':'FALSE', ':order'=>$max_order+1]
+            [':room_id'=>$id, ':filename'=>$stored, ':alt'=>$room['name']??'', ':hero'=>$is_hero?'TRUE':'FALSE', ':order'=>$max_order+1]
         );
         $uploaded++;
     }
@@ -158,8 +163,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gallery_action'])) {
     if ($act === 'delete') {
         $img = db_query('SELECT filename FROM room_images WHERE id=:id AND room_id=:rid', [':id'=>$img_id,':rid'=>$id])->fetch();
         if ($img) {
-            $path = __DIR__ . '/../assets/img/rooms/' . $img['filename'];
-            if (file_exists($path)) unlink($path);
+            require_once __DIR__ . '/../includes/storage.php';
+            storage_delete($img['filename']);
             db_query('DELETE FROM room_images WHERE id=:id', [':id'=>$img_id]);
         }
         $success = 'Image deleted.';
@@ -330,7 +335,7 @@ include __DIR__ . '/_layout.php';
           <?php if ($img['is_hero']): ?>
           <span class="gallery-hero-badge">Hero</span>
           <?php endif; ?>
-          <img src="/assets/img/rooms/<?= e($img['filename']) ?>" alt="<?= e($img['alt_text']) ?>">
+          <img src="<?= e(storage_url($img['filename'])) ?>" alt="<?= e($img['alt_text']) ?>">
           <div class="gallery-item__actions">
             <form method="POST" action="/admin/room-edit.php?id=<?= $id ?>" style="display:contents">
               <?= csrf_field() ?>
