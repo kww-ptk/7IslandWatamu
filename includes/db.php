@@ -7,14 +7,29 @@ function db(): PDO {
 
     $env = parse_env();
 
-    $dsn = sprintf(
-        'pgsql:host=%s;port=%s;dbname=%s',
-        $env['DB_HOST'] ?? 'localhost',
-        $env['DB_PORT'] ?? '5432',
-        $env['DB_NAME'] ?? '7island'
-    );
+    // Render (and most PaaS) provide a single DATABASE_URL
+    if (!empty($env['DATABASE_URL'])) {
+        $u = parse_url($env['DATABASE_URL']);
+        $dsn = sprintf(
+            'pgsql:host=%s;port=%s;dbname=%s',
+            $u['host'],
+            $u['port'] ?? 5432,
+            ltrim($u['path'], '/')
+        );
+        $user = $u['user'] ?? '';
+        $pass = $u['pass'] ?? '';
+    } else {
+        $dsn  = sprintf(
+            'pgsql:host=%s;port=%s;dbname=%s',
+            $env['DB_HOST'] ?? 'localhost',
+            $env['DB_PORT'] ?? '5432',
+            $env['DB_NAME'] ?? '7island'
+        );
+        $user = $env['DB_USER'] ?? '';
+        $pass = $env['DB_PASS'] ?? '';
+    }
 
-    $pdo = new PDO($dsn, $env['DB_USER'] ?? '', $env['DB_PASS'] ?? '', [
+    $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
