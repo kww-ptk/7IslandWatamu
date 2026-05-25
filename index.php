@@ -7,13 +7,11 @@
         <div class="hero-step" data-step="1">
           <div class="hero-search__field">
             <label for="enqCheckin">Check in</label>
-            <input type="text" id="enqCheckin" name="checkin" placeholder="Add date">
-            <i class="hero-search__caret">&#9662;</i>
+            <input type="date" id="enqCheckin" name="checkin" min="<?= date('Y-m-d') ?>">
           </div>
           <div class="hero-search__field">
             <label for="enqCheckout">Check out</label>
-            <input type="text" id="enqCheckout" name="checkout" placeholder="Add date">
-            <i class="hero-search__caret">&#9662;</i>
+            <input type="date" id="enqCheckout" name="checkout" min="<?= date('Y-m-d', strtotime('+1 day')) ?>">
           </div>
           <div class="hero-search__field hero-search__field--guests">
             <label>Guests</label>

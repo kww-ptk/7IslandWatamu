@@ -271,6 +271,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const show = (n) => steps.forEach((s) => { s.hidden = s.dataset.step !== String(n); });
     const val = (id) => (form.querySelector("#" + id)?.value || "").trim();
 
+    // Keep checkout min in sync with checkin
+    const ci = form.querySelector("#enqCheckin");
+    const co = form.querySelector("#enqCheckout");
+    if (ci && co) {
+      ci.addEventListener("change", () => {
+        if (!ci.value) return;
+        const next = new Date(ci.value);
+        next.setDate(next.getDate() + 1);
+        const min = next.toISOString().slice(0, 10);
+        co.min = min;
+        if (co.value && co.value <= ci.value) co.value = min;
+      });
+    }
+
     form.querySelector("[data-enq-next]").addEventListener("click", () => show(2));
     const back = form.querySelector("[data-enq-back]");
     if (back) back.addEventListener("click", () => show(1));
