@@ -210,3 +210,107 @@ body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; color
 .mt-16       { margin-top: 16px; }
 .mt-24       { margin-top: 24px; }
 a.no-style   { text-decoration: none; color: inherit; }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — Mobile & Tablet
+   ══════════════════════════════════════════════ */
+
+/* ── Mobile top bar (hidden on desktop) ── */
+.admin-topbar {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 52px; background: var(--sidebar-bg);
+  z-index: 200; align-items: center;
+  padding: 0 16px; gap: 12px;
+}
+.admin-topbar__burger {
+  background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; gap: 5px; padding: 4px;
+}
+.admin-topbar__burger span {
+  display: block; width: 22px; height: 2px;
+  background: #fff; border-radius: 2px;
+  transition: transform .2s, opacity .2s;
+}
+.admin-topbar__title {
+  color: #fff; font-size: 14px; font-weight: 600;
+}
+
+/* ── Sidebar overlay (mobile) ── */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 150;
+}
+.sidebar-overlay.is-visible { display: block; }
+
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .admin-content { padding: 24px 20px; }
+}
+
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+
+  /* Show top bar */
+  .admin-topbar { display: flex; }
+
+  /* Sidebar slides in from left */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 160;
+  }
+  .sidebar.is-open { transform: translateX(0); }
+
+  /* Main content takes full width, offset for topbar */
+  .admin-main { margin-left: 0; padding-top: 52px; }
+  .admin-content { padding: 16px; }
+
+  /* KPI cards — stack vertically */
+  .kpi-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Tables — horizontal scroll */
+  .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+  .data-table td, .data-table th { white-space: nowrap; }
+
+  /* Page header — stack title + actions */
+  .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .page-header .actions { flex-wrap: wrap; }
+
+  /* Form rows — single column */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* Detail grid — single column */
+  .detail-grid { grid-template-columns: 1fr; }
+
+  /* Filters — stack full width */
+  .filters { flex-direction: column; }
+  .filters input, .filters select { width: 100%; }
+
+  /* Tabs — scrollable */
+  .tabs { overflow-x: auto; white-space: nowrap; }
+
+  /* Gallery — 2 columns minimum */
+  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+  /* Login box — full width with padding */
+  .login-box { padding: 28px 20px; margin: 16px; }
+
+  /* Submission view buttons */
+  .page-header .actions .btn-primary,
+  .page-header .actions .btn-outline { font-size: 12px; padding: 6px 10px; }
+
+  /* Card body padding on mobile */
+  .card__body[style*="padding:20px"] { padding: 14px !important; }
+}
+
+/* ── Small mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  .kpi-card { padding: 16px; }
+  .kpi-card__value { font-size: 22px; }
+  .admin-content { padding: 12px; }
+  .card__head { padding: 12px 14px; }
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  .tabs { gap: 0; }
+  .tab-btn { padding: 8px 12px; font-size: 12.5px; }
+}

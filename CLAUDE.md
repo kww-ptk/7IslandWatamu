@@ -79,6 +79,17 @@ Visit http://localhost:8765
 └── .env.example
 ```
 
+## Admin UI — responsive design
+The admin panel is fully responsive. Key rules when editing admin CSS or layout:
+- **Breakpoints:** 768px (mobile), 480px (small mobile), 1024px (tablet)
+- **Sidebar:** fixed on desktop; hidden off-screen on mobile, opens via hamburger button in top bar
+- **Mobile top bar:** `.admin-topbar` — 52px fixed bar with burger + title, visible only on mobile
+- **Hamburger JS:** lives in `admin/_layout_end.php` — toggles `.is-open` on sidebar, `.is-visible` on overlay
+- **Tables:** `display:block` + `overflow-x:auto` on mobile for horizontal scroll
+- **Grids:** KPI grid (3→1 col), detail grid (2→1 col), form rows (2→1 col) on mobile
+- **Never use fixed pixel widths** on admin layout elements — use percentages or grid
+- **Test on 375px width** (iPhone SE) as the minimum target
+
 ## Security rules (never break these)
 - PDO prepared statements only — no string-concatenated SQL
 - `password_hash` / `password_verify` for all passwords

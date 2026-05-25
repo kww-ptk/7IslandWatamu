@@ -13,10 +13,21 @@ $admin = current_admin();
 </head>
 <body class="admin-body">
 
+<!-- Mobile top bar -->
+<div class="admin-topbar" id="adminTopbar">
+  <button class="admin-topbar__burger" id="sidebarBurger" aria-label="Toggle menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <span class="admin-topbar__title">7 Islands Admin</span>
+</div>
+
+<!-- Sidebar overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <div class="admin-wrap">
 
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="adminSidebar">
     <div class="sidebar__logo">
       <img src="/assets/img/logo-white.png" alt="7 Islands">
     </div>
