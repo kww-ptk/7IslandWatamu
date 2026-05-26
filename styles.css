@@ -22,6 +22,8 @@
 
 html { scroll-behavior: smooth; }
 
+@media (max-width: 767px) { :root { --gutter: 20px; } }
+
 body {
   font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 18px;
@@ -1346,7 +1348,8 @@ input:focus-visible,
 @media (max-width: 767px) {
   .partners { padding: 70px 0 60px; }
   .partners__title { font-size: 30px; }
-  .partners__logos { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .partners__logos { grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; }
+  .partner-logo { min-width: 0; }
   .trust-row {
     display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
   }
