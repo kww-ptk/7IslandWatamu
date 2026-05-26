@@ -456,6 +456,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Spa booking form
+  const spaContactForm = document.getElementById("spaContactForm");
+  if (spaContactForm) {
+    const feedback = document.getElementById("spaContactFeedback");
+    spaContactForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitForm("/api/submit-contact.php", collectFields(spaContactForm), spaContactForm, feedback,
+        "Thank you! We have received your request and our spa team will confirm your booking shortly.");
+    });
+  }
+
   // Tours page general enquiry form
   const toursContactForm = document.getElementById("toursContactForm");
   if (toursContactForm) {

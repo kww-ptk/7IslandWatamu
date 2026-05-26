@@ -60,11 +60,50 @@ include __DIR__ . '/includes/header.php';
     </div>
   </section>
 
-  <section class="tour-cta">
+  <section class="section" id="book-treatment">
     <div class="container">
-      <h2 class="tour-cta__title">Treat yourself</h2>
-      <p class="tour-cta__text">Reserve a treatment with our spa team and make space for a little stillness during your stay.</p>
-      <a class="btn btn--primary" href="contact.php">Contact Us</a>
+      <div class="contact-grid">
+        <div class="contact-form-wrap">
+          <p class="eyebrow">Book a Treatment</p>
+          <h2 class="tour-h2">Reserve your spa time</h2>
+          <p class="room-p" style="margin-bottom:2rem">Let us know which treatment you have in mind and when you would like to come in. Our spa team will confirm your booking directly.</p>
+          <form class="contact-form" id="spaContactForm" novalidate>
+            <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+            <div class="contact-form__row">
+              <label class="field">
+                <span>Full name</span>
+                <input type="text" name="name" placeholder="Your name" required>
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" placeholder="you@email.com" required>
+              </label>
+            </div>
+            <div class="contact-form__row">
+              <label class="field">
+                <span>Phone</span>
+                <input type="tel" name="phone" placeholder="+254 700 000 000">
+              </label>
+              <label class="field">
+                <span>Preferred date</span>
+                <input type="text" name="subject" placeholder="e.g. 15 June, morning">
+              </label>
+            </div>
+            <label class="field">
+              <span>Treatment &amp; any requests</span>
+              <textarea name="message" rows="4" placeholder="Which treatment would you like? Any preferences or health notes?" required></textarea>
+            </label>
+            <div class="form-feedback" id="spaContactFeedback" hidden></div>
+            <button type="submit" class="btn btn--primary">Request Booking <span aria-hidden="true">&rsaquo;</span></button>
+          </form>
+        </div>
+        <div class="contact-map">
+          <iframe
+            title="Seven Islands Resort location, Watamu"
+            src="https://www.google.com/maps?q=Watamu,+Kenya&output=embed"
+            loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
     </div>
   </section>
 
