@@ -102,15 +102,15 @@ include __DIR__ . '/_layout.php';
 </div>
 
 <!-- Filters -->
-<form method="GET" action="/admin/submissions.php" class="filters">
-  <select name="type">
+<form method="GET" action="/admin/submissions.php" class="filters" id="filtersForm">
+  <select name="type" class="js-auto-submit">
     <option value="">All types</option>
     <option value="enquiry" <?= $type==='enquiry'?'selected':'' ?>>Enquiry</option>
     <option value="contact" <?= $type==='contact'?'selected':'' ?>>Contact</option>
     <option value="agency"  <?= $type==='agency' ?'selected':'' ?>>Agency</option>
   </select>
 
-  <select name="room_id">
+  <select name="room_id" class="js-auto-submit">
     <option value="">All rooms</option>
     <?php foreach ($rooms as $r): ?>
     <option value="<?= e($r['id']) ?>" <?= $room_id===$r['id']?'selected':'' ?>><?= e($r['name']) ?></option>
@@ -121,7 +121,7 @@ include __DIR__ . '/_layout.php';
   <input type="text" name="date_to"   value="<?= e($date_to) ?>"   placeholder="To date"   class="js-datepicker" autocomplete="off">
   <input type="text" name="search"    value="<?= e($search) ?>"    placeholder="Search name or email…" style="min-width:200px">
 
-  <button type="submit" class="btn-primary btn-sm">Filter</button>
+  <button type="submit" class="btn-primary btn-sm">Search</button>
   <?php if ($type || $room_id || $date_from || $date_to || $search): ?>
   <a href="/admin/submissions.php" class="btn-outline btn-sm">Clear</a>
   <?php endif; ?>
@@ -204,12 +204,24 @@ include __DIR__ . '/_layout.php';
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script>
-  flatpickr('.js-datepicker', {
-    dateFormat: 'Y-m-d',
-    altInput: true,
-    altFormat: 'd M Y',
-    allowInput: true,
-  });
+  (function () {
+    var form = document.getElementById('filtersForm');
+    if (!form) return;
+
+    // Auto-submit on dropdown change
+    form.querySelectorAll('.js-auto-submit').forEach(function (el) {
+      el.addEventListener('change', function () { form.submit(); });
+    });
+
+    // Date pickers — auto-submit when a date is picked or cleared
+    flatpickr('.js-datepicker', {
+      dateFormat: 'Y-m-d',
+      altInput: true,
+      altFormat: 'd M Y',
+      allowInput: true,
+      onChange: function () { form.submit(); },
+    });
+  })();
 </script>
 
 <?php include __DIR__ . '/_layout_end.php'; ?>
