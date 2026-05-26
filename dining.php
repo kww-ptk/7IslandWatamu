@@ -1,4 +1,12 @@
-<?php $pageTitle = 'Dining — Seven Islands Resort, Watamu'; $activeNav = 'dining'; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+$pageTitle    = 'Dining — Seven Islands Resort, Watamu';
+$metaDesc     = 'Savour fresh seafood, Swahili flavours and international cuisine at Seven Islands Resort — beachfront dining on the coast of Watamu, Kenya.';
+$activeNav    = 'dining';
+$canonicalUrl = site_url('dining.php');
+include __DIR__ . '/includes/header.php';
+?>
 
   <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/7islands_resort_watamu8.webp') center/cover no-repeat;">
     <div class="page-hero__inner">

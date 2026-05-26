@@ -1,4 +1,12 @@
-<?php $pageTitle = 'Travel Agency — Seven Islands Resort, Watamu'; $activeNav = 'agency'; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+$pageTitle    = 'Travel Agency — Seven Islands Resort, Watamu';
+$metaDesc     = 'Travel agents and tour operators — register as a partner with Seven Islands Resort, Watamu. Competitive rates and dedicated support.';
+$activeNav    = 'agency';
+$canonicalUrl = site_url('agency.php');
+include __DIR__ . '/includes/header.php';
+?>
 
   <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/7islands_resort_watamu5_Beach.webp') center/cover no-repeat;">
     <div class="page-hero__inner">

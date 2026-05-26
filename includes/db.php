@@ -80,6 +80,26 @@ function fetch_room_images(int $room_id): array {
     )->fetchAll();
 }
 
+function fetch_tour_by_slug(string $slug): array|false {
+    return db_query(
+        'SELECT * FROM tours WHERE slug = :slug AND is_published = TRUE',
+        [':slug' => $slug]
+    )->fetch();
+}
+
+function fetch_tour_images(int $tour_id): array {
+    return db_query(
+        'SELECT * FROM tour_images WHERE tour_id = :id ORDER BY sort_order ASC',
+        [':id' => $tour_id]
+    )->fetchAll();
+}
+
+function site_url(string $path = ''): string {
+    $env  = parse_env();
+    $base = rtrim($env['APP_URL'] ?? 'https://sevenislandswatamu.com', '/');
+    return $base . ($path ? '/' . ltrim($path, '/') : '');
+}
+
 function setting(string $key, string $default = ''): string {
     $row = db_query(
         'SELECT setting_value FROM settings WHERE setting_key = :key',

@@ -1,4 +1,12 @@
-<?php $pageTitle = 'About — Seven Islands Resort, Watamu'; $activeNav = 'about'; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+$pageTitle    = 'About — Seven Islands Resort, Watamu';
+$metaDesc     = 'Learn about Seven Islands Resort — a family-run seafront retreat on the Kenyan coast at Watamu, with a 30-year legacy of warm hospitality.';
+$activeNav    = 'about';
+$canonicalUrl = site_url('about.php');
+include __DIR__ . '/includes/header.php';
+?>
 
   <section class="about-hero">
     <div class="about-hero__slides" data-about-slides>

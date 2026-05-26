@@ -1,4 +1,49 @@
-<?php $pageTitle = 'Safari &amp; Excursion — Seven Islands Resort, Watamu'; $activeNav = 'tours'; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+
+$pageTitle    = 'Safari &amp; Excursion — Seven Islands Resort, Watamu';
+$metaDesc     = 'Explore Kenya from Seven Islands Resort — classic safaris to Tsavo and the Masai Mara, custom journeys, and day excursions along the Watamu coast.';
+$activeNav    = 'tours';
+$canonicalUrl = site_url('tours.php');
+$ogImage      = site_url('assets/img/7islands_resort_watamu1.jpg');
+$jsonLd       = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'TouristAttraction',
+    'name'        => 'Safaris & Excursions — Seven Islands Resort',
+    'description' => 'Classic safaris, custom journeys, and day excursions from Watamu, Kenya.',
+    'url'         => site_url('tours.php'),
+    'address'     => ['@type' => 'PostalAddress', 'addressLocality' => 'Watamu', 'addressCountry' => 'KE'],
+]);
+
+// Fetch tours from DB (graceful fallback if DB unavailable)
+$allTours = [];
+try {
+    $allTours = db_query(
+        'SELECT t.*, (SELECT filename FROM tour_images WHERE tour_id = t.id AND is_hero = TRUE LIMIT 1) AS hero_img
+         FROM tours t WHERE t.is_published = TRUE ORDER BY t.sort_order ASC'
+    )->fetchAll();
+} catch (Throwable) {}
+
+$classics   = array_values(array_filter($allTours, fn($t) => $t['category'] === 'classic'));
+$customs    = array_values(array_filter($allTours, fn($t) => $t['category'] === 'custom'));
+$excursions = array_values(array_filter($allTours, fn($t) => $t['category'] === 'excursion'));
+
+$fallbackImgs = [
+    'assets/img/7islands_resort_watamu1.jpg',
+    'assets/img/7islands_resort_watamu6.webp',
+    'assets/img/7islands_resort_watamu3.webp',
+    'assets/img/7islands_resort_watamu5_Beach.webp',
+    'assets/img/7islands_resort_watamu12.webp',
+    'assets/img/7islands_resort_watamu2.webp',
+];
+
+function tour_card_img(array $t, int $idx, array $fallbacks): string {
+    return $t['hero_img'] ? storage_url($t['hero_img']) : $fallbacks[$idx % count($fallbacks)];
+}
+
+include __DIR__ . '/includes/header.php';
+?>
 
   <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/7islands_resort_watamu1.jpg') center/cover no-repeat;">
     <div class="page-hero__inner">
@@ -8,150 +53,139 @@
     </div>
   </section>
 
+<?php if ($classics): ?>
   <section class="section tour-section">
     <div class="container">
       <p class="eyebrow">Classics</p>
       <h2 class="tour-h2">Classic safari routes</h2>
       <div class="tour-grid tour-grid--feature">
+        <?php foreach ($classics as $i => $t): ?>
         <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu1.jpg" alt="Tsavo East safari"></a>
+          <a class="tour-card__media" href="tour.php?slug=<?= urlencode($t['slug']) ?>">
+            <img src="<?= e(tour_card_img($t, $i, $fallbackImgs)) ?>" alt="<?= e($t['name']) ?>">
+          </a>
           <div class="tour-card__body">
-            <span class="tour-card__tag">Classic Safari</span>
-            <h3 class="tour-card__name">Tsavo East</h3>
-            <p class="tour-card__detail">A first encounter with Kenya's red-earth wilderness and its famous elephants — the closest of the great parks to Watamu.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
+            <span class="tour-card__tag"><?= e($t['tag_label'] ?: 'Classic Safari') ?></span>
+            <h3 class="tour-card__name"><?= e($t['name']) ?></h3>
+            <p class="tour-card__detail"><?= e($t['short_desc'] ?? '') ?></p>
+            <a class="tour-card__link" href="tour.php?slug=<?= urlencode($t['slug']) ?>">Learn more <span aria-hidden="true">&rsaquo;</span></a>
           </div>
         </article>
-        <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu6.webp" alt="Tsavo East and West safari"></a>
-          <div class="tour-card__body">
-            <span class="tour-card__tag">Classic Safari</span>
-            <h3 class="tour-card__name">Tsavo East &amp; West</h3>
-            <p class="tour-card__detail">Two contrasting landscapes in one journey — open savannah and the lava springs and hills of Tsavo West.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
-          </div>
-        </article>
-        <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu3.webp" alt="Tsavo East and Amboseli safari"></a>
-          <div class="tour-card__body">
-            <span class="tour-card__tag">Classic Safari</span>
-            <h3 class="tour-card__name">Tsavo East &amp; Amboseli</h3>
-            <p class="tour-card__detail">Wildlife-rich plains framed by the snow-capped silhouette of Mount Kilimanjaro across the border.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
-          </div>
-        </article>
-        <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu5_Beach.webp" alt="Tsavo West, Amboseli and Tsavo East safari"></a>
-          <div class="tour-card__body">
-            <span class="tour-card__tag">Classic Safari</span>
-            <h3 class="tour-card__name">Tsavo West, Amboseli &amp; Tsavo East</h3>
-            <p class="tour-card__detail">The grand circuit — three legendary parks across several days for the complete Kenyan safari.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
-          </div>
-        </article>
+        <?php endforeach; ?>
       </div>
     </div>
   </section>
+<?php endif; ?>
 
+<?php if ($customs): ?>
   <section class="section tour-section tour-section--alt">
     <div class="container">
       <p class="eyebrow">Custom</p>
       <h2 class="tour-h2">Custom journeys</h2>
       <div class="tour-grid tour-grid--feature">
+        <?php foreach ($customs as $i => $t): ?>
         <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu5_Beach.webp" alt="Kenya Colours journey"></a>
+          <a class="tour-card__media" href="tour.php?slug=<?= urlencode($t['slug']) ?>">
+            <img src="<?= e(tour_card_img($t, $i + 4, $fallbackImgs)) ?>" alt="<?= e($t['name']) ?>">
+          </a>
           <div class="tour-card__body">
-            <span class="tour-card__tag">Custom Journey</span>
-            <h3 class="tour-card__name">Kenya Colours</h3>
-            <p class="tour-card__detail">A tailored route through the colours of the coast and the bush, shaped around your interests and pace.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
+            <span class="tour-card__tag"><?= e($t['tag_label'] ?: 'Custom Journey') ?></span>
+            <h3 class="tour-card__name"><?= e($t['name']) ?></h3>
+            <p class="tour-card__detail"><?= e($t['short_desc'] ?? '') ?></p>
+            <a class="tour-card__link" href="tour.php?slug=<?= urlencode($t['slug']) ?>">Learn more <span aria-hidden="true">&rsaquo;</span></a>
           </div>
         </article>
-        <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu6.webp" alt="Masai footpaths journey"></a>
-          <div class="tour-card__body">
-            <span class="tour-card__tag">Custom Journey</span>
-            <h3 class="tour-card__name">Masai Footpaths</h3>
-            <p class="tour-card__detail">Walk the land with Masai guides and meet the communities who have lived alongside the wildlife for generations.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
-          </div>
-        </article>
-        <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu1.jpg" alt="Author lakes journey"></a>
-          <div class="tour-card__body">
-            <span class="tour-card__tag">Custom Journey</span>
-            <h3 class="tour-card__name">Author Lakes</h3>
-            <p class="tour-card__detail">The Rift Valley lakes — flamingo-pink shallows and birdlife — on a relaxed, photography-led itinerary.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
-          </div>
-        </article>
-        <article class="tour-card">
-          <a class="tour-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu12.webp" alt="Masai Mara journey"></a>
-          <div class="tour-card__body">
-            <span class="tour-card__tag">Custom Journey</span>
-            <h3 class="tour-card__name">Masai Mara</h3>
-            <p class="tour-card__detail">The Mara at its best — choose 2 days / 1 night or 3 days / 2 nights for the wide plains and great migration.</p>
-            <a class="tour-card__link" href="#enquire">Enquire <span aria-hidden="true">&rsaquo;</span></a>
-          </div>
-        </article>
+        <?php endforeach; ?>
       </div>
     </div>
   </section>
+<?php endif; ?>
 
+<?php if ($excursions): ?>
   <section class="section tour-section">
     <div class="container">
       <p class="eyebrow">Excursions</p>
       <h2 class="tour-h2">Day excursions</h2>
       <div class="tour-grid tour-grid--compact">
+        <?php foreach ($excursions as $i => $t): ?>
         <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu1.jpg" alt="Safari Tsavo East Adventure"></a>
-          <h3 class="exc-card__name">Safari Tsavo East — Adventure</h3>
-          <p class="exc-card__meta">2 days / 1 night &middot; 4x4 cross-country vehicle</p>
+          <a class="exc-card__media" href="tour.php?slug=<?= urlencode($t['slug']) ?>">
+            <img src="<?= e(tour_card_img($t, $i, $fallbackImgs)) ?>" alt="<?= e($t['name']) ?>">
+          </a>
+          <h3 class="exc-card__name"><?= e($t['name']) ?></h3>
+          <?php if ($t['duration'] || $t['short_desc']): ?>
+          <p class="exc-card__meta"><?= e($t['duration'] ?: $t['short_desc'] ?? '') ?></p>
+          <?php endif; ?>
         </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu3.webp" alt="Safari Tsavo East Explorer"></a>
-          <h3 class="exc-card__name">Safari Tsavo East — Explorer</h3>
-          <p class="exc-card__meta">1 day &middot; 4x4 cross-country vehicle</p>
-        </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu5_Beach.webp" alt="Safari Blu"></a>
-          <h3 class="exc-card__name">Safari Blu</h3>
-          <p class="exc-card__meta">Snorkelling at the Marine Park &amp; Sardegna Two</p>
-        </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu6.webp" alt="Che Shale"></a>
-          <h3 class="exc-card__name">Che Shale</h3>
-          <p class="exc-card__meta">A wild stretch of coast north of Watamu</p>
-        </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu1.jpg" alt="Mida Adventure"></a>
-          <h3 class="exc-card__name">Mida Adventure</h3>
-          <p class="exc-card__meta">Marine Park &amp; the Mida Creek mangroves</p>
-        </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu12.webp" alt="Malindi Tour"></a>
-          <h3 class="exc-card__name">Malindi Tour</h3>
-          <p class="exc-card__meta">The historic coastal town of Malindi</p>
-        </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu2.webp" alt="The Ruins of Gede"></a>
-          <h3 class="exc-card__name">The Ruins of Gede</h3>
-          <p class="exc-card__meta">The lost Swahili town in the coastal forest</p>
-        </article>
-        <article class="exc-card">
-          <a class="exc-card__media" href="#enquire"><img src="assets/img/7islands_resort_watamu6.webp" alt="Quad Safari"></a>
-          <h3 class="exc-card__name">Quad Safari</h3>
-          <p class="exc-card__meta">An off-road quad-bike trail through the bush</p>
-        </article>
+        <?php endforeach; ?>
       </div>
     </div>
   </section>
+<?php endif; ?>
 
-  <section class="tour-cta" id="enquire">
+<?php if (!$allTours): ?>
+  <section class="section tour-section">
+    <div class="container" style="text-align:center;padding:3rem 0">
+      <p class="eyebrow">Coming soon</p>
+      <h2 class="tour-h2">Tours will be published shortly</h2>
+      <p style="color:var(--text-light);margin-bottom:2rem">Our team is adding the full tour programme. In the meantime, contact us to plan your safari.</p>
+    </div>
+  </section>
+<?php endif; ?>
+
+  <section class="section" id="enquire">
     <div class="container">
-      <h2 class="tour-cta__title">Plan your safari with us</h2>
-      <p class="tour-cta__text">Tell us how long you have and what you would like to see — our team will build the itinerary and handle every detail.</p>
-      <a class="btn btn--primary" href="tel:+2540713326336">Call +254 0713 326 336</a>
+      <div class="contact-grid">
+        <div class="contact-form-wrap">
+          <p class="eyebrow">Plan your safari</p>
+          <h2 class="tour-h2">Tell us what you'd like to see</h2>
+          <p class="room-p" style="margin-bottom:2rem">Our team will build your itinerary and handle every detail — from park permits to transport and accommodation.</p>
+          <form class="contact-form" id="toursContactForm" novalidate>
+            <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+            <div class="contact-form__row">
+              <label class="field">
+                <span>Full name</span>
+                <input type="text" name="name" placeholder="Your name" required>
+              </label>
+              <label class="field">
+                <span>Email</span>
+                <input type="email" name="email" placeholder="you@email.com" required>
+              </label>
+            </div>
+            <label class="field">
+              <span>Phone</span>
+              <input type="tel" name="phone" placeholder="+254 700 000 000">
+            </label>
+            <label class="field">
+              <span>Which safari or excursion interests you?</span>
+              <input type="text" name="subject" placeholder="e.g. Tsavo East, Masai Mara, day excursion…">
+            </label>
+            <label class="field">
+              <span>Message</span>
+              <textarea name="message" rows="4" placeholder="Tell us your dates, group size, and any special requests"></textarea>
+            </label>
+            <div class="form-feedback" id="toursContactFeedback" hidden></div>
+            <button type="submit" class="btn btn--primary">Send Enquiry <span aria-hidden="true">&rsaquo;</span></button>
+          </form>
+        </div>
+        <div class="contact-info">
+          <h3 class="contact-info__title">Get in touch directly</h3>
+          <ul class="contact-info__list">
+            <li>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 1.9.6 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.8.6a2 2 0 0 1 1.8 2.1z"/>
+              </svg>
+              <a href="tel:+2540713326336">+254 0713 326 336</a>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+              </svg>
+              <a href="mailto:reservation@sevenislandswatamu.com">reservation@sevenislandswatamu.com</a>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 

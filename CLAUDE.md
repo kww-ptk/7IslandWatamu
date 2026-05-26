@@ -41,6 +41,50 @@ Visit http://localhost:8765
 - Task 9 — Admin settings
 - Task 10 — Deployment
 
+## Phase 2 tasks (2026-05-26)
+- Task 11 — Homepage rooms dynamic (was hardcoded static HTML)
+- Task 12 — Homepage enquiry form fixed (was firing mailto: instead of API)
+- Task 13 — Tours feature: DB table, tour.php single page, dynamic tours.php, admin/tours.php + tour-edit.php
+- Task 14 — Contact form added to tours.php (id="toursContactForm" → submit-contact.php)
+- Task 15 — SEO: header.php extended with meta description, OG tags, Twitter Card, canonical URL, JSON-LD
+- Task 16 — robots.txt and sitemap.php (dynamic, includes rooms + tours)
+- Task 17 — All public pages have $metaDesc and $canonicalUrl set
+- Task 18 — Mobile CSS review (ongoing)
+
+## Migration required on existing DB
+Run before deploying Phase 2 code:
+```
+psql $DATABASE_URL -f db/migrations/add_tours.sql
+```
+This adds: tours table, tour_images table, tour_id column on submissions, and seeds 16 initial tours.
+
+## Forms — how they connect to admin
+| Form | Page | API endpoint | Admin type |
+|------|------|-------------|-----------|
+| Hero enquiry | index.php | submit-enquiry.php | enquiry |
+| Room enquiry | room.php | submit-enquiry.php | enquiry |
+| Tour enquiry | tour.php | submit-enquiry.php | enquiry (tour_id set) |
+| Tours page contact | tours.php | submit-contact.php | contact |
+| Contact page | contact.php | submit-contact.php | contact |
+| Travel agency | agency.php | submit-agency.php | agency |
+
+## SEO — variables supported in header.php
+Set these PHP variables before including header.php:
+- `$pageTitle` — `<title>` tag (required)
+- `$metaDesc` — `<meta name="description">` (recommended)
+- `$canonicalUrl` — `<link rel="canonical">` (recommended)
+- `$ogImage` — Open Graph image URL (auto-defaults to resort hero image)
+- `$ogType` — OG type (defaults to "website")
+- `$ogTitle` — OG title (defaults to $pageTitle)
+- `$ogDesc` — OG description (defaults to $metaDesc)
+- `$jsonLd` — JSON-encoded structured data object (optional)
+
+## Tours admin
+- List: `admin/tours.php` — drag to reorder, toggle publish, edit/view links
+- Edit: `admin/tour-edit.php` — tabs for Details, Gallery, SEO, Publish/Delete
+- Categories: `classic`, `custom`, `excursion`
+- Tour detail page: `tour.php?slug=xxx`
+
 ## File structure (target)
 ```
 7island/

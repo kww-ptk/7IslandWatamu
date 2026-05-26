@@ -37,19 +37,19 @@ $email   = trim($data['email']   ?? '');
 $checkin = trim($data['checkin'] ?? '');
 $checkout= trim($data['checkout']?? '');
 
-if (!$name)                          $errors['name']    = 'Your name is required.';
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = 'A valid email is required.';
-if (!$checkin)                       $errors['checkin'] = 'Check-in date is required.';
-if (!$checkout)                      $errors['checkout']= 'Check-out date is required.';
+if (!$name)                                          $errors['name']  = 'Your name is required.';
+if (!filter_var($email, FILTER_VALIDATE_EMAIL))      $errors['email'] = 'A valid email is required.';
 
 if ($errors) {
     http_response_code(422);
     exit(json_encode(['ok' => false, 'errors' => $errors]));
 }
 
-// Look up room
-$slug = trim($data['room_slug'] ?? '');
-$room = $slug ? fetch_room_by_slug($slug) : false;
+// Look up room or tour
+$slug      = trim($data['room_slug'] ?? '');
+$room      = $slug ? fetch_room_by_slug($slug) : false;
+$tourSlug  = trim($data['tour_slug'] ?? '');
+$tour      = $tourSlug ? fetch_tour_by_slug($tourSlug) : false;
 
 // Tracking from session
 if (session_status() === PHP_SESSION_NONE) session_start();
@@ -58,23 +58,24 @@ $tracking = $_SESSION['tracking'] ?? [];
 // Insert
 db_query(
     "INSERT INTO submissions
-        (type, room_id, guest_name, guest_email, guest_phone, message,
+        (type, room_id, tour_id, guest_name, guest_email, guest_phone, message,
          check_in, check_out, guests_adults, guests_children,
          source_page, referrer, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
          user_agent, ip_address)
      VALUES
-        ('enquiry', :room_id, :name, :email, :phone, :message,
+        ('enquiry', :room_id, :tour_id, :name, :email, :phone, :message,
          :checkin, :checkout, :adults, :children,
          :source_page, :referrer, :utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content,
          :user_agent, :ip)",
     [
         ':room_id'     => $room ? $room['id'] : null,
+        ':tour_id'     => $tour ? $tour['id'] : null,
         ':name'        => $name,
         ':email'       => $email,
         ':phone'       => trim($data['phone'] ?? ''),
         ':message'     => trim($data['message'] ?? ''),
-        ':checkin'     => $checkin,
-        ':checkout'    => $checkout,
+        ':checkin'     => $checkin ?: null,
+        ':checkout'    => $checkout ?: null,
         ':adults'      => max(1, (int)($data['adults'] ?? 1)),
         ':children'    => max(0, (int)($data['children'] ?? 0)),
         ':source_page' => $tracking['source_page'] ?? '',
@@ -94,7 +95,7 @@ $id = (int)db()->lastInsertId();
 send_notification([
     'id'         => $id,
     'type'       => 'enquiry',
-    'room_name'  => $room ? $room['name'] : '',
+    'room_name'  => $room ? $room['name'] : ($tour ? 'Tour: ' . $tour['name'] : ''),
     'guest_name' => $name,
     'guest_email'=> $email,
     'guest_phone'=> $data['phone'] ?? '',

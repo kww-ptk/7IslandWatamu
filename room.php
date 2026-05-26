@@ -31,6 +31,8 @@ $form_mode  = setting('form_mode', 'enquiry');
 $pageTitle     = $room['seo_title']       ?: e($room['name']) . ' — Seven Islands Resort, Watamu';
 $metaDesc      = $room['seo_description'] ?: '';
 $activeNav     = 'rooms';
+$canonicalUrl  = site_url('room.php?slug=' . urlencode($room['slug']));
+$ogImage       = $hero_img ? site_url('assets/img/' . $hero_img) : site_url('assets/img/7islands_resort_watamu1.jpg');
 $extraScripts  = ['room.js'];
 
 include __DIR__ . '/includes/header.php';

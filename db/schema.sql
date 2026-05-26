@@ -44,11 +44,43 @@ CREATE TABLE IF NOT EXISTS room_images (
 
 CREATE INDEX IF NOT EXISTS idx_room_images_room_id ON room_images(room_id);
 
+-- Tours
+CREATE TABLE IF NOT EXISTS tours (
+    id               SERIAL PRIMARY KEY,
+    slug             VARCHAR(100) NOT NULL UNIQUE,
+    name             VARCHAR(255) NOT NULL,
+    category         VARCHAR(20)  NOT NULL DEFAULT 'classic',
+    tag_label        VARCHAR(100),
+    duration         VARCHAR(100),
+    short_desc       TEXT,
+    long_desc        TEXT,
+    highlights_json  JSONB        NOT NULL DEFAULT '[]',
+    seo_title        VARCHAR(255),
+    seo_description  VARCHAR(320),
+    sort_order       INT          NOT NULL DEFAULT 0,
+    is_published     BOOLEAN      NOT NULL DEFAULT TRUE,
+    updated_at       TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+-- Tour images
+CREATE TABLE IF NOT EXISTS tour_images (
+    id         SERIAL PRIMARY KEY,
+    tour_id    INT          NOT NULL REFERENCES tours(id) ON DELETE CASCADE,
+    filename   VARCHAR(255) NOT NULL,
+    alt_text   VARCHAR(255),
+    is_hero    BOOLEAN      NOT NULL DEFAULT FALSE,
+    sort_order INT          NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tour_images_tour_id ON tour_images(tour_id);
+
 -- Form submissions
 CREATE TABLE IF NOT EXISTS submissions (
     id               SERIAL PRIMARY KEY,
     type             VARCHAR(20)  NOT NULL CHECK (type IN ('enquiry','contact','agency')),
     room_id          INT          REFERENCES rooms(id) ON DELETE SET NULL,
+    tour_id          INT          REFERENCES tours(id) ON DELETE SET NULL,
     guest_name       VARCHAR(255),
     guest_email      VARCHAR(255),
     guest_phone      VARCHAR(50),

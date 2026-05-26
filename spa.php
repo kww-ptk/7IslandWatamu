@@ -1,4 +1,12 @@
-<?php $pageTitle = 'SPA &amp; Wellness — Seven Islands Resort, Watamu'; $activeNav = 'spa'; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+$pageTitle    = 'SPA &amp; Wellness — Seven Islands Resort, Watamu';
+$metaDesc     = 'Relax and restore at the Seven Islands Resort spa — beachside massages, wellness treatments and a tranquil pool overlooking the Indian Ocean.';
+$activeNav    = 'spa';
+$canonicalUrl = site_url('spa.php');
+include __DIR__ . '/includes/header.php';
+?>
 
   <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/7islands_resort_watamu9.webp') center/cover no-repeat;">
     <div class="page-hero__inner">

@@ -1,9 +1,51 @@
-<?php $pageTitle = 'Seven Islands Resort — Watamu, Kenya'; $activeNav = 'home'; $headerSolid = false; include __DIR__ . '/includes/header.php'; ?>
+<?php
+declare(strict_types=1);
+require_once __DIR__ . '/includes/db.php';
+
+$pageTitle    = 'Seven Islands Resort — Watamu, Kenya';
+$metaDesc     = 'Discover Seven Islands Resort — a seafront all-inclusive retreat on the Indian Ocean coast of Watamu, Kenya. Luxury rooms, world-class dining, spa, and safari.';
+$activeNav    = 'home';
+$headerSolid  = false;
+$canonicalUrl = site_url('index.php');
+$ogImage      = site_url('assets/img/7islands_resort_watamu1.jpg');
+$jsonLd       = json_encode([
+    '@context' => 'https://schema.org',
+    '@type'    => 'LodgingBusiness',
+    'name'     => 'Seven Islands Resort',
+    'url'      => site_url(),
+    'description' => 'Award-winning all-inclusive seafront resort in Watamu, Kenya.',
+    'address'  => [
+        '@type'           => 'PostalAddress',
+        'streetAddress'   => 'Jacaranda Road, P.O. Box 424',
+        'addressLocality' => 'Watamu',
+        'addressCountry'  => 'KE',
+    ],
+    'telephone' => '+2540713326336',
+    'email'     => 'reservation@sevenislandswatamu.com',
+    'image'     => site_url('assets/img/7islands_resort_watamu1.jpg'),
+    'priceRange' => '$$$',
+    'starRating' => ['@type' => 'Rating', 'ratingValue' => '5'],
+]);
+
+// Fetch published rooms for carousel (graceful fallback if DB unavailable)
+$rooms = [];
+try {
+    $rooms = db_query(
+        'SELECT r.*, (SELECT filename FROM room_images WHERE room_id = r.id AND is_hero = TRUE LIMIT 1) AS hero_img
+         FROM rooms r WHERE r.is_published = TRUE ORDER BY r.sort_order ASC'
+    )->fetchAll();
+} catch (Throwable) {}
+
+include __DIR__ . '/includes/header.php';
+?>
   <section class="hero" id="top">
     <div class="container hero__inner">
       <p class="hero__text">Rated #1 all-inclusive resort in Watamu, Kenya</p>
       <h1 class="hero__title">7 Islands Resort, Watamu, Kenya</h1>
-      <form class="hero-search" id="enquiryForm">
+      <form class="hero-search" id="enquiryForm" novalidate>
+        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+        <input type="hidden" name="adults" value="1">
+        <input type="hidden" name="children" value="0">
         <div class="hero-step" data-step="1">
           <div class="hero-search__field">
             <label for="enqCheckin">Check in</label>
@@ -61,6 +103,7 @@
             </div>
           </div>
           <div class="hero-enq-actions">
+            <p class="hero-enq-error" data-enq-error hidden></p>
             <button type="button" class="hero-enq-back" data-enq-back>&#8592; Back</button>
             <button type="submit" class="hero-search__submit" data-enq-send>Send Enquiry <span aria-hidden="true">&rsaquo;</span></button>
           </div>
@@ -68,7 +111,7 @@
 
         <div class="hero-step hero-step--done" data-step="3" hidden>
           <strong>Thank you for your enquiry!</strong>
-          <p>Your email is ready to send &mdash; our team will reply within 24 hours.</p>
+          <p>We have received your message and will reply within 24 hours.</p>
         </div>
       </form>
     </div>
@@ -184,7 +227,7 @@
           <h2 class="rooms__title">Discover our rooms</h2>
         </div>
         <div class="rooms__nav">
-          <span class="rooms__fraction"><span data-rooms-current>01</span> / <span data-rooms-total>06</span></span>
+          <span class="rooms__fraction"><span data-rooms-current>01</span> / <span data-rooms-total><?= count($rooms) ?: 1 ?></span></span>
           <div class="slider__nav">
             <button class="slider__btn" data-rooms-prev aria-label="Previous room">&#8592;</button>
             <button class="slider__btn" data-rooms-next aria-label="Next room">&#8594;</button>
@@ -194,66 +237,35 @@
     </div>
     <div class="rooms-carousel" data-rooms-viewport>
       <div class="rooms-carousel__track" data-rooms-track>
+        <?php if ($rooms): foreach ($rooms as $r):
+          $img = $r['hero_img'] ? storage_url($r['hero_img']) : 'assets/img/7islands_resort_watamu14.webp';
+          $href = 'room.php?slug=' . urlencode($r['slug']);
+          $price = $r['price_amount'] > 0
+            ? e($r['price_currency'] === 'USD' ? '$' : $r['price_currency']) . number_format((float)$r['price_amount'])
+            : '';
+        ?>
         <article class="room-slide">
-          <a class="room-slide__img" href="room.php">
-            <span class="room-slide__price"><label>from</label><strong>$450</strong></span>
-            <img src="assets/img/7islands_resort_watamu14.webp" alt="Standard room">
-            <h3 class="room-slide__name">Standard room</h3>
+          <a class="room-slide__img" href="<?= e($href) ?>">
+            <?php if ($price): ?>
+            <span class="room-slide__price"><label>from</label><strong><?= $price ?></strong></span>
+            <?php endif; ?>
+            <img src="<?= e($img) ?>" alt="<?= e($r['name']) ?>">
+            <h3 class="room-slide__name"><?= e($r['name']) ?></h3>
           </a>
           <ul class="room-slide__meta">
-            <li>55M&sup2;</li><li>1-6 person</li><li>2 beds</li>
+            <?php if ($r['size_sqm']): ?><li><?= e($r['size_sqm']) ?>M&sup2;</li><?php endif; ?>
+            <?php if ($r['capacity']): ?><li>1-<?= e($r['capacity']) ?> person</li><?php endif; ?>
+            <?php if ($r['bed_count']): ?><li><?= e($r['bed_count']) ?> bed<?= $r['bed_count'] > 1 ? 's' : '' ?></li><?php endif; ?>
           </ul>
         </article>
+        <?php endforeach; else: ?>
         <article class="room-slide">
-          <a class="room-slide__img" href="room.php">
-            <span class="room-slide__price"><label>from</label><strong>$300</strong></span>
-            <img src="assets/img/7islands_resort_watamu9.webp" alt="Double Room">
-            <h3 class="room-slide__name">Double Room</h3>
+          <a class="room-slide__img" href="rooms.php">
+            <img src="assets/img/7islands_resort_watamu14.webp" alt="Rooms & Suites">
+            <h3 class="room-slide__name">Rooms &amp; Suites</h3>
           </a>
-          <ul class="room-slide__meta">
-            <li>60M&sup2;</li><li>1-3 person</li><li>2 beds</li>
-          </ul>
         </article>
-        <article class="room-slide">
-          <a class="room-slide__img" href="room.php">
-            <span class="room-slide__price"><label>from</label><strong>$500</strong></span>
-            <img src="assets/img/7islands_resort_watamu10.webp" alt="King size bed">
-            <h3 class="room-slide__name">King size bed</h3>
-          </a>
-          <ul class="room-slide__meta">
-            <li>80M&sup2;</li><li>1-7 person</li><li>3 beds</li>
-          </ul>
-        </article>
-        <article class="room-slide">
-          <a class="room-slide__img" href="room.php">
-            <span class="room-slide__price"><label>from</label><strong>$399</strong></span>
-            <img src="assets/img/7islands_resort_watamu14.webp" alt="Junior suite">
-            <h3 class="room-slide__name">Junior suite</h3>
-          </a>
-          <ul class="room-slide__meta">
-            <li>50M&sup2;</li><li>1-4 person</li><li>2 beds</li>
-          </ul>
-        </article>
-        <article class="room-slide">
-          <a class="room-slide__img" href="room.php">
-            <span class="room-slide__price"><label>from</label><strong>$250</strong></span>
-            <img src="assets/img/7islands_resort_watamu9.webp" alt="Classic single bed">
-            <h3 class="room-slide__name">Classic single bed</h3>
-          </a>
-          <ul class="room-slide__meta">
-            <li>45M&sup2;</li><li>1-2 person</li><li>2 beds</li>
-          </ul>
-        </article>
-        <article class="room-slide">
-          <a class="room-slide__img" href="room.php">
-            <span class="room-slide__price"><label>from</label><strong>$450</strong></span>
-            <img src="assets/img/7islands_resort_watamu10.webp" alt="Luxury suite">
-            <h3 class="room-slide__name">Luxury suite</h3>
-          </a>
-          <ul class="room-slide__meta">
-            <li>60M&sup2;</li><li>1-6 person</li><li>2 beds</li>
-          </ul>
-        </article>
+        <?php endif; ?>
       </div>
     </div>
     <div class="container rooms__foot">

@@ -103,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const summary = document.querySelector("[data-guests-summary]");
     if (!toggle || !popover) return;
     const counts = { adult: 1, child: 0 };
+    const heroForm = toggle.closest("form");
 
     const render = () => {
       Object.keys(counts).forEach((k) => {
@@ -112,6 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const parts = [`${counts.adult} Adult${counts.adult !== 1 ? "s" : ""}`];
       if (counts.child > 0) parts.push(`${counts.child} Child${counts.child !== 1 ? "ren" : ""}`);
       summary.textContent = parts.join(", ");
+      const aInput = heroForm?.querySelector('[name="adults"]');
+      const cInput = heroForm?.querySelector('[name="children"]');
+      if (aInput) aInput.value = counts.adult;
+      if (cInput) cInput.value = counts.child;
     };
 
     toggle.addEventListener("click", (e) => {
@@ -269,9 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!form) return;
     const steps = form.querySelectorAll(".hero-step");
     const show = (n) => steps.forEach((s) => { s.hidden = s.dataset.step !== String(n); });
-    const val = (id) => (form.querySelector("#" + id)?.value || "").trim();
 
-    // Keep checkout min in sync with checkin
     const ci = form.querySelector("#enqCheckin");
     const co = form.querySelector("#enqCheckout");
     if (ci && co) {
@@ -289,28 +292,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const back = form.querySelector("[data-enq-back]");
     if (back) back.addEventListener("click", () => show(1));
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = val("enqName");
-      const email = val("enqEmail");
-      const guests = (document.querySelector("[data-guests-summary]")?.textContent || "").trim();
-      const body = [
-        "Name: " + name,
-        "Email: " + email,
-        "Phone: " + (val("enqPhone") || "—"),
-        "",
-        "Check in: " + (val("enqCheckin") || "—"),
-        "Check out: " + (val("enqCheckout") || "—"),
-        "Guests: " + (guests || "—"),
-        "",
-        "Message:",
-        val("enqMsg") || "—",
-      ].join("\n");
-      window.location.href =
-        "mailto:reservation@sevenislandswatamu.com" +
-        "?subject=" + encodeURIComponent("Stay enquiry — " + name) +
-        "&body=" + encodeURIComponent(body);
-      show(3);
+      const btn = form.querySelector("[data-enq-send]");
+      const errEl = form.querySelector("[data-enq-error]");
+      btn.disabled = true;
+      btn.textContent = "Sending…";
+      if (errEl) errEl.hidden = true;
+
+      try {
+        const res = await fetch("/api/submit-enquiry.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(collectFields(form)),
+        });
+        const json = await res.json();
+        if (json.ok) {
+          show(3);
+        } else {
+          btn.disabled = false;
+          btn.textContent = "Send Enquiry ›";
+          if (errEl) {
+            errEl.textContent = json.error || "Something went wrong. Please try again.";
+            errEl.hidden = false;
+          }
+        }
+      } catch {
+        btn.disabled = false;
+        btn.textContent = "Send Enquiry ›";
+        if (errEl) {
+          errEl.textContent = "Network error. Please check your connection.";
+          errEl.hidden = false;
+        }
+      }
     });
   }
   initEnquiryForm();
@@ -439,6 +453,17 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       submitForm("/api/submit-agency.php", collectFields(agencyForm), agencyForm, feedback,
         "Thank you! Your agency registration request has been received. We will be in touch shortly.");
+    });
+  }
+
+  // Tours page general enquiry form
+  const toursContactForm = document.getElementById("toursContactForm");
+  if (toursContactForm) {
+    const feedback = document.getElementById("toursContactFeedback");
+    toursContactForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitForm("/api/submit-contact.php", collectFields(toursContactForm), toursContactForm, feedback,
+        "Thank you! We have received your enquiry and will reply within 24 hours.");
     });
   }
 });

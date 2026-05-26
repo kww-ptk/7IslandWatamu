@@ -2,8 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/db.php';
 
-$pageTitle = 'Rooms &amp; Suites — Seven Islands Resort, Watamu';
-$activeNav = 'rooms';
+$pageTitle    = 'Rooms &amp; Suites — Seven Islands Resort, Watamu';
+$metaDesc     = 'Browse all rooms and suites at Seven Islands Resort in Watamu, Kenya — from classic rooms to luxury ocean suites, all fully inclusive.';
+$activeNav    = 'rooms';
+$canonicalUrl = site_url('rooms.php');
 include __DIR__ . '/includes/header.php';
 
 $rooms = db_query(

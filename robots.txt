@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /bin/
+Disallow: /logs/
+
+Sitemap: https://sevenislandswatamu.com/sitemap.php
