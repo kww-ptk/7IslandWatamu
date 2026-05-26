@@ -64,6 +64,7 @@
       </ul>
     </div>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" defer></script>
   <script src="script.js" defer></script>
 <?php if (!empty($extraScripts)) foreach ($extraScripts as $extraScript): ?>
   <script src="<?= $extraScript ?>" defer></script>

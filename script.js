@@ -1,4 +1,47 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Flatpickr — replace native date pickers site-wide
+  if (typeof flatpickr !== "undefined") {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+
+    // Standalone single-date pickers
+    flatpickr(".js-datepicker", {
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d M Y",
+      minDate: "today",
+      allowInput: true,
+    });
+
+    // Linked check-in / check-out pairs (scoped per form)
+    document.querySelectorAll(".js-checkin").forEach((ciEl) => {
+      const form = ciEl.closest("form");
+      const coEl = form && form.querySelector(".js-checkout");
+      if (!coEl) return;
+
+      const co = flatpickr(coEl, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        minDate: new Date(today.getTime() + 86400000),
+        allowInput: true,
+      });
+
+      flatpickr(ciEl, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        minDate: "today",
+        allowInput: true,
+        onChange: (dates) => {
+          if (!dates.length) return;
+          const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
+          co.set("minDate", next);
+          if (co.selectedDates[0] && co.selectedDates[0] <= dates[0]) co.setDate(next);
+        },
+      });
+    });
+  }
+
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const header = document.getElementById("siteHeader");
   const nav = document.getElementById("siteNav");

@@ -107,16 +107,4 @@ include __DIR__ . '/includes/header.php';
     </div>
   </section>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-<script>
-  flatpickr('#spaContactForm .js-datepicker', {
-    dateFormat: 'Y-m-d',
-    altInput: true,
-    altFormat: 'd M Y',
-    minDate: 'today',
-    allowInput: true,
-  });
-</script>
-
 <?php include __DIR__ . '/includes/footer.php'; ?>

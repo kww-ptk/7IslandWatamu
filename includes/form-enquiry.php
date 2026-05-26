@@ -11,11 +11,11 @@ $room_name = $room['name'] ?? '';
 
   <label class="booking-field">
     <span>Check in</span>
-    <input type="date" name="checkin" id="enqRoomCheckin" min="<?= date('Y-m-d') ?>" required>
+    <input type="text" name="checkin" id="enqRoomCheckin" class="js-checkin" placeholder="Select date" autocomplete="off" required>
   </label>
   <label class="booking-field">
     <span>Check out</span>
-    <input type="date" name="checkout" id="enqRoomCheckout" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required>
+    <input type="text" name="checkout" id="enqRoomCheckout" class="js-checkout" placeholder="Select date" autocomplete="off" required>
   </label>
 
   <div class="booking-field booking-field--row">
@@ -60,18 +60,3 @@ $room_name = $room['name'] ?? '';
     Book Now <span aria-hidden="true">&rsaquo;</span>
   </button>
 </form>
-<script>
-(function(){
-  var ci = document.getElementById('enqRoomCheckin');
-  var co = document.getElementById('enqRoomCheckout');
-  if (!ci || !co) return;
-  ci.addEventListener('change', function(){
-    if (!ci.value) return;
-    var next = new Date(ci.value);
-    next.setDate(next.getDate() + 1);
-    var min = next.toISOString().slice(0, 10);
-    co.min = min;
-    if (co.value && co.value <= ci.value) co.value = min;
-  });
-})();
-</script>
