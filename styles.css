@@ -1014,6 +1014,7 @@ section, footer { scroll-margin-top: 90px; }
 
 /* ============ POLISH: ACCESSIBILITY & MOBILE ============ */
 html { overflow-x: clip; }
+body { overflow-x: hidden; }
 
 /* Visible keyboard focus (mouse clicks unaffected) */
 a:focus-visible,
