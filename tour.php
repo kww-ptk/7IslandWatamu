@@ -70,6 +70,20 @@ include __DIR__ . '/includes/header.php';
     </div>
   </section>
 
+  <?php if (count($images) > 1): ?>
+  <div class="room-gallery" data-gal-viewport>
+    <div class="room-gallery__track" data-gal-track>
+      <?php foreach ($images as $img): ?>
+      <div class="room-gallery__slide">
+        <img src="<?= e(storage_url($img['filename'])) ?>" alt="<?= e($img['alt_text'] ?: $tour['name']) ?>" loading="lazy">
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <button class="room-gallery__arrow room-gallery__arrow--prev" data-gal-prev aria-label="Previous image">&#8592;</button>
+    <button class="room-gallery__arrow room-gallery__arrow--next" data-gal-next aria-label="Next image">&#8594;</button>
+  </div>
+  <?php endif; ?>
+
   <div class="container room-main">
     <div class="room-content">
       <p class="room-p room-p--lead"><?= e($tour['short_desc'] ?? '') ?></p>
@@ -89,20 +103,6 @@ include __DIR__ . '/includes/header.php';
         </li>
         <?php endforeach; ?>
       </ul>
-      <?php endif; ?>
-
-      <?php if (count($images) > 1): ?>
-      <div class="room-gallery" data-gal-viewport>
-        <div class="room-gallery__track" data-gal-track>
-          <?php foreach ($images as $img): ?>
-          <div class="room-gallery__slide">
-            <img src="<?= e(storage_url($img['filename'])) ?>" alt="<?= e($img['alt_text'] ?: $tour['name']) ?>" loading="lazy">
-          </div>
-          <?php endforeach; ?>
-        </div>
-        <button class="room-gallery__arrow room-gallery__arrow--prev" data-gal-prev aria-label="Previous image">&#8592;</button>
-        <button class="room-gallery__arrow room-gallery__arrow--next" data-gal-next aria-label="Next image">&#8594;</button>
-      </div>
       <?php endif; ?>
     </div>
 
