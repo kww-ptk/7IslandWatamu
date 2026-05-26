@@ -86,7 +86,7 @@ include __DIR__ . '/includes/header.php';
               </label>
               <label class="field">
                 <span>Preferred date</span>
-                <input type="date" name="subject" min="<?= date('Y-m-d') ?>">
+                <input type="text" name="subject" class="js-datepicker" placeholder="Select date" autocomplete="off">
               </label>
             </div>
             <label class="field">
@@ -106,5 +106,17 @@ include __DIR__ . '/includes/header.php';
       </div>
     </div>
   </section>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script>
+  flatpickr('#spaContactForm .js-datepicker', {
+    dateFormat: 'Y-m-d',
+    altInput: true,
+    altFormat: 'd M Y',
+    minDate: 'today',
+    allowInput: true,
+  });
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

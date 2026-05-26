@@ -117,8 +117,8 @@ include __DIR__ . '/_layout.php';
     <?php endforeach; ?>
   </select>
 
-  <input type="date" name="date_from" value="<?= e($date_from) ?>" placeholder="From">
-  <input type="date" name="date_to"   value="<?= e($date_to) ?>"   placeholder="To">
+  <input type="text" name="date_from" value="<?= e($date_from) ?>" placeholder="From date" class="js-datepicker" autocomplete="off">
+  <input type="text" name="date_to"   value="<?= e($date_to) ?>"   placeholder="To date"   class="js-datepicker" autocomplete="off">
   <input type="text" name="search"    value="<?= e($search) ?>"    placeholder="Search name or email…" style="min-width:200px">
 
   <button type="submit" class="btn-primary btn-sm">Filter</button>
@@ -200,5 +200,16 @@ include __DIR__ . '/_layout.php';
     <?php endif; ?>
   </div>
 </div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script>
+  flatpickr('.js-datepicker', {
+    dateFormat: 'Y-m-d',
+    altInput: true,
+    altFormat: 'd M Y',
+    allowInput: true,
+  });
+</script>
 
 <?php include __DIR__ . '/_layout_end.php'; ?>
