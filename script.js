@@ -42,6 +42,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Room/Tour gallery carousel
+  document.querySelectorAll("[data-gal-viewport]").forEach((viewport) => {
+    const track  = viewport.querySelector("[data-gal-track]");
+    const slides = [...viewport.querySelectorAll(".room-gallery__slide")];
+    const prev   = viewport.querySelector("[data-gal-prev]");
+    const next   = viewport.querySelector("[data-gal-next]");
+    if (!track || slides.length === 0) return;
+
+    let index = 0;
+
+    const update = () => {
+      slides.forEach((s, i) => s.classList.toggle("is-active", i === index));
+      const active = slides[index];
+      const slideW = active.getBoundingClientRect().width;
+      const gap    = parseFloat(getComputedStyle(track).gap) || 0;
+      // Center the active slide in the viewport
+      const offset = (viewport.clientWidth - slideW) / 2 - index * (slideW + gap);
+      track.style.transform = `translateX(${offset}px)`;
+    };
+
+    const go = (dir) => {
+      index = (index + dir + slides.length) % slides.length;
+      update();
+    };
+
+    prev && prev.addEventListener("click", () => go(-1));
+    next && next.addEventListener("click", () => go(1));
+    slides.forEach((s, i) => s.addEventListener("click", () => { index = i; update(); }));
+
+    window.addEventListener("resize", update);
+    update();
+
+    // Hide arrows when only one slide
+    if (slides.length < 2) {
+      prev && (prev.style.display = "none");
+      next && (next.style.display = "none");
+    }
+  });
+
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const header = document.getElementById("siteHeader");
   const nav = document.getElementById("siteNav");
