@@ -86,7 +86,7 @@ include __DIR__ . '/includes/header.php';
               </label>
               <label class="field">
                 <span>Preferred date</span>
-                <input type="text" name="subject" placeholder="e.g. 15 June, morning">
+                <input type="date" name="subject" min="<?= date('Y-m-d') ?>">
               </label>
             </div>
             <label class="field">
