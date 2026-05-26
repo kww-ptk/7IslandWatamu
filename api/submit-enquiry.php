@@ -59,12 +59,12 @@ $tracking = $_SESSION['tracking'] ?? [];
 db_query(
     "INSERT INTO submissions
         (type, room_id, tour_id, guest_name, guest_email, guest_phone, message,
-         check_in, check_out, guests_adults, guests_children,
+         check_in, check_out, guests_adults, guests_children, payload_json,
          source_page, referrer, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
          user_agent, ip_address)
      VALUES
         ('enquiry', :room_id, :tour_id, :name, :email, :phone, :message,
-         :checkin, :checkout, :adults, :children,
+         :checkin, :checkout, :adults, :children, :payload,
          :source_page, :referrer, :utm_source, :utm_medium, :utm_campaign, :utm_term, :utm_content,
          :user_agent, :ip)",
     [
@@ -78,6 +78,7 @@ db_query(
         ':checkout'    => $checkout ?: null,
         ':adults'      => max(1, (int)($data['adults'] ?? 1)),
         ':children'    => max(0, (int)($data['children'] ?? 0)),
+        ':payload'     => json_encode(['submitted_from' => $_SERVER['HTTP_REFERER'] ?? '']),
         ':source_page' => $tracking['source_page'] ?? '',
         ':referrer'    => $tracking['referrer']    ?? '',
         ':utm_source'  => $tracking['utm_source']  ?? '',

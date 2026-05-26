@@ -64,7 +64,10 @@ db_query(
         ':email'       => $email,
         ':phone'       => trim($data['phone']   ?? ''),
         ':message'     => $message,
-        ':payload'     => json_encode(['subject' => trim($data['subject'] ?? '')]),
+        ':payload'     => json_encode([
+            'subject'        => trim($data['subject'] ?? ''),
+            'submitted_from' => $_SERVER['HTTP_REFERER'] ?? '',
+        ]),
         ':source_page' => $tracking['source_page'] ?? '',
         ':referrer'    => $tracking['referrer']    ?? '',
         ':utm_source'  => $tracking['utm_source']  ?? '',

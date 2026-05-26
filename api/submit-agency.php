@@ -51,9 +51,10 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 $tracking = $_SESSION['tracking'] ?? [];
 
 $payload = [
-    'agency_name' => $agency,
-    'iata'        => trim($data['iata']    ?? ''),
-    'country'     => trim($data['country'] ?? ''),
+    'agency_name'    => $agency,
+    'iata'           => trim($data['iata']    ?? ''),
+    'country'        => trim($data['country'] ?? ''),
+    'submitted_from' => $_SERVER['HTTP_REFERER'] ?? '',
 ];
 
 // Insert

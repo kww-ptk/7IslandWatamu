@@ -41,10 +41,12 @@ if ($export) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="submissions-' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['ID','Type','Room','Name','Email','Phone','Message','Check-in','Check-out','Adults','Children','Source Page','UTM Source','UTM Medium','UTM Campaign','Date']);
+    fputcsv($out, ['ID','Type','Source','Room','Name','Email','Phone','Message','Check-in','Check-out','Adults','Children','Source Page','UTM Source','UTM Medium','UTM Campaign','Date']);
     foreach ($rows as $r) {
+        $pl  = json_decode($r['payload_json'] ?? '{}', true) ?: [];
+        $src = $pl['submitted_from'] ?? $r['source_page'] ?? '';
         fputcsv($out, [
-            $r['id'], $r['type'], $r['room_name'] ?? '', $r['guest_name'], $r['guest_email'],
+            $r['id'], $r['type'], source_label($src), $r['room_name'] ?? '', $r['guest_name'], $r['guest_email'],
             $r['guest_phone'], $r['message'], $r['check_in'], $r['check_out'],
             $r['guests_adults'], $r['guests_children'],
             $r['source_page'], $r['utm_source'], $r['utm_medium'], $r['utm_campaign'],
@@ -78,6 +80,25 @@ $rooms = db_query('SELECT id, name FROM rooms ORDER BY sort_order')->fetchAll();
 
 $pageTitle  = 'Submissions';
 $activeMenu = 'submissions';
+
+// Derive a friendly "Source" label from a URL (HTTP_REFERER or source_page)
+function source_label(?string $url): string {
+    if (!$url) return '—';
+    $path = parse_url($url, PHP_URL_PATH) ?? '';
+    $page = basename($path) ?: 'index.php';
+    return match (true) {
+        str_starts_with($page, 'index')   => 'Homepage',
+        str_starts_with($page, 'spa')     => 'Spa page',
+        str_starts_with($page, 'tours')   => 'Tours page',
+        str_starts_with($page, 'tour')    => 'Tour page',
+        str_starts_with($page, 'room')    => 'Room page',
+        str_starts_with($page, 'contact') => 'Contact page',
+        str_starts_with($page, 'agency')  => 'Travel Agency',
+        str_starts_with($page, 'about')   => 'About page',
+        str_starts_with($page, 'dining')  => 'Dining page',
+        default                           => $page,
+    };
+}
 
 // Build query string helper (preserves filters when paginating/exporting)
 function qs(array $extra = []): string {
@@ -141,6 +162,7 @@ include __DIR__ . '/_layout.php';
         <tr>
           <th>#</th>
           <th>Type</th>
+          <th>Source</th>
           <th>Name</th>
           <th>Email</th>
           <th>Room</th>
@@ -150,7 +172,10 @@ include __DIR__ . '/_layout.php';
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($rows as $row): ?>
+        <?php foreach ($rows as $row):
+          $payload   = json_decode($row['payload_json'] ?? '{}', true) ?: [];
+          $sourceUrl = $payload['submitted_from'] ?? $row['source_page'] ?? '';
+        ?>
         <tr>
           <td class="text-muted"><?= e($row['id']) ?></td>
           <td>
@@ -162,6 +187,7 @@ include __DIR__ . '/_layout.php';
             }; ?>
             <span class="badge <?= $badge ?>"><?= e($row['type']) ?></span>
           </td>
+          <td class="text-muted"><?= e(source_label($sourceUrl)) ?></td>
           <td><strong><?= e($row['guest_name']) ?></strong></td>
           <td class="text-muted"><?= e($row['guest_email']) ?></td>
           <td class="text-muted"><?= e($row['room_name'] ?? '—') ?></td>
