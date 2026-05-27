@@ -84,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const nextBtn  = document.getElementById("availNext");
 
     let fullyBlocked = []; // array of "YYYY-MM-DD" strings
+    let rateDates    = []; // dates with a price override
     let viewYear, viewMonth; // currently displayed month (0-indexed)
     let selStart = null, selEnd = null; // selected dates as Date objects
 
@@ -97,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then(r => r.json())
       .then(data => {
         fullyBlocked = data.fully_blocked || [];
+        rateDates    = data.rate_dates    || [];
         renderCalendar();
       })
       .catch(() => renderCalendar());
@@ -106,8 +108,9 @@ document.addEventListener("DOMContentLoaded", () => {
         String(d.getMonth() + 1).padStart(2, "0") + "-" +
         String(d.getDate()).padStart(2, "0");
     }
-    function isBlocked(d)  { return fullyBlocked.includes(ymd(d)); }
-    function isPast(d)     { const t = new Date(); t.setHours(0,0,0,0); return d < t; }
+    function isBlocked(d)   { return fullyBlocked.includes(ymd(d)); }
+    function isRateDate(d)  { return rateDates.includes(ymd(d)); }
+    function isPast(d)      { const t = new Date(); t.setHours(0,0,0,0); return d < t; }
     function inRange(d)    {
       if (!selStart || !selEnd) return false;
       const lo = selStart <= selEnd ? selStart : selEnd;
@@ -145,6 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (selStart && ymd(date) === ymd(selStart)) cls += " avail-cell--start";
           else if (selEnd && ymd(date) === ymd(selEnd)) cls += " avail-cell--end";
           else if (inRange(date)) cls += " avail-cell--range";
+          if (isRateDate(date)) cls += " avail-cell--rate";
         }
 
         html += `<div class="${cls}" data-date="${key}">${d}</div>`;
@@ -153,19 +157,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
       grid.querySelectorAll(".avail-cell:not(.avail-cell--blocked):not(.avail-cell--blank)").forEach(cell => {
         cell.addEventListener("click", () => onDayClick(cell.dataset.date));
+        // Hover preview — highlight potential range while start is selected
+        cell.addEventListener("mouseenter", () => {
+          if (!selStart || selEnd) return;
+          const hd = cell.dataset.date;
+          const lo = ymd(selStart) <= hd ? ymd(selStart) : hd;
+          const hi = ymd(selStart) <= hd ? hd : ymd(selStart);
+          grid.querySelectorAll(".avail-cell[data-date]").forEach(c => {
+            const cd = c.dataset.date;
+            c.classList.toggle("avail-cell--hover", cd > lo && cd < hi);
+          });
+        });
+      });
+      // Clear hover preview when mouse leaves the grid
+      grid.addEventListener("mouseleave", () => {
+        grid.querySelectorAll(".avail-cell--hover").forEach(c => c.classList.remove("avail-cell--hover"));
       });
     }
 
     function onDayClick(dateStr) {
-      const clicked = new Date(dateStr);
+      const clicked = new Date(dateStr + "T00:00");
+      const rateNotice = document.getElementById("availRateNotice");
+
+      // Clicking the check-in date again → deselect everything
+      if (selStart && ymd(clicked) === ymd(selStart)) {
+        selStart = null; selEnd = null;
+        if (rateNotice) rateNotice.hidden = true;
+        step2.style.display = "none";
+        step1.style.display = "block";
+        hint.textContent = "Select check-in date";
+        renderCalendar();
+        return;
+      }
+
+      // Clicking the check-out date again → deselect just the end, keep check-in
+      if (selEnd && ymd(clicked) === ymd(selEnd)) {
+        selEnd = null;
+        if (rateNotice) rateNotice.hidden = true;
+        step2.style.display = "none";
+        step1.style.display = "block";
+        hint.textContent = "Now select check-out date";
+        renderCalendar();
+        return;
+      }
+
       if (!selStart) {
-        selStart = clicked; selEnd = null;
+        // No selection yet — set check-in
+        selStart = clicked;
         hint.textContent = "Now select check-out date";
       } else if (!selEnd) {
         if (clicked <= selStart) {
-          selStart = clicked; selEnd = null;
+          // Clicked before/on start — move check-in
+          selStart = clicked;
           hint.textContent = "Now select check-out date";
         } else {
+          // Valid check-out candidate
           selEnd = clicked;
           if (rangeHasBlock()) {
             hint.textContent = "Those dates include unavailable nights — please choose a different range.";
@@ -175,8 +221,11 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } else {
-        // Reset selection
+        // Both selected — 3rd click starts a new selection
         selStart = clicked; selEnd = null;
+        if (rateNotice) rateNotice.hidden = true;
+        step2.style.display = "none";
+        step1.style.display = "block";
         hint.textContent = "Now select check-out date";
       }
       renderCalendar();
@@ -188,12 +237,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const nights = Math.round((selEnd - selStart) / 86400000);
       const fmt = d => d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
       const dateRange = `${fmt(selStart)} → ${fmt(selEnd)} · ${nights} night${nights>1?"s":""}`;
+      const rateNotice = document.getElementById("availRateNotice");
 
       document.getElementById("availCheckinHidden").value  = ci;
       document.getElementById("availCheckoutHidden").value = co;
 
       // Show step 2 immediately while price loads
       document.getElementById("availSummaryText").textContent = dateRange + " · …";
+      if (rateNotice) rateNotice.hidden = true;
       step1.style.display = "none";
       step2.style.display = "block";
 
@@ -201,10 +252,14 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res  = await fetch(`/api/check-availability.php?room=${encodeURIComponent(slug)}&check_in=${ci}&check_out=${co}`);
         const data = await res.json();
-        const totalFmt = data.total != null
-          ? data.total.toLocaleString("en-US", { style:"currency", currency: data.currency ?? currency })
-          : (defPrice * nights).toLocaleString("en-US", { style:"currency", currency });
+        const defaultTotal = defPrice * nights;
+        const realTotal    = data.total ?? defaultTotal;
+        const totalFmt = realTotal.toLocaleString("en-US", { style:"currency", currency: data.currency ?? currency });
         document.getElementById("availSummaryText").textContent = dateRange + " · " + totalFmt;
+        // Show notice if any night differs from the room default
+        if (rateNotice && Math.abs(realTotal - defaultTotal) > 0.01) {
+          rateNotice.hidden = false;
+        }
       } catch {
         // Fallback to room default price if API unreachable
         const totalFmt = (defPrice * nights).toLocaleString("en-US", { style:"currency", currency });
@@ -215,9 +270,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // "Change dates" resets to step 1
     document.getElementById("availChangeDates")?.addEventListener("click", () => {
       selEnd = null;
+      const rn = document.getElementById("availRateNotice");
+      if (rn) rn.hidden = true;
       step2.style.display = "none";
       step1.style.display = "block";
-      hint.textContent = "Select check-in date";
+      hint.textContent = selStart ? "Now select check-out date" : "Select check-in date";
       renderCalendar();
     });
 

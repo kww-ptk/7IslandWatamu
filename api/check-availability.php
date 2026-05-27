@@ -69,12 +69,27 @@ if ($check_in && $check_out) {
     ]));
 }
 
-// ── Calendar view: return fully-blocked dates for next 18 months ─
+// ── Calendar view: return fully-blocked dates + rate-override dates ─
 $from = date('Y-m-d');
 $to   = date('Y-m-d', strtotime('+18 months'));
 
+// Build list of dates that have a price override (so the JS can mark them)
+$rate_rows = db_query(
+    "SELECT date_from, date_to FROM rates
+     WHERE room_id = :rid AND date_to > :from AND date_from < :to",
+    [':rid' => $room['id'], ':from' => $from, ':to' => $to]
+)->fetchAll();
+
+$rate_dates_map = [];
+foreach ($rate_rows as $r) {
+    $d   = new DateTime(max($r['date_from'], $from));
+    $end = new DateTime(min($r['date_to'],   $to));
+    while ($d < $end) { $rate_dates_map[$d->format('Y-m-d')] = true; $d->modify('+1 day'); }
+}
+
 exit(json_encode([
     'fully_blocked' => get_room_blocked_dates($room['id'], $from, $to),
+    'rate_dates'    => array_keys($rate_dates_map),
     'price'         => (float)$room['price_amount'],
     'currency'      => $room['price_currency'],
     'price_unit'    => $room['price_unit'],

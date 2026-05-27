@@ -37,6 +37,9 @@ $room_curr  = $room['price_currency'] ?? 'USD';
       <span id="availSummaryText"></span>
       <button type="button" class="avail-change-btn" id="availChangeDates">Change dates</button>
     </div>
+    <div class="avail-rate-notice" id="availRateNotice" hidden>
+      ★ Prices vary — some nights in your stay are at a special rate
+    </div>
 
     <label class="booking-field">
       <span>Your name</span>
