@@ -303,15 +303,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const feedback = document.getElementById("availFeedback");
 
       const data = {
-        room_slug: slug,
-        checkin:   document.getElementById("availCheckinHidden").value,
-        checkout:  document.getElementById("availCheckoutHidden").value,
-        name:      step2.querySelector("[name=name]").value.trim(),
-        email:     step2.querySelector("[name=email]").value.trim(),
-        phone:     step2.querySelector("[name=phone]")?.value.trim() || "",
-        adults:    parseInt(step2.querySelector("[name=adults]").value, 10),
-        children:  parseInt(step2.querySelector("[name=children]").value, 10),
-        message:   step2.querySelector("[name=message]")?.value.trim() || "",
+        room_slug:             slug,
+        checkin:               document.getElementById("availCheckinHidden").value,
+        checkout:              document.getElementById("availCheckoutHidden").value,
+        name:                  step2.querySelector("[name=name]").value.trim(),
+        email:                 step2.querySelector("[name=email]").value.trim(),
+        phone:                 step2.querySelector("[name=phone]")?.value.trim() || "",
+        adults:                parseInt(step2.querySelector("[name=adults]").value, 10),
+        children:              parseInt(step2.querySelector("[name=children]").value, 10),
+        message:               step2.querySelector("[name=message]")?.value.trim() || "",
+        "h-captcha-response":  step2.querySelector("[name='h-captcha-response']")?.value || "",
       };
 
       try {
