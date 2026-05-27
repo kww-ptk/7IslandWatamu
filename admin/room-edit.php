@@ -24,6 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if (!$error) {
             $features = array_values(array_filter(array_map('trim', explode("\n", $_POST['features'] ?? ''))));
+            // form_mode: '' (inherit), 'enquiry', or 'availability'
+            $form_mode_in = $_POST['form_mode'] ?? '';
+            $form_mode    = in_array($form_mode_in, ['enquiry', 'availability'], true) ? $form_mode_in : null;
             $data = [
                 ':name'          => trim($_POST['name']          ?? ''),
                 ':slug'          => $slug,
@@ -36,12 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 ':short_desc'    => trim($_POST['short_desc']     ?? ''),
                 ':long_desc'     => trim($_POST['long_desc']      ?? ''),
                 ':features_json' => json_encode($features),
+                ':form_mode'     => $form_mode,
             ];
 
             if ($isNew) {
                 db_query(
-                    "INSERT INTO rooms (name,slug,price_amount,price_currency,price_unit,size_sqm,capacity,bed_count,short_desc,long_desc,features_json)
-                     VALUES (:name,:slug,:price_amount,:price_currency,:price_unit,:size_sqm,:capacity,:bed_count,:short_desc,:long_desc,:features_json)",
+                    "INSERT INTO rooms (name,slug,price_amount,price_currency,price_unit,size_sqm,capacity,bed_count,short_desc,long_desc,features_json,form_mode)
+                     VALUES (:name,:slug,:price_amount,:price_currency,:price_unit,:size_sqm,:capacity,:bed_count,:short_desc,:long_desc,:features_json,:form_mode)",
                     $data
                 );
                 $id   = (int)db()->lastInsertId();
@@ -55,7 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 db_query(
                     "UPDATE rooms SET name=:name,slug=:slug,price_amount=:price_amount,price_currency=:price_currency,
                      price_unit=:price_unit,size_sqm=:size_sqm,capacity=:capacity,bed_count=:bed_count,
-                     short_desc=:short_desc,long_desc=:long_desc,features_json=:features_json,updated_at=NOW()
+                     short_desc=:short_desc,long_desc=:long_desc,features_json=:features_json,
+                     form_mode=:form_mode,updated_at=NOW()
                      WHERE id=:id",
                     $data
                 );
@@ -321,6 +326,49 @@ include __DIR__ . '/_layout.php';
         <label>One feature per line</label>
         <textarea name="features" rows="10" placeholder="WiFi&#10;Air conditioning&#10;Minibar&#10;..."><?= e($features_text) ?></textarea>
       </div>
+    </div>
+  </div>
+
+  <?php
+    $room_form_mode    = $room['form_mode'] ?? null;
+    $global_form_mode  = setting('form_mode', 'enquiry');
+    $global_label      = $global_form_mode === 'availability' ? 'Live availability' : 'Enquiry form';
+  ?>
+  <div class="card">
+    <div class="card__head">
+      <span class="card__title">Booking form</span>
+      <span class="text-muted" style="font-size:12px">Which form guests see on this room's page</span>
+    </div>
+    <div class="card__body" style="padding:20px">
+      <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;cursor:pointer">
+        <input type="radio" name="form_mode" value="" <?= $room_form_mode === null ? 'checked' : '' ?> style="margin-top:3px">
+        <span>
+          <strong>Use global setting</strong>
+          <span class="badge <?= $global_form_mode==='availability'?'badge--orange':'badge--green' ?>" style="margin-left:6px"><?= e($global_label) ?></span>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Inherits the site-wide default from <a href="/admin/settings.php">Settings</a>.
+          </div>
+        </span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;cursor:pointer">
+        <input type="radio" name="form_mode" value="enquiry" <?= $room_form_mode === 'enquiry' ? 'checked' : '' ?> style="margin-top:3px">
+        <span>
+          <strong>Enquiry form</strong>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Guest fills out a contact form. You receive a submission and reply manually.
+          </div>
+        </span>
+      </label>
+      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">
+        <input type="radio" name="form_mode" value="availability" <?= $room_form_mode === 'availability' ? 'checked' : '' ?> style="margin-top:3px">
+        <span>
+          <strong>Live availability</strong>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">
+            Guest sees a calendar with real availability and can request a 24h hold.
+            Requires at least one active <a href="#" onclick="document.querySelector('[data-tab=units]').click();return false">unit</a>.
+          </div>
+        </span>
+      </label>
     </div>
   </div>
 

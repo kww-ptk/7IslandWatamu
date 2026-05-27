@@ -58,7 +58,10 @@ $tourSlug  = trim($data['tour_slug'] ?? '');
 $tour      = $tourSlug ? fetch_tour_by_slug($tourSlug) : false;
 
 // Check form mode — availability mode creates a 24h hold
-$form_mode = setting('form_mode', 'enquiry');
+// Per-room override takes precedence over the global setting
+$form_mode = ($room && !empty($room['form_mode']))
+    ? $room['form_mode']
+    : setting('form_mode', 'enquiry');
 $unit      = false;
 
 if ($form_mode === 'availability' && $room) {

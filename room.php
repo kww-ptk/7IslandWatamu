@@ -26,7 +26,8 @@ foreach ($images as $img) {
 if (!$hero_img && !empty($images)) $hero_img = $images[0]['filename'];
 
 $features   = json_decode($room['features_json'] ?? '[]', true) ?: [];
-$form_mode  = setting('form_mode', 'enquiry');
+// Per-room override takes precedence over the global setting
+$form_mode  = !empty($room['form_mode']) ? $room['form_mode'] : setting('form_mode', 'enquiry');
 
 $pageTitle     = $room['seo_title']       ?: e($room['name']) . ' — Seven Islands Resort, Watamu';
 $metaDesc      = $room['seo_description'] ?: ($room['short_desc'] ?? '');
