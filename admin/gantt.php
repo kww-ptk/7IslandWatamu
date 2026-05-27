@@ -141,13 +141,22 @@ $rates = db_query(
      ORDER BY r.date_from ASC LIMIT 100"
 )->fetchAll();
 
-// Build set of dates (within current view) that have a rate override
-$rate_dates = [];
+// Build rate-date lookups scoped correctly:
+// $rate_dates[room_id][date] — used on unit rows (only highlight the right room)
+// $rate_dates_any[date]      — used on the shared day-header (highlight if any room has a rate)
+$rate_dates     = [];
+$rate_dates_any = [];
 foreach ($rates as $r) {
     if ($r['date_from'] >= $end_str || $r['date_to'] <= $start_str) continue;
-    $rd = new DateTime(max($r['date_from'], $start_str));
-    $re = new DateTime(min($r['date_to'],   $end_str));
-    while ($rd < $re) { $rate_dates[$rd->format('Y-m-d')] = true; $rd->modify('+1 day'); }
+    $rid = (int)$r['room_id'];
+    $rd  = new DateTime(max($r['date_from'], $start_str));
+    $re  = new DateTime(min($r['date_to'],   $end_str));
+    while ($rd < $re) {
+        $key = $rd->format('Y-m-d');
+        $rate_dates[$rid][$key] = true;
+        $rate_dates_any[$key]   = true;
+        $rd->modify('+1 day');
+    }
 }
 
 $ical_feeds = db_query(
@@ -279,7 +288,7 @@ include __DIR__ . '/_layout.php';
         <?php foreach ($days as $day):
           $dow = (int)date('N', strtotime($day));
           $isToday = $day === date('Y-m-d');
-          $isRate  = isset($rate_dates[$day]);
+          $isRate  = isset($rate_dates_any[$day]);
           $cls = ($isToday ? ' is-today' : '') . ($dow >= 6 ? ' is-weekend' : '') . ($isRate ? ' is-rate' : '');
         ?>
         <div class="gantt-day-h<?= $cls ?>" title="<?= date('D d M', strtotime($day)) . ($isRate ? ' ★ Rate override' : '') ?>">
@@ -309,7 +318,7 @@ include __DIR__ . '/_layout.php';
       <?php foreach ($days as $i => $day):
         $dow = (int)date('N', strtotime($day));
         $isToday = $day === date('Y-m-d');
-        $isRate  = isset($rate_dates[$day]);
+        $isRate  = isset($rate_dates[(int)$unit['room_db_id']][$day]);
         $cls = ($isToday ? ' is-today' : '') . ($dow >= 6 ? ' is-weekend' : '') . ($isRate ? ' is-rate' : '');
       ?>
       <div class="gantt-day-cell<?= $cls ?>" data-date="<?= e($day) ?>" data-unit="<?= e($unit['id']) ?>"></div>
