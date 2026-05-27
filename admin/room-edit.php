@@ -7,6 +7,7 @@ require_login();
 $id   = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $room = $id ? db_query('SELECT * FROM rooms WHERE id = :id', [':id' => $id])->fetch() : null;
 $images = $id ? fetch_room_images($id) : [];
+$units  = $id ? fetch_units_by_room($id) : [];
 $isNew  = !$room;
 
 $success = '';
@@ -79,6 +80,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $success = 'Publish status updated.';
     }
 
+    if ($action === 'add_unit') {
+        $unit_name = trim($_POST['unit_name'] ?? '');
+        if (!$unit_name) {
+            $error = 'Unit name is required.';
+        } else {
+            $max_order = db_query('SELECT COALESCE(MAX(sort_order),0) AS m FROM units WHERE room_id=:id', [':id' => $id])->fetch()['m'];
+            db_query('INSERT INTO units (room_id, name, sort_order) VALUES (:rid, :name, :ord)',
+                [':rid' => $id, ':name' => $unit_name, ':ord' => $max_order + 1]);
+            $success = 'Unit added.';
+        }
+    }
+
+    if ($action === 'delete_unit') {
+        $unit_id = (int)($_POST['unit_id'] ?? 0);
+        $blocked = db_query(
+            'SELECT COUNT(*) FROM availability_blocks WHERE unit_id = :uid',
+            [':uid' => $unit_id]
+        )->fetchColumn();
+        if ($blocked > 0) {
+            $error = 'Cannot delete a unit that has existing availability blocks or holds.';
+        } else {
+            db_query('DELETE FROM units WHERE id = :id AND room_id = :rid', [':id' => $unit_id, ':rid' => $id]);
+            $success = 'Unit deleted.';
+        }
+    }
+
     if ($action === 'delete_room') {
         db_query('DELETE FROM rooms WHERE id = :id', [':id' => $id]);
         header('Location: /admin/rooms.php');
@@ -89,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($id) {
         $room   = db_query('SELECT * FROM rooms WHERE id = :id', [':id' => $id])->fetch();
         $images = fetch_room_images($id);
+        $units  = fetch_units_by_room($id);
     }
 }
 
@@ -213,6 +241,7 @@ include __DIR__ . '/_layout.php';
   <button class="tab-btn is-active" data-tab="details">Details</button>
   <?php if (!$isNew): ?>
   <button class="tab-btn" data-tab="gallery">Gallery</button>
+  <button class="tab-btn" data-tab="units">Units</button>
   <button class="tab-btn" data-tab="seo">SEO</button>
   <button class="tab-btn" data-tab="publish">Publish</button>
   <?php endif; ?>
@@ -362,6 +391,60 @@ include __DIR__ . '/_layout.php';
       </div>
       <?php endif; ?>
     </div>
+  </div>
+</div>
+
+<!-- ── TAB: Units ── -->
+<div class="tab-panel" id="tab-units">
+  <div class="card">
+    <div class="card__head">
+      <span class="card__title">Bookable Units</span>
+      <span class="text-muted" style="font-size:12px">Each unit is a physical room that can be independently booked</span>
+    </div>
+    <div class="card__body">
+      <?php if (empty($units)): ?>
+      <p style="padding:24px;text-align:center;color:var(--muted)">No units yet. Add at least one to enable availability booking for this room.</p>
+      <?php else: ?>
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        <?php foreach ($units as $unit): ?>
+        <tr>
+          <td><?= e($unit['name']) ?></td>
+          <td><?= $unit['is_active'] ? '<span class="badge badge--green">Active</span>' : '<span class="badge badge--grey">Inactive</span>' ?></td>
+          <td style="text-align:right">
+            <form method="POST" action="/admin/room-edit.php?id=<?= $id ?>" style="display:inline"
+                  onsubmit="return confirm('Delete this unit? Cannot be undone if it has existing bookings.')">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action"  value="delete_unit">
+              <input type="hidden" name="unit_id" value="<?= e($unit['id']) ?>">
+              <button type="submit" class="btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+      </table>
+      <?php endif; ?>
+
+      <div style="padding:16px;border-top:1px solid var(--border)">
+        <form method="POST" action="/admin/room-edit.php?id=<?= $id ?>" style="display:flex;gap:8px;align-items:flex-end">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action" value="add_unit">
+          <div class="field" style="margin:0;flex:1">
+            <label>New unit name</label>
+            <input type="text" name="unit_name" placeholder="e.g. Unit B, Garden View, Room 101" required>
+          </div>
+          <button type="submit" class="btn-primary btn-sm" style="align-self:flex-end">Add Unit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert--info" style="font-size:13px">
+    <strong>How units work:</strong> A room type (e.g. "Standard Room") can have multiple physical units (e.g. Unit A, Unit B).
+    When availability mode is active, the system automatically assigns an available unit when a guest requests a hold.
+    View and manage holds at <a href="/admin/holds.php">Holds &amp; Bookings</a>.
   </div>
 </div>
 

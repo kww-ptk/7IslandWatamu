@@ -106,6 +106,104 @@ function send_smtp(string $to, string $subject, string $body, string $headers, a
     }
 }
 
+// ── Hold notifications ──────────────────────────────────────────
+
+function send_hold_notification(array $hold): void {
+    $env    = parse_env();
+    $to     = setting('notify_email', 'reservation@sevenislandswatamu.com');
+    $from   = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+    $site   = rtrim($env['SITE_URL'] ?? '', '/');
+
+    $subject = "[Hold Request] {$hold['room_name']} ({$hold['unit_name']}) — {$hold['guest_name']} — {$hold['check_in']} to {$hold['check_out']}";
+    $expires = isset($hold['expires_at']) ? date('d M Y H:i', strtotime($hold['expires_at'])) : '24 hours';
+
+    $body = implode("\n", [
+        'NEW HOLD REQUEST — 24-HOUR SOFT HOLD',
+        str_repeat('-', 40),
+        "Guest:     {$hold['guest_name']}",
+        "Email:     {$hold['guest_email']}",
+        "Room:      {$hold['room_name']} ({$hold['unit_name']})",
+        "Check-in:  {$hold['check_in']}",
+        "Check-out: {$hold['check_out']}",
+        "Expires:   {$expires}",
+        '',
+        'Confirm or cancel within 24 hours — hold expires automatically.',
+        '',
+        "Manage holds: {$site}/admin/holds.php",
+    ]);
+
+    _dispatch_mail($to, $subject, $body, $from, $hold['guest_email'] ?? '', $env);
+}
+
+function send_hold_confirmed(array $hold): void {
+    $env  = parse_env();
+    $from = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+
+    $subject = "Booking Confirmed — {$hold['room_name']} — {$hold['check_in']} to {$hold['check_out']}";
+    $body = implode("\n", [
+        "Dear {$hold['guest_name']},",
+        '',
+        'We are delighted to confirm your booking at Seven Islands Resort, Watamu.',
+        '',
+        "Room:      {$hold['room_name']}",
+        "Check-in:  {$hold['check_in']}",
+        "Check-out: {$hold['check_out']}",
+        '',
+        'Our team will be in touch shortly with arrival details.',
+        '',
+        'Warm regards,',
+        'Seven Islands Resort',
+        'reservation@sevenislandswatamu.com',
+    ]);
+
+    _dispatch_mail($hold['guest_email'], $subject, $body, $from, $from, $env);
+}
+
+function send_hold_cancelled(array $hold, string $reason = 'cancelled'): void {
+    $env  = parse_env();
+    $from = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+
+    $is_expired = $reason === 'expired';
+    $subject    = $is_expired
+        ? "Hold Expired — {$hold['room_name']} — {$hold['check_in']}"
+        : "Hold Cancelled — {$hold['room_name']} — {$hold['check_in']}";
+
+    $body = implode("\n", [
+        "Dear {$hold['guest_name']},",
+        '',
+        $is_expired
+            ? "Unfortunately we were unable to confirm your hold request for {$hold['room_name']} within the 24-hour window."
+            : "Your hold request for {$hold['room_name']} has been cancelled.",
+        '',
+        "Dates: {$hold['check_in']} to {$hold['check_out']}",
+        '',
+        'Please contact us to check alternative availability:',
+        'Email: reservation@sevenislandswatamu.com',
+        '',
+        'Warm regards,',
+        'Seven Islands Resort',
+    ]);
+
+    _dispatch_mail($hold['guest_email'], $subject, $body, $from, $from, $env);
+}
+
+function _dispatch_mail(string $to, string $subject, string $body, string $from, string $reply_to, array $env): void {
+    $headers  = "From: {$from}\r\n";
+    $headers .= "Reply-To: {$reply_to}\r\n";
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $headers .= "MIME-Version: 1.0\r\n";
+
+    if (!empty($env['RESEND_API_KEY'])) {
+        send_resend($to, $subject, $body, $from, $reply_to, $env['RESEND_API_KEY']);
+    } elseif (($env['MAIL_DRIVER'] ?? '') === 'smtp') {
+        send_smtp($to, $subject, $body, $headers, $env);
+    } else {
+        if (!mail($to, $subject, $body, $headers)) {
+            log_mail_error("mail() failed sending '{$subject}' to {$to}");
+        }
+    }
+}
+
 function log_mail_error(string $message): void {
     $log = __DIR__ . '/../logs/mail.log';
     $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;

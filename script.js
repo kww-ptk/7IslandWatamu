@@ -484,7 +484,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const json = await res.json();
 
       if (json.ok) {
-        form.innerHTML = `<p class="form-success">${successMsg}</p>`;
+        const msg = json.mode === 'hold'
+          ? "Your request has been received and your dates are held for 24 hours. We'll confirm your booking shortly."
+          : successMsg;
+        form.innerHTML = `<p class="form-success">${msg}</p>`;
       } else if (json.errors) {
         highlightErrors(form, json.errors);
         showFeedback(feedbackEl, false, "Please fix the errors above.");

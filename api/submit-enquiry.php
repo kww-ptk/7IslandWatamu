@@ -51,6 +51,25 @@ $room      = $slug ? fetch_room_by_slug($slug) : false;
 $tourSlug  = trim($data['tour_slug'] ?? '');
 $tour      = $tourSlug ? fetch_tour_by_slug($tourSlug) : false;
 
+// Check form mode — availability mode creates a 24h hold
+$form_mode = setting('form_mode', 'enquiry');
+$unit      = false;
+
+if ($form_mode === 'availability' && $room) {
+    if (!$checkin || !$checkout) {
+        http_response_code(422);
+        exit(json_encode(['ok' => false, 'errors' => [
+            'checkin'  => $checkin  ? null : 'Check-in date is required.',
+            'checkout' => $checkout ? null : 'Check-out date is required.',
+        ]]));
+    }
+    $unit = find_available_unit($room['id'], $checkin, $checkout);
+    if (!$unit) {
+        http_response_code(409);
+        exit(json_encode(['ok' => false, 'error' => 'No availability for those dates. Please try different dates or contact us directly.']));
+    }
+}
+
 // Tracking from session
 if (session_status() === PHP_SESSION_NONE) session_start();
 $tracking = $_SESSION['tracking'] ?? [];
@@ -93,19 +112,31 @@ db_query(
 
 $id = (int)db()->lastInsertId();
 
-send_notification([
-    'id'         => $id,
-    'type'       => 'enquiry',
-    'room_name'  => $room ? $room['name'] : ($tour ? 'Tour: ' . $tour['name'] : ''),
-    'guest_name' => $name,
-    'guest_email'=> $email,
-    'guest_phone'=> $data['phone'] ?? '',
-    'message'    => $data['message'] ?? '',
-    'check_in'   => $checkin,
-    'check_out'  => $checkout,
-    'guests_adults'   => $data['adults']   ?? 1,
-    'guests_children' => $data['children'] ?? 0,
-    'created_at' => date('Y-m-d H:i:s'),
-] + $tracking);
-
-echo json_encode(['ok' => true, 'id' => $id]);
+// Availability mode: create hold + block dates
+if ($form_mode === 'availability' && $unit) {
+    $hold_id = create_hold_with_block($unit['id'], $id, $checkin, $checkout, $name, $email);
+    $hold_row = db_query(
+        "SELECT h.*, u.name AS unit_name, r.name AS room_name
+         FROM holds h JOIN units u ON u.id = h.unit_id JOIN rooms r ON r.id = u.room_id
+         WHERE h.id = :id",
+        [':id' => $hold_id]
+    )->fetch();
+    if ($hold_row) send_hold_notification($hold_row);
+    echo json_encode(['ok' => true, 'id' => $id, 'mode' => 'hold']);
+} else {
+    send_notification([
+        'id'         => $id,
+        'type'       => 'enquiry',
+        'room_name'  => $room ? $room['name'] : ($tour ? 'Tour: ' . $tour['name'] : ''),
+        'guest_name' => $name,
+        'guest_email'=> $email,
+        'guest_phone'=> $data['phone'] ?? '',
+        'message'    => $data['message'] ?? '',
+        'check_in'   => $checkin,
+        'check_out'  => $checkout,
+        'guests_adults'   => $data['adults']   ?? 1,
+        'guests_children' => $data['children'] ?? 0,
+        'created_at' => date('Y-m-d H:i:s'),
+    ] + $tracking);
+    echo json_encode(['ok' => true, 'id' => $id, 'mode' => 'enquiry']);
+}

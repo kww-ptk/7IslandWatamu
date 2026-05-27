@@ -117,6 +117,74 @@ function set_setting(string $key, string $value): void {
     );
 }
 
+// ── Availability helpers ────────────────────────────────────────
+
+function fetch_units_by_room(int $room_id): array {
+    return db_query(
+        'SELECT * FROM units WHERE room_id = :id AND is_active = TRUE ORDER BY sort_order ASC',
+        [':id' => $room_id]
+    )->fetchAll();
+}
+
+function expire_stale_holds(): void {
+    $stmt = db()->prepare(
+        "UPDATE holds SET status='expired' WHERE status='pending' AND expires_at < NOW() RETURNING id"
+    );
+    $stmt->execute();
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $hid) {
+        db_query(
+            "DELETE FROM availability_blocks WHERE hold_id = :hid AND block_type = 'hold'",
+            [':hid' => $hid]
+        );
+    }
+}
+
+function find_available_unit(int $room_id, string $check_in, string $check_out): array|false {
+    expire_stale_holds();
+    return db_query(
+        "SELECT u.* FROM units u
+         WHERE u.room_id = :room_id AND u.is_active = TRUE
+           AND NOT EXISTS (
+               SELECT 1 FROM availability_blocks ab
+               WHERE ab.unit_id = u.id
+                 AND ab.date_from < :check_out
+                 AND ab.date_to   > :check_in
+           )
+         ORDER BY u.sort_order ASC
+         LIMIT 1",
+        [':room_id' => $room_id, ':check_in' => $check_in, ':check_out' => $check_out]
+    )->fetch();
+}
+
+function create_hold_with_block(
+    int $unit_id, int $submission_id,
+    string $check_in, string $check_out,
+    string $guest_name, string $guest_email
+): int {
+    $stmt = db()->prepare(
+        "INSERT INTO holds (submission_id, unit_id, check_in, check_out, guest_name, guest_email, expires_at)
+         VALUES (:sub, :unit, :ci, :co, :name, :email, NOW() + INTERVAL '24 hours')
+         RETURNING id"
+    );
+    $stmt->execute([
+        ':sub'   => $submission_id,
+        ':unit'  => $unit_id,
+        ':ci'    => $check_in,
+        ':co'    => $check_out,
+        ':name'  => $guest_name,
+        ':email' => $guest_email,
+    ]);
+    $hold_id = (int)$stmt->fetchColumn();
+
+    db_query(
+        "INSERT INTO availability_blocks (unit_id, date_from, date_to, block_type, hold_id)
+         VALUES (:unit, :df, :dt, 'hold', :hold)",
+        [':unit' => $unit_id, ':df' => $check_in, ':dt' => $check_out, ':hold' => $hold_id]
+    );
+
+    return $hold_id;
+}
+
 function e(mixed $val): string {
     return htmlspecialchars((string)$val, ENT_QUOTES, 'UTF-8');
 }
