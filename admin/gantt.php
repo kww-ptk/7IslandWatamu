@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE id=:id AND block_type != 'hold'",
                 [':uid' => $unit_id, ':df' => $date_from, ':dt' => $date_to, ':id' => $block_id]
             );
+            audit_log('gantt.move_block', 'availability_block', $block_id, "unit={$unit_id} {$date_from}→{$date_to}");
         }
         // Always respond JSON (AJAX-only action)
         header('Content-Type: application/json');

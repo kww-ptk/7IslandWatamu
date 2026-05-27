@@ -235,6 +235,8 @@ function send_hold_confirmed(array $hold): void {
 
     $subject = "Booking Confirmed — {$hold['room_name']} — {$hold['check_in']} to {$hold['check_out']}";
 
+    $checkin_instructions = setting('checkin_instructions', '');
+
     $text_lines = [
         "Dear {$hold['guest_name']},",
         '',
@@ -245,9 +247,14 @@ function send_hold_confirmed(array $hold): void {
         "Check-in:   {$hold['check_in']}",
         "Check-out:  {$hold['check_out']}",
         '',
-        'Our team will be in touch shortly with arrival details.',
-        '',
     ];
+    if ($checkin_instructions) {
+        $text_lines[] = 'CHECK-IN INFORMATION';
+        $text_lines[] = $checkin_instructions;
+        $text_lines[] = '';
+    }
+    $text_lines[] = 'Our team will be in touch if you have any further questions.';
+    $text_lines[] = '';
     if ($manage_url) {
         $text_lines[] = 'View or manage your booking:';
         $text_lines[] = $manage_url;
@@ -259,14 +266,15 @@ function send_hold_confirmed(array $hold): void {
 
     $body = implode("\n", $text_lines);
     $html = _hold_confirmed_html([
-        'guest_name' => $hold['guest_name'],
-        'room_name'  => $hold['room_name'],
-        'unit_name'  => $hold['unit_name'] ?? '',
-        'check_in'   => $hold['check_in'],
-        'check_out'  => $hold['check_out'],
-        'ref'        => $ref,
-        'manage_url' => $manage_url,
-        'site'       => $site,
+        'guest_name'           => $hold['guest_name'],
+        'room_name'            => $hold['room_name'],
+        'unit_name'            => $hold['unit_name'] ?? '',
+        'check_in'             => $hold['check_in'],
+        'check_out'            => $hold['check_out'],
+        'ref'                  => $ref,
+        'manage_url'           => $manage_url,
+        'site'                 => $site,
+        'checkin_instructions' => $checkin_instructions,
     ]);
 
     _dispatch_mail($hold['guest_email'], $subject, $body, $from, $from, $env, $html);
@@ -309,7 +317,14 @@ function _hold_confirmed_html(array $d): string {
               . '</table>'
             . '</div>'
             . $manage_block
-            . '<p style="font-size:13px;color:#777;line-height:1.6;margin-top:24px">Our team will be in touch shortly with arrival details. If you have any questions, please email us at <a href="mailto:reservation@sevenislandswatamu.com" style="color:#0b6273">reservation@sevenislandswatamu.com</a>.</p>'
+            . (!empty($d['checkin_instructions'])
+                ? '<div style="background:#f0f9fa;border-left:3px solid #0b6273;padding:14px 18px;margin:20px 0;border-radius:0 4px 4px 0">'
+                  . '<p style="margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;color:#0b6273;letter-spacing:.5px">Check-in Information</p>'
+                  . '<p style="margin:0;font-size:13px;color:#444;line-height:1.7;white-space:pre-line">'
+                  . htmlspecialchars($d['checkin_instructions'], ENT_QUOTES, 'UTF-8')
+                  . '</p></div>'
+                : '')
+            . '<p style="font-size:13px;color:#777;line-height:1.6;margin-top:24px">If you have any questions, please email us at <a href="mailto:reservation@sevenislandswatamu.com" style="color:#0b6273">reservation@sevenislandswatamu.com</a>.</p>'
             . '<p style="font-size:14px;margin:24px 0 0">Warm regards,<br><strong>Seven Islands Resort</strong></p>'
           . '</div>'
           . '<div style="background:#f9fafb;padding:16px 32px;text-align:center;font-size:12px;color:#aaa">'

@@ -39,12 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db_query("UPDATE holds SET status='confirmed', confirmed_at=NOW() WHERE id=:id", [':id' => $hold_id]);
             db_query("UPDATE availability_blocks SET block_type='booked' WHERE hold_id=:hid", [':hid' => $hold_id]);
             if ($hold['guest_email']) send_hold_confirmed($hold);
+            audit_log('hold.confirm', 'hold', $hold_id, "{$hold['guest_name']} {$hold['check_in']}→{$hold['check_out']}");
             $success = "Hold #{$hold_id} confirmed — confirmation email sent to {$hold['guest_email']}.";
         } elseif ($hold && $action === 'cancel' && in_array($hold['status'], ['pending', 'confirmed'])) {
             $was_status = $hold['status'];
             db_query("UPDATE holds SET status='cancelled', cancelled_at=NOW() WHERE id=:id", [':id' => $hold_id]);
             db_query("DELETE FROM availability_blocks WHERE hold_id=:hid", [':hid' => $hold_id]);
             if ($hold['guest_email']) send_hold_cancelled($hold, 'cancelled');
+            audit_log('hold.cancel', 'hold', $hold_id, "{$hold['guest_name']} {$hold['check_in']}→{$hold['check_out']} (was {$was_status})");
             $success = "Hold #{$hold_id} cancelled — dates freed, guest notified.";
         } else {
             $error = 'Action not allowed for this hold status.';

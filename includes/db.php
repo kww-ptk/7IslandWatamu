@@ -264,4 +264,17 @@ function storage_url(string $filename): string {
     return '/assets/img/' . $filename;
 }
 
+function audit_log(string $action, string $target_type = '', int $target_id = 0, string $notes = ''): void {
+    $admin_id = $_SESSION['admin_id'] ?? null;
+    db_query(
+        'INSERT INTO admin_audit_log (admin_id, action, target_type, target_id, notes)
+         VALUES (:aid, :action, :type, :tid, :notes)',
+        [':aid'    => $admin_id,
+         ':action' => $action,
+         ':type'   => $target_type,
+         ':tid'    => $target_id ?: null,
+         ':notes'  => $notes]
+    );
+}
+
 require_once __DIR__ . '/turnstile.php';

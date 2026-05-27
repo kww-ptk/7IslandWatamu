@@ -64,26 +64,58 @@ foreach ($feeds as $feed) {
 
         $summary = trim($event['summary'] ?? $feed['label'] ?? 'OTA block');
 
-        // Upsert: only insert if no identical blocked entry exists
+        // Skip if an identical blocked entry already exists (idempotent re-import)
         $exists = db_query(
             "SELECT id FROM availability_blocks
              WHERE unit_id=:uid AND date_from=:df AND date_to=:dt AND block_type='blocked'",
             [':uid' => $feed['unit_id'], ':df' => $from, ':dt' => $to]
         )->fetchColumn();
 
-        if (!$exists) {
-            db_query(
-                "INSERT INTO availability_blocks (unit_id, date_from, date_to, block_type, notes)
-                 VALUES (:uid, :df, :dt, 'blocked', :notes)",
-                [':uid'   => $feed['unit_id'],
-                 ':df'    => $from,
-                 ':dt'    => $to,
-                 ':notes' => 'iCal: ' . mb_substr($summary, 0, 200)]
-            );
-            $imported++;
-        } else {
+        if ($exists) { $skipped++; continue; }
+
+        // Detect conflict with existing hold or booked block
+        $conflicting_hold = db_query(
+            "SELECT h.id FROM holds h
+             WHERE h.unit_id = :uid
+               AND h.status IN ('pending','confirmed')
+               AND h.check_in  < :dto
+               AND h.check_out > :dfrom",
+            [':uid' => $feed['unit_id'], ':dto' => $to, ':dfrom' => $from]
+        )->fetch();
+
+        if ($conflicting_hold) {
+            // Record conflict — do NOT insert the OTA block yet
+            $conflict_already = db_query(
+                "SELECT id FROM channel_conflicts
+                 WHERE unit_id=:uid AND date_from=:df AND date_to=:dt AND hold_id=:hid AND status='pending'",
+                [':uid' => $feed['unit_id'], ':df' => $from, ':dt' => $to, ':hid' => $conflicting_hold['id']]
+            )->fetchColumn();
+
+            if (!$conflict_already) {
+                db_query(
+                    "INSERT INTO channel_conflicts (ical_feed_id, unit_id, date_from, date_to, hold_id, ota_summary)
+                     VALUES (:fid, :uid, :df, :dt, :hid, :summary)",
+                    [':fid'     => $feed['id'],
+                     ':uid'     => $feed['unit_id'],
+                     ':df'      => $from,
+                     ':dt'      => $to,
+                     ':hid'     => $conflicting_hold['id'],
+                     ':summary' => mb_substr($summary, 0, 500)]
+                );
+            }
             $skipped++;
+            continue;
         }
+
+        db_query(
+            "INSERT INTO availability_blocks (unit_id, date_from, date_to, block_type, notes)
+             VALUES (:uid, :df, :dt, 'blocked', :notes)",
+            [':uid'   => $feed['unit_id'],
+             ':df'    => $from,
+             ':dt'    => $to,
+             ':notes' => 'iCal: ' . mb_substr($summary, 0, 200)]
+        );
+        $imported++;
     }
 
     db_query(

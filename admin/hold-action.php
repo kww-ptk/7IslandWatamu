@@ -62,6 +62,7 @@ if ($action === 'confirm') {
     db_query("UPDATE holds SET status='confirmed', confirmed_at=NOW() WHERE id=:id", [':id' => $id]);
     db_query("UPDATE availability_blocks SET block_type='booked' WHERE hold_id=:hid", [':hid' => $id]);
     if ($hold['guest_email']) send_hold_confirmed($hold);
+    audit_log('hold.confirm', 'hold', $id, "via email link — {$hold['guest_name']} {$hold['check_in']}→{$hold['check_out']}");
     $_SESSION['hold_flash'] = ['type' => 'success', 'msg' => "Hold #{$id} confirmed — confirmation email sent to {$hold['guest_email']}."];
 
 } elseif ($action === 'decline') {
@@ -73,6 +74,7 @@ if ($action === 'confirm') {
     db_query("UPDATE holds SET status='cancelled', cancelled_at=NOW() WHERE id=:id", [':id' => $id]);
     db_query("DELETE FROM availability_blocks WHERE hold_id=:hid", [':hid' => $id]);
     if ($hold['guest_email']) send_hold_cancelled($hold, 'cancelled');
+    audit_log('hold.decline', 'hold', $id, "via email link — {$hold['guest_name']} {$hold['check_in']}→{$hold['check_out']}");
     $_SESSION['hold_flash'] = ['type' => 'success', 'msg' => "Hold #{$id} declined — dates freed and guest notified."];
 }
 
