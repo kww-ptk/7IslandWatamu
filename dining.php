@@ -5,6 +5,20 @@ $pageTitle    = 'Dining — Seven Islands Resort, Watamu';
 $metaDesc     = 'Savour fresh seafood, Swahili flavours and international cuisine at Seven Islands Resort — beachfront dining on the coast of Watamu, Kenya.';
 $activeNav    = 'dining';
 $canonicalUrl = site_url('dining.php');
+$jsonLd       = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'Restaurant',
+    'name'        => 'Seven Islands Resort — Dining',
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'image'       => site_url('assets/img/7islands_resort_watamu8.webp'),
+    'servesCuisine' => ['Seafood', 'Swahili', 'International'],
+    'containedInPlace' => [
+        '@type' => 'LodgingBusiness',
+        'name'  => 'Seven Islands Resort',
+        'url'   => site_url(),
+    ],
+]);
 include __DIR__ . '/includes/header.php';
 ?>
 

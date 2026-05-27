@@ -5,6 +5,24 @@ $pageTitle    = 'Contact — Seven Islands Resort, Watamu';
 $metaDesc     = 'Contact Seven Islands Resort in Watamu, Kenya — send us a message, call reception, or find us on the Indian Ocean coast. We are always open.';
 $activeNav    = 'contact';
 $canonicalUrl = site_url('contact.php');
+$jsonLd       = json_encode([
+    '@context' => 'https://schema.org',
+    '@type'    => 'ContactPage',
+    'name'     => 'Contact Seven Islands Resort',
+    'url'      => $canonicalUrl,
+    'mainEntity' => [
+        '@type'     => 'LodgingBusiness',
+        'name'      => 'Seven Islands Resort',
+        'telephone' => '+2540713326336',
+        'email'     => 'reservation@sevenislandswatamu.com',
+        'address'   => [
+            '@type'           => 'PostalAddress',
+            'streetAddress'   => 'Jacaranda Road, P.O. Box 424',
+            'addressLocality' => 'Watamu',
+            'addressCountry'  => 'KE',
+        ],
+    ],
+]);
 include __DIR__ . '/includes/header.php';
 ?>
 

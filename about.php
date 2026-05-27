@@ -5,6 +5,25 @@ $pageTitle    = 'About — Seven Islands Resort, Watamu';
 $metaDesc     = 'Learn about Seven Islands Resort — a family-run seafront retreat on the Kenyan coast at Watamu, with a 30-year legacy of warm hospitality.';
 $activeNav    = 'about';
 $canonicalUrl = site_url('about.php');
+$jsonLd       = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'AboutPage',
+    'name'        => 'About Seven Islands Resort',
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'mainEntity'  => [
+        '@type'       => 'LodgingBusiness',
+        'name'        => 'Seven Islands Resort',
+        'url'         => site_url(),
+        'description' => $metaDesc,
+        'foundingDate' => '1994',
+        'address'     => [
+            '@type'           => 'PostalAddress',
+            'addressLocality' => 'Watamu',
+            'addressCountry'  => 'KE',
+        ],
+    ],
+]);
 include __DIR__ . '/includes/header.php';
 ?>
 

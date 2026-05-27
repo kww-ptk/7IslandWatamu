@@ -51,6 +51,37 @@ Visit http://localhost:8765
 - Task 17 — All public pages have $metaDesc and $canonicalUrl set
 - Task 18 — Mobile CSS review (ongoing)
 
+## Phase 3 tasks — Availability & booking (not yet started)
+Build in this order — each phase depends on the previous.
+
+### Phase 3a — Foundation (schema + request-to-book)
+- Task 19 — Schema additions: `units` (bookable instances per room), `availability_blocks` (date ranges blocked/held/booked), `rates` (price overrides by date range), `holds` (24h soft holds), `ical_feeds` (OTA feed URLs per unit)
+- Task 20 — Request-to-book flow: guest requests dates → 24h soft hold created → admin confirms or expires → submission lifecycle (pending → confirmed → expired/cancelled) → email triggers at each state change → cron job clears expired holds
+- Task 21 — Admin hold/booking list: view active holds, confirm or release, filter by unit/date/status
+
+### Phase 3b — Guest-facing calendar
+- Task 22 — Public availability query API: `api/check-availability.php?room=slug&check_in=&check_out=` returns available units + rate for date range
+- Task 23 — Calendar widget on room.php: date range picker showing blocked/available dates, replaces stub `form-availability.php` when `form_mode=availability`
+- Task 24 — iCal feed generation: `api/ical.php?unit=ID&token=SECRET` serves .ics feed per unit (for OTAs to subscribe to)
+
+### Phase 3c — OTA sync + admin Gantt (hardest, build last)
+- Task 25 — iCal pull sync: cron job fetches external .ics URLs from `ical_feeds`, parses blocks, inserts into `availability_blocks`, applies conflict rules (external blocks always win)
+- Task 26 — Admin Gantt calendar: timeline view (units as rows, dates as columns), drag-drop to move/resize blocks, bulk-select date ranges to set rates or block, visual state colours (available/held/booked/blocked)
+
+### Key decisions for Phase 3
+- A **room** has 1–N **units** (e.g. "Standard Room" has 3 physical units — unit A/B/C)
+- Availability is tracked at the **unit** level, not the room level
+- `form_mode=availability` (already in settings) is the toggle that activates the calendar widget
+- iCal feeds use a secret token in the URL (no auth UI needed for OTAs)
+- Holds expire after 24h — a cron or lazy-expiry on next page load is acceptable for v1
+
+### Migration for Phase 3
+```
+psql $DATABASE_URL -f db/migrations/add_availability.sql
+```
+
+---
+
 ## Migration required on existing DB
 Run before deploying Phase 2 code:
 ```

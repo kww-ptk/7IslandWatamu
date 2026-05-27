@@ -5,6 +5,19 @@ $pageTitle    = 'SPA &amp; Wellness — Seven Islands Resort, Watamu';
 $metaDesc     = 'Relax and restore at the Seven Islands Resort spa — beachside massages, wellness treatments and a tranquil pool overlooking the Indian Ocean.';
 $activeNav    = 'spa';
 $canonicalUrl = site_url('spa.php');
+$jsonLd       = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'HealthClub',
+    'name'        => 'Seven Islands Resort — SPA & Wellness',
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'image'       => site_url('assets/img/7islands_resort_watamu9.webp'),
+    'containedInPlace' => [
+        '@type' => 'LodgingBusiness',
+        'name'  => 'Seven Islands Resort',
+        'url'   => site_url(),
+    ],
+]);
 include __DIR__ . '/includes/header.php';
 ?>
 

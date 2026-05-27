@@ -1,0 +1,26 @@
+# Seven Islands Resort — Watamu, Kenya
+
+> Award-winning all-inclusive seafront resort on the Indian Ocean coast of Watamu, Kenya.
+> Family-run for over 30 years. Luxury rooms, beachfront dining, spa, and safari tours.
+
+## Key pages
+
+- [Home](https://sevenislandswatamu.com/)
+- [About the Resort](https://sevenislandswatamu.com/about.php)
+- [Rooms & Suites](https://sevenislandswatamu.com/rooms.php)
+- [Dining](https://sevenislandswatamu.com/dining.php)
+- [SPA & Wellness](https://sevenislandswatamu.com/spa.php)
+- [Safari & Excursion Tours](https://sevenislandswatamu.com/tours.php)
+- [Travel Agency Partners](https://sevenislandswatamu.com/agency.php)
+- [Contact](https://sevenislandswatamu.com/contact.php)
+
+## Location & contact
+
+- Address: Jacaranda Road, P.O. Box 424, Watamu, Kenya
+- Phone: +254 0713 326 336
+- Email: reservation@sevenislandswatamu.com
+
+## Machine-readable data
+
+- Sitemap: https://sevenislandswatamu.com/sitemap.php
+- Robots: https://sevenislandswatamu.com/robots.txt

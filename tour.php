@@ -29,7 +29,7 @@ $hero_src = $hero_img ? storage_url($hero_img) : 'assets/img/7islands_resort_wat
 $highlights = json_decode($tour['highlights_json'] ?? '[]', true) ?: [];
 
 $pageTitle    = $tour['seo_title']       ?: e($tour['name']) . ' — Seven Islands Resort, Watamu';
-$metaDesc     = $tour['seo_description'] ?: '';
+$metaDesc     = $tour['seo_description'] ?: ($tour['short_desc'] ?? '');
 $activeNav    = 'tours';
 $canonicalUrl = site_url('tour.php?slug=' . urlencode($tour['slug']));
 $ogImage      = $hero_img ? site_url('assets/img/' . $hero_img) : site_url('assets/img/7islands_resort_watamu1.jpg');

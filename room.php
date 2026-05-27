@@ -29,11 +29,26 @@ $features   = json_decode($room['features_json'] ?? '[]', true) ?: [];
 $form_mode  = setting('form_mode', 'enquiry');
 
 $pageTitle     = $room['seo_title']       ?: e($room['name']) . ' — Seven Islands Resort, Watamu';
-$metaDesc      = $room['seo_description'] ?: '';
+$metaDesc      = $room['seo_description'] ?: ($room['short_desc'] ?? '');
 $activeNav     = 'rooms';
 $canonicalUrl  = site_url('room.php?slug=' . urlencode($room['slug']));
 $ogImage       = $hero_img ? site_url('assets/img/' . $hero_img) : site_url('assets/img/7islands_resort_watamu1.jpg');
 $extraScripts  = ['room.js'];
+$jsonLd        = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'HotelRoom',
+    'name'        => $room['name'],
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'image'       => $ogImage,
+    'occupancy'   => $room['capacity'] ? ['@type' => 'QuantitativeValue', 'maxValue' => (int)$room['capacity']] : null,
+    'floorSize'   => $room['size_sqm']  ? ['@type' => 'QuantitativeValue', 'value' => (int)$room['size_sqm'], 'unitCode' => 'MTK'] : null,
+    'containedInPlace' => [
+        '@type' => 'LodgingBusiness',
+        'name'  => 'Seven Islands Resort',
+        'url'   => site_url(),
+    ],
+]);
 
 include __DIR__ . '/includes/header.php';
 ?>
