@@ -71,6 +71,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = 'Rate removed.';
     }
 
+    if ($action === 'update_block') {
+        $block_id  = (int)($_POST['block_id']  ?? 0);
+        $unit_id   = (int)($_POST['unit_id']   ?? 0);
+        $date_from = $_POST['date_from'] ?? '';
+        $date_to   = $_POST['date_to']   ?? ''; // exclusive
+        $ok = $block_id && $unit_id && $date_from && $date_to && $date_from < $date_to
+              && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_from)
+              && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_to);
+        if ($ok) {
+            db_query(
+                "UPDATE availability_blocks
+                 SET unit_id=:uid, date_from=:df, date_to=:dt
+                 WHERE id=:id AND block_type != 'hold'",
+                [':uid' => $unit_id, ':df' => $date_from, ':dt' => $date_to, ':id' => $block_id]
+            );
+        }
+        // Always respond JSON (AJAX-only action)
+        header('Content-Type: application/json');
+        http_response_code($ok ? 200 : 400);
+        echo json_encode($ok ? ['ok' => true] : ['ok' => false, 'error' => 'Invalid data']);
+        exit;
+    }
+
     if ($action === 'add_ical_feed') {
         $unit_id   = (int)($_POST['feed_unit_id'] ?? 0);
         $label     = trim($_POST['feed_label']    ?? '');
@@ -223,6 +246,29 @@ include __DIR__ . '/_layout.php';
 .gantt-day-cell.is-rate { background: #fefce8; }
 .gantt-day-cell.is-rate:hover { background: #fef08a; }
 .gantt-day-cell.is-today.is-rate { background: #fef9c3; }
+/* Drag-move / resize */
+.gantt-block--dragging { opacity:.3 !important; }
+.gantt-day-cell.is-drag-target { background:#bfdbfe !important; }
+.gantt-block .gantt-resize-handle {
+  position:absolute; right:0; top:0; bottom:0; width:7px;
+  cursor:ew-resize; z-index:5; border-radius:0 3px 3px 0;
+  background:rgba(255,255,255,.25);
+}
+.gantt-block .gantt-resize-handle:hover { background:rgba(255,255,255,.45); }
+/* Mobile fallback */
+.gantt-mobile { display:none; }
+.gantt-mobile__hint { font-size:12px; color:var(--muted); margin-bottom:12px; }
+.gantt-mobile__block { display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.gantt-mobile__block:last-child { border-bottom:none; }
+.gantt-mobile__dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.gantt-mobile__dot--booked  { background:#2e7d32; }
+.gantt-mobile__dot--hold    { background:#e07b39; }
+.gantt-mobile__dot--blocked { background:#6b7c85; }
+@media (max-width:900px) {
+  .gantt-outer { display:none; }
+  .gantt-mobile { display:block; }
+}
 /* Custom date picker */
 .dp { position: relative; }
 .dp__display { display: block; width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; cursor: pointer; background: #fff; color: var(--muted); user-select: none; box-sizing: border-box; }
@@ -342,8 +388,49 @@ include __DIR__ . '/_layout.php';
            style="left:<?= $left_px ?>px;width:<?= $width_px ?>px"
            data-block-id="<?= e($b['id']) ?>"
            data-block-type="<?= e($b['block_type']) ?>"
+           data-date-from="<?= e($b['date_from']) ?>"
+           data-date-to="<?= e($b['date_to']) ?>"
+           data-unit-id="<?= e($unit['id']) ?>"
            title="<?= e($title) ?>">
         <?= e($label) ?>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+  <?php endforeach; ?>
+</div>
+
+<!-- Mobile list (shown below 900px instead of Gantt) -->
+<div class="gantt-mobile">
+  <p class="gantt-mobile__hint">Switch to a wider screen to use the interactive calendar. Blocks for the next 90 days:</p>
+  <?php
+  $today_ts = strtotime('today');
+  foreach ($units as $mu):
+    $mu_blocks = array_filter($blocks_by_unit[(int)$mu['id']] ?? [], fn($b) => strtotime($b['date_to']) > $today_ts);
+    if (!$mu_blocks) continue;
+  ?>
+  <div class="card" style="margin-bottom:12px">
+    <div class="card__head">
+      <span class="card__title"><?= e($mu['room_name']) ?> — <?= e($mu['name']) ?></span>
+    </div>
+    <div class="card__body" style="padding:12px 16px">
+      <?php foreach ($mu_blocks as $mb): ?>
+      <div class="gantt-mobile__block">
+        <span class="gantt-mobile__dot gantt-mobile__dot--<?= e($mb['block_type']) ?>"></span>
+        <span style="font-weight:600"><?= ucfirst(e($mb['block_type'])) ?></span>
+        <span><?= e($mb['date_from']) ?> &rarr; <?= e(date('Y-m-d', strtotime($mb['date_to'] . ' -1 day'))) ?></span>
+        <?php if ($mb['notes']): ?>
+        <span style="color:var(--muted)"><?= e($mb['notes']) ?></span>
+        <?php endif; ?>
+        <?php if ($mb['block_type'] !== 'hold'): ?>
+        <form method="POST" style="margin-left:auto">
+          <?= csrf_field() ?>
+          <input type="hidden" name="action"   value="delete_block">
+          <input type="hidden" name="block_id" value="<?= e($mb['id']) ?>">
+          <button type="submit" class="btn-danger btn-sm"
+                  onclick="return confirm('Remove this block?')">Remove</button>
+        </form>
+        <?php endif; ?>
       </div>
       <?php endforeach; ?>
     </div>
@@ -358,7 +445,7 @@ include __DIR__ . '/_layout.php';
   <span><span style="display:inline-block;width:12px;height:12px;background:#e07b39;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Hold (pending)</span>
   <span><span style="display:inline-block;width:12px;height:12px;background:#6b7c85;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Blocked</span>
   <span><span style="display:inline-block;width:12px;height:12px;background:#fef9c3;border:1px solid #f59e0b;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Rate override</span>
-  <span style="color:var(--muted)">Click empty cells to block · Click blocks to delete</span>
+  <span style="color:var(--muted)">Drag empty cells to block · Drag blocks to move · Drag right edge to resize · Click block to delete</span>
 </div>
 
 <?php endif; // end if units ?>
@@ -586,8 +673,12 @@ include __DIR__ . '/_layout.php';
 </div>
 
 <script>
-// ── Unit name lookup ─────────────────────────────────────────────
-const unitNames = {<?php foreach ($units as $u) echo (int)$u['id'] . ':"' . addslashes($u['room_name'].' — '.$u['name']) . '",'; ?>};
+// ── Data from PHP ─────────────────────────────────────────────────
+const unitNames  = {<?php foreach ($units as $u) echo (int)$u['id'] . ':"' . addslashes($u['room_name'].' — '.$u['name']) . '",'; ?>};
+const days       = <?= json_encode(array_values($days)) ?>;
+const dayIndex   = <?= json_encode($day_index) ?>;
+const csrfToken  = () => document.querySelector('input[name="csrf_token"]')?.value ?? '';
+const CELL_W     = 28;
 
 // ── Modal helpers ────────────────────────────────────────────────
 const blockModal  = document.getElementById('blockModal');
@@ -597,12 +688,184 @@ document.getElementById('blockModalClose').onclick  = () => { closeModal(blockMo
 document.getElementById('deleteModalClose').onclick = () => closeModal(deleteModal);
 [blockModal, deleteModal].forEach(m => m.addEventListener('click', e => { if(e.target===m) closeModal(m); }));
 
-// ── Drag-select on cells to open create-block modal ──────────────
+// ── Helpers ───────────────────────────────────────────────────────
+function addDays(ymd, n) {
+  const d = new Date(ymd + 'T00:00'); d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function dateDiff(from, to) {
+  return Math.round((new Date(to+'T00:00') - new Date(from+'T00:00')) / 86400000);
+}
+
+// ── Block drag-move / resize ──────────────────────────────────────
+let dragState = null; // { block, mode, blockId, unitId, dateFrom, dateTo, duration, dayOffset, startX, moved, highlights }
+
+function initBlockDrag(block) {
+  if (block.dataset.blockType === 'hold') return;
+
+  // Resize handle on the right edge
+  const handle = document.createElement('div');
+  handle.className = 'gantt-resize-handle';
+  block.appendChild(handle);
+
+  handle.addEventListener('mousedown', e => {
+    e.stopPropagation(); e.preventDefault();
+    beginDrag(block, 'resize', e);
+  });
+
+  block.addEventListener('mousedown', e => {
+    if (e.target === handle || e.button !== 0) return;
+    e.preventDefault();
+    const rect = block.getBoundingClientRect();
+    beginDrag(block, 'move', e, Math.floor((e.clientX - rect.left) / CELL_W));
+  });
+
+  // Click (no drag) → delete modal
+  block.addEventListener('click', e => {
+    if (dragState?.moved) return; // was a drag, not a click
+    e.stopPropagation();
+    document.getElementById('deleteDesc').textContent = 'Remove: ' + block.title;
+    document.getElementById('m_block_id').value = block.dataset.blockId;
+    deleteModal.classList.remove('is-hidden');
+  });
+}
+
+function beginDrag(block, mode, e, dayOffset = 0) {
+  dragState = {
+    block,
+    mode,
+    blockId:   block.dataset.blockId,
+    unitId:    block.dataset.unitId,
+    dateFrom:  block.dataset.dateFrom,
+    dateTo:    block.dataset.dateTo,
+    duration:  dateDiff(block.dataset.dateFrom, block.dataset.dateTo),
+    dayOffset,
+    startX: e.clientX,
+    moved:  false,
+    highlights: [],
+    newFrom: null,
+    newTo:   null,
+    newUnit: block.dataset.unitId,
+  };
+}
+
+function clearDragHighlights() {
+  dragState?.highlights.forEach(c => c.classList.remove('is-drag-target'));
+  if (dragState) dragState.highlights = [];
+}
+
+document.addEventListener('mousemove', e => {
+  if (!dragState) return;
+
+  // Threshold before activating visual drag
+  if (!dragState.moved) {
+    if (Math.abs(e.clientX - dragState.startX) < 5) return;
+    dragState.moved = true;
+    dragState.block.classList.add('gantt-block--dragging');
+    dragState.block.style.pointerEvents = 'none';
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = dragState.mode === 'resize' ? 'ew-resize' : 'grabbing';
+  }
+
+  clearDragHighlights();
+
+  // Find cell under cursor (block has pointer-events:none so this hits the cell)
+  const el      = document.elementFromPoint(e.clientX, e.clientY);
+  const dayCell = el?.classList.contains('gantt-day-cell') ? el : el?.closest?.('.gantt-day-cell');
+  const rowEl   = el?.classList.contains('gantt-cells')   ? el : el?.closest?.('.gantt-cells');
+  if (!dayCell?.dataset.date) return;
+
+  const hoverDate = dayCell.dataset.date;
+  const hoverIdx  = dayIndex[hoverDate];
+  if (hoverIdx === undefined) return;
+
+  const targetUnit = rowEl?.dataset.unitId ?? dragState.unitId;
+
+  let fromIdx, toIdx;
+  if (dragState.mode === 'move') {
+    fromIdx = Math.max(0, hoverIdx - dragState.dayOffset);
+    toIdx   = fromIdx + dragState.duration;
+  } else {
+    fromIdx = dayIndex[dragState.dateFrom] ?? 0;
+    toIdx   = Math.max(fromIdx + 1, hoverIdx + 1);
+  }
+  toIdx = Math.min(toIdx, days.length);
+
+  dragState.newFrom = days[fromIdx];
+  dragState.newTo   = days[toIdx] ?? addDays(days[days.length - 1], 1); // exclusive end
+  dragState.newUnit = targetUnit;
+
+  // Highlight target cells on the target unit row
+  document.querySelectorAll(`.gantt-day-cell[data-unit="${targetUnit}"]`).forEach(c => {
+    if (c.dataset.date >= dragState.newFrom && c.dataset.date < dragState.newTo) {
+      c.classList.add('is-drag-target');
+      dragState.highlights.push(c);
+    }
+  });
+});
+
+document.addEventListener('mouseup', async () => {
+  if (!dragState) return;
+  const { block, moved, blockId, unitId, dateFrom, dateTo, newFrom, newTo, newUnit } = dragState;
+  dragState = null;
+
+  block.classList.remove('gantt-block--dragging');
+  block.style.pointerEvents = '';
+  document.body.style.userSelect = '';
+  document.body.style.cursor = '';
+  document.querySelectorAll('.is-drag-target').forEach(c => c.classList.remove('is-drag-target'));
+
+  if (!moved || !newFrom || !newTo) return;
+  if (newFrom === dateFrom && newTo === dateTo && newUnit === unitId) return; // no change
+
+  // Optimistic UI update
+  const viewStart  = new Date(days[0] + 'T00:00');
+  const leftDays   = Math.max(0, (new Date(newFrom+'T00:00') - viewStart) / 86400000);
+  const spanDays   = Math.max(0, (new Date(newTo+'T00:00') - Math.max(new Date(newFrom+'T00:00'), viewStart)) / 86400000);
+  block.style.left  = (leftDays * CELL_W) + 'px';
+  block.style.width = Math.max(4, spanDays * CELL_W - 2) + 'px';
+  block.dataset.dateFrom = newFrom;
+  block.dataset.dateTo   = newTo;
+  if (newUnit !== unitId) {
+    const targetRow = document.querySelector(`.gantt-cells[data-unit-id="${newUnit}"]`);
+    if (targetRow) { targetRow.appendChild(block); block.dataset.unitId = newUnit; }
+  }
+
+  // Persist via AJAX
+  try {
+    const fd = new FormData();
+    fd.append('action',     'update_block');
+    fd.append('csrf_token', csrfToken());
+    fd.append('block_id',   blockId);
+    fd.append('unit_id',    newUnit);
+    fd.append('date_from',  newFrom);
+    fd.append('date_to',    newTo);
+    const res  = await fetch(location.pathname + location.search, { method:'POST', body:fd });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error ?? 'Server error');
+  } catch (err) {
+    alert('Save failed: ' + err.message + '. Page will reload.');
+    location.reload();
+  }
+});
+
+// Attach drag handlers to all non-hold blocks
+document.querySelectorAll('.gantt-block').forEach(initBlockDrag);
+
+// Hold blocks are read-only — inform admin on click
+document.querySelectorAll('.gantt-block[data-block-type="hold"]').forEach(block => {
+  block.addEventListener('click', e => {
+    e.stopPropagation();
+    alert('Holds are managed via the Holds & Bookings page.');
+  });
+});
+
+// ── Drag-select on cells to create a block ────────────────────────
 let selUnit = null, selStart = null, selCurrent = null;
 
 document.querySelectorAll('.gantt-day-cell').forEach(cell => {
   cell.addEventListener('mousedown', e => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || dragState) return; // ignore if block drag starting
     selUnit    = cell.dataset.unit;
     selStart   = cell.dataset.date;
     selCurrent = cell.dataset.date;
@@ -610,7 +873,7 @@ document.querySelectorAll('.gantt-day-cell').forEach(cell => {
     e.preventDefault();
   });
   cell.addEventListener('mouseenter', () => {
-    if (!selStart || cell.dataset.unit !== selUnit) return;
+    if (!selStart || cell.dataset.unit !== selUnit || dragState?.moved) return;
     selCurrent = cell.dataset.date;
     document.querySelectorAll(`.gantt-day-cell[data-unit="${selUnit}"]`).forEach(c => {
       const d = c.dataset.date;
@@ -635,20 +898,6 @@ document.addEventListener('mouseup', () => {
   blockModal.classList.remove('is-hidden');
 
   selUnit = selStart = selCurrent = null;
-});
-
-// ── Click on block → delete modal ───────────────────────────────
-document.querySelectorAll('.gantt-block').forEach(block => {
-  block.addEventListener('click', e => {
-    e.stopPropagation();
-    if (block.dataset.blockType === 'hold') {
-      alert('Holds are managed via the Holds & Bookings page.');
-      return;
-    }
-    document.getElementById('deleteDesc').textContent = 'Remove: ' + block.title;
-    document.getElementById('m_block_id').value = block.dataset.blockId;
-    deleteModal.classList.remove('is-hidden');
-  });
 });
 
 // ── Sync iCal button ─────────────────────────────────────────────
