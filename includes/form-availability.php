@@ -1,87 +1,122 @@
 <?php
-/** Availability form partial — single-step request, server checks availability on submit */
-$room_slug  = $room['slug']          ?? '';
-$room_name  = $room['name']          ?? '';
-$room_price = (float)($room['price_amount']   ?? 0);
-$room_curr  = $room['price_currency'] ?? 'USD';
-
-// Today + tomorrow as min defaults for the date inputs
-$today_iso    = date('Y-m-d');
-$tomorrow_iso = date('Y-m-d', strtotime('+1 day'));
+/** Availability form — compact pill-style date + guest pickers, single submit */
+$room_slug  = $room['slug']           ?? '';
+$room_name  = $room['name']           ?? '';
+$room_price = (float)($room['price_amount']    ?? 0);
+$room_curr  = $room['price_currency']  ?? 'USD';
 ?>
-<div class="avail-wrap"
+<div class="bk-avail"
      id="availCalendar"
      data-slug="<?= e($room_slug) ?>"
      data-price="<?= e($room_price) ?>"
      data-currency="<?= e($room_curr) ?>">
 
-  <form id="availForm" class="room-enquiry-form" novalidate
-        data-room-slug="<?= e($room_slug) ?>">
+  <form id="availForm" class="bk-form" novalidate data-room-slug="<?= e($room_slug) ?>">
     <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+    <input type="hidden" name="checkin"  id="availCheckin">
+    <input type="hidden" name="checkout" id="availCheckout">
+    <input type="hidden" name="adults"   id="availAdults"   value="2">
+    <input type="hidden" name="children" id="availChildren" value="0">
 
-    <div class="booking-field booking-field--row" style="gap:8px">
-      <label style="flex:1">
-        <span>Check-in</span>
-        <input type="date" name="checkin" id="availCheckin" required
-               min="<?= e($today_iso) ?>" value="<?= e($today_iso) ?>">
-      </label>
-      <label style="flex:1">
-        <span>Check-out</span>
-        <input type="date" name="checkout" id="availCheckout" required
-               min="<?= e($tomorrow_iso) ?>" value="<?= e($tomorrow_iso) ?>">
-      </label>
-    </div>
+    <!-- DATES PILL ─────────────────────────────────────────────── -->
+    <button type="button" class="bk-pill" id="bkDatesBtn" aria-haspopup="dialog" aria-expanded="false">
+      <span class="bk-pill__label">Dates</span>
+      <span class="bk-pill__value" id="bkDatesValue">Add dates</span>
+      <svg class="bk-pill__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
 
-    <div class="avail-summary" id="availSummary" style="display:block">
-      <span id="availSummaryText">Select your dates</span>
-    </div>
-
-    <div class="booking-field booking-field--row">
-      <span>Adults <small>(18+)</small></span>
-      <div class="booking-step">
-        <button type="button" data-bk="adult" data-dir="-1" aria-label="Decrease adults">&minus;</button>
-        <span data-bk-count="adult">2</span>
-        <button type="button" data-bk="adult" data-dir="1"  aria-label="Increase adults">+</button>
+    <div class="bk-pop" id="bkDatesPop" role="dialog" aria-label="Select dates" hidden>
+      <div class="bk-cal">
+        <div class="bk-cal__head">
+          <button type="button" class="bk-cal__nav" id="bkPrevMonth" aria-label="Previous month">&#8249;</button>
+          <span class="bk-cal__title" id="bkMonthLabel"></span>
+          <button type="button" class="bk-cal__nav" id="bkNextMonth" aria-label="Next month">&#8250;</button>
+        </div>
+        <div class="bk-cal__dow">
+          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+        </div>
+        <div class="bk-cal__grid" id="bkCalGrid"></div>
       </div>
-      <input type="hidden" name="adults" value="2">
-    </div>
-    <div class="booking-field booking-field--row">
-      <span>Children</span>
-      <div class="booking-step">
-        <button type="button" data-bk="child" data-dir="-1" aria-label="Decrease children">&minus;</button>
-        <span data-bk-count="child">0</span>
-        <button type="button" data-bk="child" data-dir="1"  aria-label="Increase children">+</button>
+      <div class="bk-pop__footer">
+        <span class="bk-pop__hint" id="bkDatesHint">Select your check-in date</span>
+        <button type="button" class="bk-pop__cta" id="bkDatesDone">Done</button>
       </div>
-      <input type="hidden" name="children" value="0">
     </div>
 
-    <label class="booking-field">
-      <span>Your name</span>
-      <input type="text" name="name" placeholder="Full name" required>
-    </label>
-    <label class="booking-field">
-      <span>Email</span>
-      <input type="email" name="email" placeholder="Your email" required>
-    </label>
-    <label class="booking-field">
-      <span>Phone</span>
-      <input type="tel" name="phone" placeholder="Your phone">
-    </label>
-    <label class="booking-field">
-      <span>Message</span>
-      <textarea name="message" rows="2" placeholder="Special requests?"></textarea>
-    </label>
+    <!-- GUESTS PILL ────────────────────────────────────────────── -->
+    <button type="button" class="bk-pill" id="bkGuestsBtn" aria-haspopup="dialog" aria-expanded="false">
+      <span class="bk-pill__label">Guests</span>
+      <span class="bk-pill__value" id="bkGuestsValue">2 adults</span>
+      <svg class="bk-pill__chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
 
-    <div class="form-feedback" id="availFeedback" hidden></div>
+    <div class="bk-pop bk-pop--narrow" id="bkGuestsPop" role="dialog" aria-label="Select guests" hidden>
+      <div class="bk-stepper-row">
+        <div class="bk-stepper-row__label">
+          <strong>Adults</strong>
+          <small>Age 18+</small>
+        </div>
+        <div class="bk-stepper">
+          <button type="button" data-bk="adult" data-dir="-1" aria-label="Decrease adults">&minus;</button>
+          <span data-bk-count="adult">2</span>
+          <button type="button" data-bk="adult" data-dir="1"  aria-label="Increase adults">+</button>
+        </div>
+      </div>
+      <div class="bk-stepper-row">
+        <div class="bk-stepper-row__label">
+          <strong>Children</strong>
+          <small>Age 0–17</small>
+        </div>
+        <div class="bk-stepper">
+          <button type="button" data-bk="child" data-dir="-1" aria-label="Decrease children">&minus;</button>
+          <span data-bk-count="child">0</span>
+          <button type="button" data-bk="child" data-dir="1"  aria-label="Increase children">+</button>
+        </div>
+      </div>
+      <div class="bk-pop__footer bk-pop__footer--end">
+        <button type="button" class="bk-pop__cta" id="bkGuestsDone">Done</button>
+      </div>
+    </div>
+
+    <!-- TOTAL SUMMARY ──────────────────────────────────────────── -->
+    <div class="bk-total" id="bkTotal" hidden>
+      <div class="bk-total__row">
+        <span class="bk-total__label" id="bkTotalLabel">— nights</span>
+        <span class="bk-total__price" id="bkTotalPrice">—</span>
+      </div>
+      <div class="bk-total__hint">Final price confirmed by email</div>
+    </div>
+
+    <!-- CONTACT FIELDS ─────────────────────────────────────────── -->
+    <div class="bk-fields">
+      <label class="bk-field">
+        <span>Your name</span>
+        <input type="text" name="name" placeholder="Full name" required>
+      </label>
+      <label class="bk-field">
+        <span>Email</span>
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </label>
+      <label class="bk-field">
+        <span>Phone <small>(optional)</small></span>
+        <input type="tel" name="phone" placeholder="+254 …">
+      </label>
+      <label class="bk-field">
+        <span>Message <small>(optional)</small></span>
+        <textarea name="message" rows="2" placeholder="Special requests, arrival time, etc."></textarea>
+      </label>
+    </div>
+
+    <div class="bk-feedback" id="availFeedback" hidden></div>
 
     <?php if (captcha_site_key()): ?>
     <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
     <?php endif; ?>
 
-    <button type="submit" class="btn btn--primary booking-card__submit">
-      Check availability &amp; request hold <span aria-hidden="true">&rsaquo;</span>
+    <button type="submit" class="bk-submit">
+      <span class="bk-submit__label">Check availability</span>
+      <svg class="bk-submit__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
     </button>
-    <p class="avail-hold-note">We'll confirm availability and hold your dates for 24 hours</p>
+    <p class="bk-hold-note">Dates are held for 24 hours pending confirmation</p>
   </form>
-
 </div>

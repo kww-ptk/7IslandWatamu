@@ -66,9 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     grid.innerHTML = html;
   })();
 
-  // ---- Availability form (booking card, form_mode=availability) ----
-  // Single-step form: guest fills dates + people + info, then submits.
-  // Server checks availability and either creates a 24h hold or returns "no availability".
+  // ---- Availability form (compact pill style, form_mode=availability) ----
   (function initAvailForm() {
     const wrap = document.getElementById("availCalendar");
     if (!wrap) return;
@@ -79,93 +77,234 @@ document.addEventListener("DOMContentLoaded", () => {
     const defPrice = parseFloat(wrap.dataset.price) || 0;
     const currency = wrap.dataset.currency || "USD";
 
-    const checkinEl  = document.getElementById("availCheckin");
-    const checkoutEl = document.getElementById("availCheckout");
-    const summary    = document.getElementById("availSummaryText");
+    // Elements
+    const datesBtn   = document.getElementById("bkDatesBtn");
+    const datesPop   = document.getElementById("bkDatesPop");
+    const datesValue = document.getElementById("bkDatesValue");
+    const datesHint  = document.getElementById("bkDatesHint");
+    const datesDone  = document.getElementById("bkDatesDone");
+    const guestsBtn  = document.getElementById("bkGuestsBtn");
+    const guestsPop  = document.getElementById("bkGuestsPop");
+    const guestsValue= document.getElementById("bkGuestsValue");
+    const guestsDone = document.getElementById("bkGuestsDone");
+    const calGrid    = document.getElementById("bkCalGrid");
+    const monthLbl   = document.getElementById("bkMonthLabel");
+    const prevBtn    = document.getElementById("bkPrevMonth");
+    const nextBtn    = document.getElementById("bkNextMonth");
+    const ciHidden   = document.getElementById("availCheckin");
+    const coHidden   = document.getElementById("availCheckout");
+    const adultsH    = document.getElementById("availAdults");
+    const childrenH  = document.getElementById("availChildren");
+    const totalCard  = document.getElementById("bkTotal");
+    const totalLabel = document.getElementById("bkTotalLabel");
+    const totalPrice = document.getElementById("bkTotalPrice");
     const feedback   = document.getElementById("availFeedback");
-    const submitBtn  = form.querySelector("[type=submit]");
-    const submitLbl  = submitBtn.innerHTML;
+    const submitBtn  = form.querySelector(".bk-submit");
+    const submitLbl  = submitBtn.querySelector(".bk-submit__label");
 
-    // Keep check-out at least one day after check-in
-    function bumpCheckout() {
-      const ci = new Date(checkinEl.value + "T00:00");
-      const co = new Date(checkoutEl.value + "T00:00");
-      const minCo = new Date(ci); minCo.setDate(minCo.getDate() + 1);
-      const minIso = minCo.toISOString().slice(0, 10);
-      checkoutEl.min = minIso;
-      if (!checkoutEl.value || co <= ci) checkoutEl.value = minIso;
+    // State
+    let fullyBlocked = [];
+    let viewYear, viewMonth;
+    let selStart = null, selEnd = null;
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    viewYear  = today.getFullYear();
+    viewMonth = today.getMonth();
+
+    function ymd(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     }
+    function parseYmd(s) { return new Date(s + "T00:00"); }
+    function isBlocked(d) { return fullyBlocked.includes(ymd(d)); }
+    function isPast(d) { return d < today; }
 
-    // Live nights × price summary
-    function updateSummary() {
-      const ci = new Date(checkinEl.value + "T00:00");
-      const co = new Date(checkoutEl.value + "T00:00");
-      if (isNaN(ci) || isNaN(co) || co <= ci) {
-        summary.textContent = "Select your dates";
-        return;
+    // Fetch blocked dates (non-blocking — calendar still renders if it fails)
+    fetch(`/api/check-availability.php?room=${encodeURIComponent(slug)}`)
+      .then(r => r.json())
+      .then(data => { fullyBlocked = data.fully_blocked || []; renderCal(); })
+      .catch(() => {});
+
+    // ── Calendar render ─────────────────────────────────────────
+    function renderCal() {
+      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      monthLbl.textContent = `${months[viewMonth]} ${viewYear}`;
+      const firstDay = new Date(viewYear, viewMonth, 1);
+      const lastDay  = new Date(viewYear, viewMonth + 1, 0);
+      const leadingBlanks = (firstDay.getDay() + 6) % 7; // Mon-first
+
+      let html = "";
+      for (let i = 0; i < leadingBlanks; i++) html += `<div class="bk-cell bk-cell--blank"></div>`;
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(viewYear, viewMonth, d);
+        const key  = ymd(date);
+        let cls = "bk-cell";
+
+        if (isPast(date) || isBlocked(date)) {
+          cls += " bk-cell--blocked";
+        } else {
+          if (selStart && key === ymd(selStart)) cls += " bk-cell--start";
+          else if (selEnd && key === ymd(selEnd)) cls += " bk-cell--end";
+          else if (selStart && selEnd && date > selStart && date < selEnd) cls += " bk-cell--in-range";
+        }
+        html += `<div class="${cls}" data-date="${key}">${d}</div>`;
       }
-      const nights = Math.round((co - ci) / 86400000);
-      const total  = defPrice * nights;
-      const fmt = d => d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
-      const totalFmt = total > 0
-        ? " · " + total.toLocaleString("en-US", { style:"currency", currency })
-        : "";
-      summary.textContent = `${fmt(ci)} → ${fmt(co)} · ${nights} night${nights>1?"s":""}${totalFmt}`;
+      calGrid.innerHTML = html;
+
+      // Attach handlers
+      calGrid.querySelectorAll(".bk-cell:not(.bk-cell--blocked):not(.bk-cell--blank)").forEach(cell => {
+        cell.addEventListener("click", () => onDayClick(cell.dataset.date));
+        cell.addEventListener("mouseenter", () => onCellHover(cell.dataset.date));
+      });
     }
 
-    checkinEl.addEventListener("change",  () => { bumpCheckout(); updateSummary(); });
-    checkoutEl.addEventListener("change", updateSummary);
-    bumpCheckout();
-    updateSummary();
+    function onCellHover(dateStr) {
+      if (!selStart || selEnd) return;
+      const start = ymd(selStart);
+      calGrid.querySelectorAll(".bk-cell[data-date]").forEach(c => {
+        const d = c.dataset.date;
+        const lo = start <= dateStr ? start : dateStr;
+        const hi = start <= dateStr ? dateStr : start;
+        c.classList.toggle("bk-cell--hover-range", d > lo && d < hi);
+      });
+    }
 
-    // Adults / children stepper
-    form.querySelectorAll("[data-bk]").forEach(btn => {
+    function clearHoverRange() {
+      calGrid.querySelectorAll(".bk-cell--hover-range").forEach(c => c.classList.remove("bk-cell--hover-range"));
+    }
+
+    calGrid.addEventListener("mouseleave", clearHoverRange);
+
+    function onDayClick(dateStr) {
+      const clicked = parseYmd(dateStr);
+
+      if (!selStart || (selStart && selEnd)) {
+        // Start fresh
+        selStart = clicked; selEnd = null;
+        datesHint.textContent = "Now select your check-out date";
+      } else if (clicked <= selStart) {
+        // Clicked earlier than current start — move start
+        selStart = clicked; selEnd = null;
+        datesHint.textContent = "Now select your check-out date";
+      } else {
+        // Valid check-out
+        selEnd = clicked;
+        datesHint.textContent = "Press Done to confirm";
+      }
+      clearHoverRange();
+      renderCal();
+      updateDatesPill();
+      updateTotal();
+    }
+
+    function updateDatesPill() {
+      if (selStart && selEnd) {
+        const fmt = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+        const nights = Math.round((selEnd - selStart) / 86400000);
+        datesValue.textContent = `${fmt(selStart)} → ${fmt(selEnd)} · ${nights}n`;
+        datesValue.classList.remove("is-empty");
+        ciHidden.value = ymd(selStart);
+        coHidden.value = ymd(selEnd);
+      } else {
+        datesValue.textContent = "Add dates";
+        datesValue.classList.add("is-empty");
+        ciHidden.value = "";
+        coHidden.value = "";
+      }
+    }
+
+    function updateTotal() {
+      if (!selStart || !selEnd) { totalCard.hidden = true; return; }
+      const nights = Math.round((selEnd - selStart) / 86400000);
+      const total  = defPrice * nights;
+      totalLabel.textContent = `${nights} night${nights > 1 ? "s" : ""} · ${defPrice ? defPrice.toLocaleString("en-US", { style: "currency", currency }) : "rate"} / night`;
+      totalPrice.textContent = total > 0 ? total.toLocaleString("en-US", { style: "currency", currency }) : "—";
+      totalCard.hidden = false;
+    }
+
+    prevBtn.addEventListener("click", () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCal(); });
+    nextBtn.addEventListener("click", () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCal(); });
+
+    renderCal();
+    updateDatesPill();
+
+    // ── Popover open/close logic ────────────────────────────────
+    function closeAllPops() {
+      [datesPop, guestsPop].forEach(p => p.hidden = true);
+      datesBtn.setAttribute("aria-expanded", "false");
+      guestsBtn.setAttribute("aria-expanded", "false");
+    }
+    function togglePop(btn, pop) {
+      const open = !pop.hidden;
+      closeAllPops();
+      if (!open) {
+        pop.hidden = false;
+        btn.setAttribute("aria-expanded", "true");
+      }
+    }
+    datesBtn.addEventListener("click", e => { e.stopPropagation(); togglePop(datesBtn, datesPop); });
+    guestsBtn.addEventListener("click", e => { e.stopPropagation(); togglePop(guestsBtn, guestsPop); });
+    datesDone.addEventListener("click", closeAllPops);
+    guestsDone.addEventListener("click", closeAllPops);
+    document.addEventListener("click", e => {
+      if (!wrap.contains(e.target)) closeAllPops();
+    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeAllPops(); });
+
+    // ── Guests stepper ───────────────────────────────────────────
+    function updateGuestsPill() {
+      const a = parseInt(adultsH.value, 10);
+      const c = parseInt(childrenH.value, 10);
+      let parts = [`${a} adult${a !== 1 ? "s" : ""}`];
+      if (c > 0) parts.push(`${c} child${c !== 1 ? "ren" : ""}`);
+      guestsValue.textContent = parts.join(", ");
+    }
+    guestsPop.querySelectorAll("[data-bk]").forEach(btn => {
       btn.addEventListener("click", () => {
-        const key      = btn.dataset.bk;
-        const min      = key === "adult" ? 1 : 0;
-        const countEl  = form.querySelector(`[data-bk-count="${key}"]`);
-        const hiddenEl = form.querySelector(`[name="${key === "adult" ? "adults" : "children"}"]`);
+        const key = btn.dataset.bk;
+        const min = key === "adult" ? 1 : 0;
+        const countEl  = guestsPop.querySelector(`[data-bk-count="${key}"]`);
+        const hiddenEl = key === "adult" ? adultsH : childrenH;
         let val = parseInt(countEl.textContent, 10) + parseInt(btn.dataset.dir, 10);
         val = Math.max(min, Math.min(20, val));
         countEl.textContent = val;
-        if (hiddenEl) hiddenEl.value = val;
+        hiddenEl.value = val;
+        updateGuestsPill();
       });
     });
+    updateGuestsPill();
 
+    // ── Submit ───────────────────────────────────────────────────
     function showError(msg) {
       feedback.hidden = false;
-      feedback.className = "form-feedback form-feedback--error";
       feedback.textContent = msg;
+      feedback.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-    function clearError() {
-      feedback.hidden = true;
-      feedback.textContent = "";
-    }
+    function clearError() { feedback.hidden = true; feedback.textContent = ""; }
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
       clearError();
 
-      // Client-side date sanity
-      const ci = checkinEl.value;
-      const co = checkoutEl.value;
-      if (!ci || !co || new Date(co) <= new Date(ci)) {
-        showError("Please choose a check-out date after your check-in date.");
+      if (!ciHidden.value || !coHidden.value) {
+        showError("Please pick your check-in and check-out dates.");
+        togglePop(datesBtn, datesPop);
         return;
       }
 
+      const originalLabel = submitLbl.textContent;
       submitBtn.disabled = true;
-      submitBtn.textContent = "Checking availability…";
+      submitLbl.textContent = "Checking availability…";
 
       const data = {
         room_slug:            slug,
-        checkin:              ci,
-        checkout:             co,
+        checkin:              ciHidden.value,
+        checkout:             coHidden.value,
         name:                 form.querySelector("[name=name]").value.trim(),
         email:                form.querySelector("[name=email]").value.trim(),
         phone:                form.querySelector("[name=phone]")?.value.trim() || "",
-        adults:               parseInt(form.querySelector("[name=adults]").value, 10),
-        children:             parseInt(form.querySelector("[name=children]").value, 10),
+        adults:               parseInt(adultsH.value, 10),
+        children:             parseInt(childrenH.value, 10),
         message:              form.querySelector("[name=message]")?.value.trim() || "",
         "h-captcha-response": form.querySelector("[name='h-captcha-response']")?.value || "",
       };
@@ -179,23 +318,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const json = await res.json();
 
         if (json.ok) {
-          wrap.innerHTML = `<p class="form-success">Great news — your dates are available. We've held them for 24 hours and will confirm your booking shortly. Please check your email.</p>`;
+          wrap.innerHTML = `
+            <div class="bk-success">
+              <svg class="bk-success__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <h3 class="bk-success__title">Your dates are held</h3>
+              <p class="bk-success__body">Good news — those dates are available. We've put a 24-hour hold on your booking and will confirm by email shortly.</p>
+            </div>`;
           return;
         }
-
-        // Specific errors
         if (json.errors) {
           showError(Object.values(json.errors).filter(Boolean).join(" "));
         } else if (res.status === 409) {
-          showError(json.error || "Sorry — those dates are no longer available. Please try different dates.");
+          showError(json.error || "Sorry — those dates are no longer available. Try different dates.");
         } else {
           showError(json.error || "Something went wrong. Please try again.");
         }
       } catch {
-        showError("Network error. Please check your connection and try again.");
+        showError("Network error. Check your connection and try again.");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = submitLbl;
+        submitLbl.textContent = originalLabel;
       }
     });
   })();
