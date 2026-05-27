@@ -156,18 +156,6 @@ include __DIR__ . '/includes/header.php';
         <p>Children are welcome. Kids stay free when using existing bedding. Rollaway/extra beds are available for USD 40 per day.</p>
       </div>
 
-      <h2 class="room-h2">Availability Calendar</h2>
-      <div class="cal">
-        <div class="cal__head">
-          <button class="cal__nav" type="button" aria-label="Previous month">&#8249;</button>
-          <span class="cal__month"></span>
-          <button class="cal__nav" type="button" aria-label="Next month">&#8250;</button>
-        </div>
-        <div class="cal__grid cal__grid--days">
-          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-        </div>
-        <div class="cal__grid" data-calendar></div>
-      </div>
     </div>
 
     <aside class="room-booking" id="book">

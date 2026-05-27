@@ -292,7 +292,7 @@ include __DIR__ . '/_layout.php';
         $title     = ucfirst($b['block_type']) . ': ' . $b['date_from'] . ' → ' . $b['date_to'] . ($b['notes'] ? ' · ' . $b['notes'] : '');
       ?>
       <div class="gantt-block <?= $type_cls ?>"
-           style="left:<?= $left_px + 150 ?>px;width:<?= $width_px ?>px"
+           style="left:<?= $left_px ?>px;width:<?= $width_px ?>px"
            data-block-id="<?= e($b['id']) ?>"
            data-block-type="<?= e($b['block_type']) ?>"
            title="<?= e($title) ?>">
