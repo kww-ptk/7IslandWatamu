@@ -50,16 +50,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price     = (float)($_POST['price']    ?? 0);
         $label     = trim($_POST['rate_label']  ?? '');
 
-        if ($room_id && $date_from && $date_to && $price > 0 && $date_from < $date_to) {
+        // date_to from form is inclusive last night — add 1 day for exclusive DB storage
+        $date_to_excl = $date_to ? date('Y-m-d', strtotime($date_to . ' +1 day')) : '';
+
+        if ($room_id && $date_from && $date_to_excl && $price > 0 && $date_from < $date_to_excl) {
             db_query(
                 "INSERT INTO rates (room_id, date_from, date_to, price_amount, label)
                  VALUES (:rid, :df, :dt, :price, :label)",
-                [':rid' => $room_id, ':df' => $date_from, ':dt' => $date_to,
+                [':rid' => $room_id, ':df' => $date_from, ':dt' => $date_to_excl,
                  ':price' => $price, ':label' => $label]
             );
             $msg = 'Rate override added.';
         } else {
-            $err = 'Invalid rate data.';
+            $err = 'Invalid rate data — check all fields are filled and dates are valid.';
         }
     }
 
@@ -350,8 +353,22 @@ include __DIR__ . '/_layout.php';
           <?php foreach ($rooms as $r): ?><option value="<?= e($r['id']) ?>"><?= e($r['name']) ?></option><?php endforeach; ?>
         </select>
       </div>
-      <div class="field" style="margin:0"><label>From</label><input type="date" name="rate_from" required></div>
-      <div class="field" style="margin:0"><label>To (exclusive)</label><input type="date" name="rate_to" required></div>
+      <div class="field" style="margin:0">
+        <label>From (first night)</label>
+        <div class="dp" style="min-width:140px">
+          <div class="dp__display" id="dpRateFromDisplay" tabindex="0">Pick a date</div>
+          <input type="hidden" name="rate_from" id="dpRateFromVal">
+          <div class="dp__pop is-hidden" id="dpRateFromPop"></div>
+        </div>
+      </div>
+      <div class="field" style="margin:0">
+        <label>To (last night)</label>
+        <div class="dp" style="min-width:140px">
+          <div class="dp__display" id="dpRateToDisplay" tabindex="0">Pick a date</div>
+          <input type="hidden" name="rate_to" id="dpRateToVal">
+          <div class="dp__pop is-hidden" id="dpRateToPop"></div>
+        </div>
+      </div>
       <div class="field" style="margin:0"><label>Price / night</label><input type="number" name="price" step="0.01" min="1" placeholder="450" required style="width:90px"></div>
       <div class="field" style="margin:0"><label>Label</label><input type="text" name="rate_label" placeholder="Peak Season" style="width:130px"></div>
       <button type="submit" class="btn-primary btn-sm">Add Override</button>
@@ -714,8 +731,10 @@ function makePicker(popId, hiddenId, displayId) {
   };
 }
 
-const dpFrom = makePicker('dpFromPop', 'm_date_from', 'dpFromDisplay');
-const dpTo   = makePicker('dpToPop',   'm_date_to',   'dpToDisplay');
+const dpFrom     = makePicker('dpFromPop',     'm_date_from',  'dpFromDisplay');
+const dpTo       = makePicker('dpToPop',       'm_date_to',    'dpToDisplay');
+const dpRateFrom = makePicker('dpRateFromPop', 'dpRateFromVal','dpRateFromDisplay');
+const dpRateTo   = makePicker('dpRateToPop',   'dpRateToVal',  'dpRateToDisplay');
 </script>
 
 <?php include __DIR__ . '/_layout_end.php'; ?>
