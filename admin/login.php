@@ -15,9 +15,12 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email']    ?? '');
     $password = trim($_POST['password'] ?? '');
+    $tsToken  = $_POST['h-captcha-response'] ?? '';
 
     if (!$email || !$password) {
         $error = 'Email and password are required.';
+    } elseif (!verify_captcha($tsToken, $_SERVER['REMOTE_ADDR'] ?? '')) {
+        $error = 'Security check failed. Please try again.';
     } elseif (is_rate_limited($email, $_SERVER['REMOTE_ADDR'] ?? '')) {
         $error = 'Too many failed attempts. Please wait 10 minutes and try again.';
     } elseif (login($email, $password)) {
@@ -35,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin Login — Seven Islands Resort</title>
   <link rel="stylesheet" href="/admin/assets/admin.css">
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </head>
 <body class="login-page">
 
@@ -59,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label for="password">Password</label>
         <input type="password" id="password" name="password" placeholder="••••••••" required>
       </div>
+      <?php if (captcha_site_key()): ?>
+      <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>" style="margin:12px 0"></div>
+      <?php endif; ?>
       <button type="submit" class="btn-primary btn-full">Sign in</button>
     </form>
 

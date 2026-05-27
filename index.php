@@ -102,6 +102,9 @@ include __DIR__ . '/includes/header.php';
               <input type="text" id="enqMsg" name="message" placeholder="Tell us about your stay">
             </div>
           </div>
+          <?php if (captcha_site_key()): ?>
+          <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+          <?php endif; ?>
           <div class="hero-enq-actions">
             <p class="hero-enq-error" data-enq-error hidden></p>
             <button type="button" class="hero-enq-back" data-enq-back>&#8592; Back</button>

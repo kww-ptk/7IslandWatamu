@@ -124,6 +124,9 @@ include __DIR__ . '/includes/header.php';
               <textarea name="message" rows="5" placeholder="Tell us about your stay" required></textarea>
             </label>
             <div class="form-feedback" id="contactFeedback" hidden></div>
+            <?php if (captcha_site_key()): ?>
+            <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+            <?php endif; ?>
             <button type="submit" class="btn btn--primary">Send Message <span aria-hidden="true">&rsaquo;</span></button>
           </form>
         </div>

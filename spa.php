@@ -107,6 +107,9 @@ include __DIR__ . '/includes/header.php';
               <textarea name="message" rows="4" placeholder="Which treatment would you like? Any preferences or health notes?" required></textarea>
             </label>
             <div class="form-feedback" id="spaContactFeedback" hidden></div>
+            <?php if (captcha_site_key()): ?>
+            <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+            <?php endif; ?>
             <button type="submit" class="btn btn--primary">Request Booking <span aria-hidden="true">&rsaquo;</span></button>
           </form>
         </div>

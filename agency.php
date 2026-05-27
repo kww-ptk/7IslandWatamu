@@ -182,6 +182,9 @@ include __DIR__ . '/includes/header.php';
               <textarea name="message" rows="4" placeholder="Tell us about your agency and clients"></textarea>
             </label>
             <div class="form-feedback" id="agencyFeedback" hidden></div>
+            <?php if (captcha_site_key()): ?>
+            <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+            <?php endif; ?>
             <button type="submit" class="btn btn--primary">Send Request <span aria-hidden="true">&rsaquo;</span></button>
           </form>
         </div>

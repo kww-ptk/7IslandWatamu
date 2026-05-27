@@ -243,3 +243,5 @@ function storage_url(string $filename): string {
     if (str_starts_with($filename, 'http')) return $filename;
     return '/assets/img/' . $filename;
 }
+
+require_once __DIR__ . '/turnstile.php';

@@ -392,6 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (json.ok) {
           show(3);
         } else {
+          resetTurnstileIn(form);
           btn.disabled = false;
           btn.textContent = "Send Enquiry ›";
           if (errEl) {
@@ -400,6 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       } catch {
+        resetTurnstileIn(form);
         btn.disabled = false;
         btn.textContent = "Send Enquiry ›";
         if (errEl) {
@@ -469,6 +471,14 @@ document.addEventListener("DOMContentLoaded", () => {
     form.querySelectorAll(".field-error").forEach((el) => el.remove());
   }
 
+  function resetTurnstileIn(form) {
+    if (typeof hcaptcha === "undefined") return;
+    form.querySelectorAll(".h-captcha").forEach((w) => {
+      const id = w.getAttribute("data-hcaptcha-widget-id");
+      if (id) hcaptcha.reset(id); else hcaptcha.reset();
+    });
+  }
+
   async function submitForm(endpoint, data, form, feedbackEl, successMsg) {
     const btn = form.querySelector("[type=submit]");
     btn.disabled = true;
@@ -491,15 +501,18 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (json.errors) {
         highlightErrors(form, json.errors);
         showFeedback(feedbackEl, false, "Please fix the errors above.");
+        resetTurnstileIn(form);
         btn.disabled = false;
         btn.textContent = "Send";
       } else {
         showFeedback(feedbackEl, false, json.error || "Something went wrong. Please try again.");
+        resetTurnstileIn(form);
         btn.disabled = false;
         btn.textContent = "Send";
       }
     } catch {
       showFeedback(feedbackEl, false, "Network error. Please check your connection and try again.");
+      resetTurnstileIn(form);
       btn.disabled = false;
       btn.textContent = "Send";
     }

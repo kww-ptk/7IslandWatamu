@@ -17,8 +17,14 @@ if (!empty($data['website'])) {
     exit(json_encode(['ok' => true]));
 }
 
+// Turnstile
+$ip = $_SERVER['REMOTE_ADDR'] ?? '';
+if (!verify_captcha($data['h-captcha-response'] ?? '', $ip)) {
+    http_response_code(403);
+    exit(json_encode(['ok' => false, 'error' => 'Security check failed. Please try again.']));
+}
+
 // Rate limit
-$ip     = $_SERVER['REMOTE_ADDR'] ?? '';
 $window = date('Y-m-d H:i:s', time() - 600);
 $count  = db_query(
     "SELECT COUNT(*) AS cnt FROM submissions WHERE ip_address = :ip AND created_at > :window",

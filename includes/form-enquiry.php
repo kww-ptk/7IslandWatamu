@@ -56,6 +56,10 @@ $room_name = $room['name'] ?? '';
 
   <div class="form-feedback" id="roomEnquiryFeedback" hidden></div>
 
+  <?php if (captcha_site_key()): ?>
+  <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+  <?php endif; ?>
+
   <button type="submit" class="btn btn--primary booking-card__submit">
     Book Now <span aria-hidden="true">&rsaquo;</span>
   </button>

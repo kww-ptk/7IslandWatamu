@@ -80,6 +80,10 @@ $room_curr  = $room['price_currency'] ?? 'USD';
 
     <div class="form-feedback" id="availFeedback" hidden></div>
 
+    <?php if (captcha_site_key()): ?>
+    <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+    <?php endif; ?>
+
     <button type="submit" class="btn btn--primary booking-card__submit">
       Request Hold <span aria-hidden="true">&rsaquo;</span>
     </button>
