@@ -1,9 +1,13 @@
 <?php
-/** Availability form partial — calendar date picker + hold request form */
+/** Availability form partial — single-step request, server checks availability on submit */
 $room_slug  = $room['slug']          ?? '';
 $room_name  = $room['name']          ?? '';
 $room_price = (float)($room['price_amount']   ?? 0);
 $room_curr  = $room['price_currency'] ?? 'USD';
+
+// Today + tomorrow as min defaults for the date inputs
+$today_iso    = date('Y-m-d');
+$tomorrow_iso = date('Y-m-d', strtotime('+1 day'));
 ?>
 <div class="avail-wrap"
      id="availCalendar"
@@ -11,48 +15,26 @@ $room_curr  = $room['price_currency'] ?? 'USD';
      data-price="<?= e($room_price) ?>"
      data-currency="<?= e($room_curr) ?>">
 
-  <!-- Step 1: date picker -->
-  <div id="availStep1">
-    <div class="avail-nav">
-      <button type="button" class="avail-nav__btn" id="availPrev">&#8249;</button>
-      <span class="avail-nav__label" id="availMonthLabel"></span>
-      <button type="button" class="avail-nav__btn" id="availNext">&#8250;</button>
-    </div>
-    <div class="avail-day-names">
-      <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-    </div>
-    <div class="avail-grid" id="availGrid"></div>
-    <div class="avail-hint" id="availHint">Select check-in date</div>
-  </div>
-
-  <!-- Step 2: guest details (shown after valid dates chosen) -->
   <form id="availForm" class="room-enquiry-form" novalidate
-        data-room-slug="<?= e($room_slug) ?>"
-        style="display:none">
+        data-room-slug="<?= e($room_slug) ?>">
     <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
-    <input type="hidden" name="checkin"  id="availCheckinHidden">
-    <input type="hidden" name="checkout" id="availCheckoutHidden">
 
-    <div class="avail-summary" id="availSummary">
-      <span id="availSummaryText"></span>
-      <button type="button" class="avail-change-btn" id="availChangeDates">Change dates</button>
-    </div>
-    <div class="avail-rate-notice" id="availRateNotice" hidden>
-      ★ Prices vary — some nights in your stay are at a special rate
+    <div class="booking-field booking-field--row" style="gap:8px">
+      <label style="flex:1">
+        <span>Check-in</span>
+        <input type="date" name="checkin" id="availCheckin" required
+               min="<?= e($today_iso) ?>" value="<?= e($today_iso) ?>">
+      </label>
+      <label style="flex:1">
+        <span>Check-out</span>
+        <input type="date" name="checkout" id="availCheckout" required
+               min="<?= e($tomorrow_iso) ?>" value="<?= e($tomorrow_iso) ?>">
+      </label>
     </div>
 
-    <label class="booking-field">
-      <span>Your name</span>
-      <input type="text" name="name" placeholder="Full name" required>
-    </label>
-    <label class="booking-field">
-      <span>Email</span>
-      <input type="email" name="email" placeholder="Your email" required>
-    </label>
-    <label class="booking-field">
-      <span>Phone</span>
-      <input type="tel" name="phone" placeholder="Your phone">
-    </label>
+    <div class="avail-summary" id="availSummary" style="display:block">
+      <span id="availSummaryText">Select your dates</span>
+    </div>
 
     <div class="booking-field booking-field--row">
       <span>Adults <small>(18+)</small></span>
@@ -74,6 +56,18 @@ $room_curr  = $room['price_currency'] ?? 'USD';
     </div>
 
     <label class="booking-field">
+      <span>Your name</span>
+      <input type="text" name="name" placeholder="Full name" required>
+    </label>
+    <label class="booking-field">
+      <span>Email</span>
+      <input type="email" name="email" placeholder="Your email" required>
+    </label>
+    <label class="booking-field">
+      <span>Phone</span>
+      <input type="tel" name="phone" placeholder="Your phone">
+    </label>
+    <label class="booking-field">
       <span>Message</span>
       <textarea name="message" rows="2" placeholder="Special requests?"></textarea>
     </label>
@@ -85,9 +79,9 @@ $room_curr  = $room['price_currency'] ?? 'USD';
     <?php endif; ?>
 
     <button type="submit" class="btn btn--primary booking-card__submit">
-      Request Hold <span aria-hidden="true">&rsaquo;</span>
+      Check availability &amp; request hold <span aria-hidden="true">&rsaquo;</span>
     </button>
-    <p class="avail-hold-note">Dates held 24 hours pending confirmation</p>
+    <p class="avail-hold-note">We'll confirm availability and hold your dates for 24 hours</p>
   </form>
 
 </div>
