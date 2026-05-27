@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS units (
     name       VARCHAR(100) NOT NULL DEFAULT 'Unit A',
     sort_order INT          NOT NULL DEFAULT 0,
     is_active  BOOLEAN      NOT NULL DEFAULT TRUE,
+    feed_token VARCHAR(40)  NOT NULL DEFAULT md5(random()::text || clock_timestamp()::text),
     created_at TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_units_room_id ON units(room_id);

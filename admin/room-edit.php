@@ -406,12 +406,24 @@ include __DIR__ . '/_layout.php';
       <p style="padding:24px;text-align:center;color:var(--muted)">No units yet. Add at least one to enable availability booking for this room.</p>
       <?php else: ?>
       <table class="data-table">
-        <thead><tr><th>Name</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>Status</th><th>iCal Feed URL</th><th></th></tr></thead>
         <tbody>
-        <?php foreach ($units as $unit): ?>
+        <?php
+        $env_re = parse_env();
+        $site_url_re = rtrim($env_re['SITE_URL'] ?? '', '/');
+        foreach ($units as $unit):
+        ?>
         <tr>
           <td><?= e($unit['name']) ?></td>
           <td><?= $unit['is_active'] ? '<span class="badge badge--green">Active</span>' : '<span class="badge badge--grey">Inactive</span>' ?></td>
+          <td style="font-size:11px;max-width:260px">
+            <?php if (!empty($unit['feed_token'])): ?>
+            <input type="text" readonly onclick="this.select()"
+                   value="<?= e($site_url_re . '/api/ical.php?unit=' . $unit['id'] . '&token=' . $unit['feed_token']) ?>"
+                   style="width:100%;font-family:monospace;font-size:10px;background:#f9fafb;padding:3px 6px;border:1px solid var(--border);border-radius:3px"
+                   title="iCal feed URL — share with OTAs">
+            <?php endif; ?>
+          </td>
           <td style="text-align:right">
             <form method="POST" action="/admin/room-edit.php?id=<?= $id ?>" style="display:inline"
                   onsubmit="return confirm('Delete this unit? Cannot be undone if it has existing bookings.')">

@@ -185,6 +185,51 @@ function create_hold_with_block(
     return $hold_id;
 }
 
+/**
+ * Returns a list of fully-blocked dates (YYYY-MM-DD) for a room:
+ * a date is fully blocked when every active unit has a block covering it.
+ * Used by the public availability calendar widget.
+ */
+function get_room_blocked_dates(int $room_id, string $from, string $to): array {
+    $unit_count = (int)db_query(
+        'SELECT COUNT(*) FROM units WHERE room_id = :id AND is_active = TRUE',
+        [':id' => $room_id]
+    )->fetchColumn();
+
+    if ($unit_count === 0) return [];
+
+    $blocks = db_query(
+        "SELECT ab.unit_id, ab.date_from, ab.date_to
+         FROM availability_blocks ab
+         JOIN units u ON u.id = ab.unit_id
+         WHERE u.room_id = :rid AND u.is_active = TRUE
+           AND ab.date_to > :from AND ab.date_from < :to
+         ORDER BY ab.date_from",
+        [':rid' => $room_id, ':from' => $from, ':to' => $to]
+    )->fetchAll();
+
+    // Map each date to the set of unit IDs blocking it
+    $date_units = [];
+    foreach ($blocks as $b) {
+        $d   = new DateTime($b['date_from']);
+        $end = new DateTime($b['date_to']);
+        while ($d < $end) {
+            $key = $d->format('Y-m-d');
+            $date_units[$key][$b['unit_id']] = true;
+            $d->modify('+1 day');
+        }
+    }
+
+    $fully_blocked = [];
+    foreach ($date_units as $date => $uid_map) {
+        if (count($uid_map) >= $unit_count) {
+            $fully_blocked[] = $date;
+        }
+    }
+    sort($fully_blocked);
+    return $fully_blocked;
+}
+
 function e(mixed $val): string {
     return htmlspecialchars((string)$val, ENT_QUOTES, 'UTF-8');
 }
