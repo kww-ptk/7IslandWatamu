@@ -27,9 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 
   // ---- Booking sidebar steppers ----
+  // Skip if availability form is active — that form has its own scoped stepper.
   (function initBooking() {
     const card = document.querySelector(".booking-card");
     if (!card) return;
+    if (card.querySelector("#availCalendar")) return; // availability mode handles its own
     const counts = { adult: 1, child: 0 };
     card.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-bk]");
@@ -39,6 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
       counts[key] = Math.max(min, Math.min(20, counts[key] + parseInt(btn.dataset.dir, 10)));
       const el = card.querySelector(`[data-bk-count="${key}"]`);
       if (el) el.textContent = counts[key];
+      // Sync hidden input so the form submits the actual count
+      const hidden = card.querySelector(`[name="${key === "adult" ? "adults" : "children"}"]`);
+      if (hidden) hidden.value = counts[key];
     });
   })();
 
