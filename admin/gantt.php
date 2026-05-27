@@ -191,13 +191,13 @@ include __DIR__ . '/_layout.php';
 .gantt-month-cell { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; background: var(--sidebar-bg); color: #fff; height: 20px; border-right: 1px solid rgba(255,255,255,.15); }
 /* Day header */
 .gantt-day-h { width: 28px; min-width: 28px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); border-right: 1px solid var(--border); flex-shrink: 0; }
-.gantt-day-h.is-today { background: #fff3e0; color: var(--accent); font-weight: 700; }
+.gantt-day-h.is-today { background: #e0f2fe; color: #0369a1; font-weight: 700; }
 .gantt-day-h.is-weekend { background: #f8f9fa; }
 /* Row cells */
 .gantt-cells { position: relative; display: flex; flex: 1; height: 36px; border-bottom: 1px solid var(--border); }
 .gantt-day-cell { width: 28px; min-width: 28px; height: 100%; border-right: 1px solid #f0f0f0; cursor: pointer; flex-shrink: 0; transition: background .1s; }
 .gantt-day-cell:hover { background: #f0f8fa; }
-.gantt-day-cell.is-today { background: #fffde7; }
+.gantt-day-cell.is-today { background: #f0f9ff; }
 .gantt-day-cell.is-weekend { background: #fafafa; }
 .gantt-day-cell.is-selecting { background: #dceeff; }
 /* Blocks */
@@ -222,7 +222,7 @@ include __DIR__ . '/_layout.php';
 .gantt-day-h.is-rate { background: #fef9c3; color: #92400e; }
 .gantt-day-cell.is-rate { background: #fefce8; }
 .gantt-day-cell.is-rate:hover { background: #fef08a; }
-.gantt-day-cell.is-today.is-rate { background: #fef08a; }
+.gantt-day-cell.is-today.is-rate { background: #fef9c3; }
 /* Custom date picker */
 .dp { position: relative; }
 .dp__display { display: block; width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; cursor: pointer; background: #fff; color: var(--muted); user-select: none; box-sizing: border-box; }
