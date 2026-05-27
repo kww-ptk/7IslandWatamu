@@ -141,6 +141,15 @@ $rates = db_query(
      ORDER BY r.date_from ASC LIMIT 100"
 )->fetchAll();
 
+// Build set of dates (within current view) that have a rate override
+$rate_dates = [];
+foreach ($rates as $r) {
+    if ($r['date_from'] >= $end_str || $r['date_to'] <= $start_str) continue;
+    $rd = new DateTime(max($r['date_from'], $start_str));
+    $re = new DateTime(min($r['date_to'],   $end_str));
+    while ($rd < $re) { $rate_dates[$rd->format('Y-m-d')] = true; $rd->modify('+1 day'); }
+}
+
 $ical_feeds = db_query(
     "SELECT f.*, u.name AS unit_name, r.name AS room_name
      FROM ical_feeds f
@@ -200,6 +209,11 @@ include __DIR__ . '/_layout.php';
 .g-modal__box { background: #fff; border-radius: 8px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
 .g-modal__box h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
 .g-modal__actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+/* Rate-override day highlight */
+.gantt-day-h.is-rate { background: #fef9c3; color: #92400e; }
+.gantt-day-cell.is-rate { background: #fefce8; }
+.gantt-day-cell.is-rate:hover { background: #fef08a; }
+.gantt-day-cell.is-today.is-rate { background: #fef08a; }
 /* Custom date picker */
 .dp { position: relative; }
 .dp__display { display: block; width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; cursor: pointer; background: #fff; color: var(--muted); user-select: none; box-sizing: border-box; }
@@ -265,9 +279,10 @@ include __DIR__ . '/_layout.php';
         <?php foreach ($days as $day):
           $dow = (int)date('N', strtotime($day));
           $isToday = $day === date('Y-m-d');
-          $cls = ($isToday ? ' is-today' : '') . ($dow >= 6 ? ' is-weekend' : '');
+          $isRate  = isset($rate_dates[$day]);
+          $cls = ($isToday ? ' is-today' : '') . ($dow >= 6 ? ' is-weekend' : '') . ($isRate ? ' is-rate' : '');
         ?>
-        <div class="gantt-day-h<?= $cls ?>" title="<?= date('D d M', strtotime($day)) ?>">
+        <div class="gantt-day-h<?= $cls ?>" title="<?= date('D d M', strtotime($day)) . ($isRate ? ' ★ Rate override' : '') ?>">
           <?= date('j', strtotime($day)) ?>
         </div>
         <?php endforeach; ?>
@@ -294,7 +309,8 @@ include __DIR__ . '/_layout.php';
       <?php foreach ($days as $i => $day):
         $dow = (int)date('N', strtotime($day));
         $isToday = $day === date('Y-m-d');
-        $cls = ($isToday ? ' is-today' : '') . ($dow >= 6 ? ' is-weekend' : '');
+        $isRate  = isset($rate_dates[$day]);
+        $cls = ($isToday ? ' is-today' : '') . ($dow >= 6 ? ' is-weekend' : '') . ($isRate ? ' is-rate' : '');
       ?>
       <div class="gantt-day-cell<?= $cls ?>" data-date="<?= e($day) ?>" data-unit="<?= e($unit['id']) ?>"></div>
       <?php endforeach; ?>
@@ -332,6 +348,7 @@ include __DIR__ . '/_layout.php';
   <span><span style="display:inline-block;width:12px;height:12px;background:#2e7d32;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Booked</span>
   <span><span style="display:inline-block;width:12px;height:12px;background:#e07b39;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Hold (pending)</span>
   <span><span style="display:inline-block;width:12px;height:12px;background:#6b7c85;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Blocked</span>
+  <span><span style="display:inline-block;width:12px;height:12px;background:#fef9c3;border:1px solid #f59e0b;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Rate override</span>
   <span style="color:var(--muted)">Click empty cells to block · Click blocks to delete</span>
 </div>
 

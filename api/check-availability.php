@@ -28,24 +28,44 @@ if ($check_in && $check_out) {
 
     $unit = find_available_unit($room['id'], $check_in, $check_out);
 
-    // Rate override for these dates (use earliest matching rate)
-    $rate = db_query(
-        "SELECT price_amount FROM rates
-         WHERE room_id = :rid AND date_from <= :ci AND date_to >= :co
-         ORDER BY created_at DESC LIMIT 1",
-        [':rid' => $room['id'], ':ci' => $check_in, ':co' => $check_out]
-    )->fetchColumn();
-
-    $price_per_night = $rate !== false ? (float)$rate : (float)$room['price_amount'];
     $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
+
+    // Fetch all rates overlapping this range, build per-night price lookup
+    // (multiple rates can cover different nights within the same stay)
+    $overlap_rates = db_query(
+        "SELECT date_from, date_to, price_amount FROM rates
+         WHERE room_id = :rid AND date_from < :co AND date_to > :ci
+         ORDER BY created_at DESC",
+        [':rid' => $room['id'], ':ci' => $check_in, ':co' => $check_out]
+    )->fetchAll();
+
+    $rate_by_night = [];
+    foreach ($overlap_rates as $r) {
+        $rd = new DateTime($r['date_from']);
+        $re = new DateTime($r['date_to']);
+        while ($rd < $re) {
+            $key = $rd->format('Y-m-d');
+            if (!isset($rate_by_night[$key])) $rate_by_night[$key] = (float)$r['price_amount'];
+            $rd->modify('+1 day');
+        }
+    }
+
+    $default_price = (float)$room['price_amount'];
+    $total = 0.0;
+    $d = new DateTime($check_in);
+    $end_dt = new DateTime($check_out);
+    while ($d < $end_dt) {
+        $total += $rate_by_night[$d->format('Y-m-d')] ?? $default_price;
+        $d->modify('+1 day');
+    }
 
     exit(json_encode([
         'available'       => (bool)$unit,
-        'price_per_night' => $price_per_night,
+        'price_per_night' => round($total / $nights, 2),
         'currency'        => $room['price_currency'],
         'price_unit'      => $room['price_unit'],
         'nights'          => $nights,
-        'total'           => round($price_per_night * $nights, 2),
+        'total'           => round($total, 2),
     ]));
 }
 

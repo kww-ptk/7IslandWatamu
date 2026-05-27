@@ -182,18 +182,34 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCalendar();
     }
 
-    function showDateSummary() {
+    async function showDateSummary() {
+      const ci  = ymd(selStart);
+      const co  = ymd(selEnd);
       const nights = Math.round((selEnd - selStart) / 86400000);
       const fmt = d => d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
-      const total = (defPrice * nights).toLocaleString("en-US", { style:"currency", currency });
+      const dateRange = `${fmt(selStart)} → ${fmt(selEnd)} · ${nights} night${nights>1?"s":""}`;
 
-      document.getElementById("availCheckinHidden").value  = ymd(selStart);
-      document.getElementById("availCheckoutHidden").value = ymd(selEnd);
-      document.getElementById("availSummaryText").textContent =
-        `${fmt(selStart)} → ${fmt(selEnd)} · ${nights} night${nights>1?"s":""} · ${total}`;
+      document.getElementById("availCheckinHidden").value  = ci;
+      document.getElementById("availCheckoutHidden").value = co;
 
+      // Show step 2 immediately while price loads
+      document.getElementById("availSummaryText").textContent = dateRange + " · …";
       step1.style.display = "none";
       step2.style.display = "block";
+
+      // Fetch real price — picks up any rate overrides configured in admin
+      try {
+        const res  = await fetch(`/api/check-availability.php?room=${encodeURIComponent(slug)}&check_in=${ci}&check_out=${co}`);
+        const data = await res.json();
+        const totalFmt = data.total != null
+          ? data.total.toLocaleString("en-US", { style:"currency", currency: data.currency ?? currency })
+          : (defPrice * nights).toLocaleString("en-US", { style:"currency", currency });
+        document.getElementById("availSummaryText").textContent = dateRange + " · " + totalFmt;
+      } catch {
+        // Fallback to room default price if API unreachable
+        const totalFmt = (defPrice * nights).toLocaleString("en-US", { style:"currency", currency });
+        document.getElementById("availSummaryText").textContent = dateRange + " · " + totalFmt;
+      }
     }
 
     // "Change dates" resets to step 1
