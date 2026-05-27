@@ -4,6 +4,19 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_login();
 
+// ── Delete (POST) ────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+    verify_csrf();
+    $delete_id = (int)($_POST['id'] ?? 0);
+    if ($delete_id > 0) {
+        db_query('DELETE FROM submissions WHERE id = :id', [':id' => $delete_id]);
+    }
+    // Preserve filters/page when redirecting back
+    $qs = $_SERVER['QUERY_STRING'] ?? '';
+    header('Location: /admin/submissions.php' . ($qs ? '?' . $qs : ''));
+    exit;
+}
+
 // ── Filters ──────────────────────────────────────────────────────
 $type     = $_GET['type']     ?? '';
 $room_id  = isset($_GET['room_id']) ? (int)$_GET['room_id'] : 0;
@@ -194,7 +207,16 @@ include __DIR__ . '/_layout.php';
           <td class="text-muted"><?= $row['check_in'] ? e(date('d M Y', strtotime($row['check_in']))) : '—' ?></td>
           <td class="text-muted"><?= e(date('d M Y', strtotime($row['created_at']))) ?></td>
           <td>
-            <a href="/admin/submission-view.php?id=<?= e($row['id']) ?>" class="btn-sm btn-outline">View</a>
+            <div style="display:flex;gap:6px;justify-content:flex-end">
+              <a href="/admin/submission-view.php?id=<?= e($row['id']) ?>" class="btn-sm btn-outline">View</a>
+              <form method="POST" action="/admin/submissions.php?<?= qs() ?>" style="display:inline"
+                    onsubmit="return confirm('Delete submission #<?= e($row['id']) ?>? This cannot be undone.');">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="<?= e($row['id']) ?>">
+                <button type="submit" class="btn-sm btn-outline" style="color:#b00020;border-color:#e5b4bc">Delete</button>
+              </form>
+            </div>
           </td>
         </tr>
         <?php endforeach; ?>
