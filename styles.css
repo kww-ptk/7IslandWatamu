@@ -2042,3 +2042,8 @@ input:focus-visible,
   .bk-stepper button { width: 36px; height: 36px; }
   .bk-submit { padding: 15px 16px; }
 }
+
+/* Availability hint tones inside the dates popover */
+.bk-pop__hint[data-tone="ok"]      { color: #1f7a4a; font-weight: 600; }
+.bk-pop__hint[data-tone="bad"]     { color: #b91c1c; font-weight: 600; }
+.bk-pop__hint[data-tone="loading"] { color: var(--text-light); font-style: italic; }

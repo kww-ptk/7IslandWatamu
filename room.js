@@ -181,20 +181,57 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!selStart || (selStart && selEnd)) {
         // Start fresh
         selStart = clicked; selEnd = null;
-        datesHint.textContent = "Now select your check-out date";
+        setHint("Now select your check-out date", "neutral");
       } else if (clicked <= selStart) {
         // Clicked earlier than current start — move start
         selStart = clicked; selEnd = null;
-        datesHint.textContent = "Now select your check-out date";
+        setHint("Now select your check-out date", "neutral");
       } else {
         // Valid check-out
         selEnd = clicked;
-        datesHint.textContent = "Press Done to confirm";
       }
       clearHoverRange();
       renderCal();
       updateDatesPill();
       updateTotal();
+
+      // Both dates set → check live availability
+      if (selStart && selEnd) checkAvailability();
+    }
+
+    function setHint(text, tone /* neutral | ok | bad | loading */) {
+      datesHint.textContent = text;
+      datesHint.dataset.tone = tone || "neutral";
+    }
+
+    let availSeq = 0;            // monotonic to ignore stale responses
+    let availOk = null;          // true / false / null
+    async function checkAvailability() {
+      if (!selStart || !selEnd) return;
+      const ci = ymd(selStart), co = ymd(selEnd);
+      setHint("Checking availability…", "loading");
+      const mySeq = ++availSeq;
+      try {
+        const res = await fetch(`/api/check-availability.php?room=${encodeURIComponent(slug)}&check_in=${ci}&check_out=${co}`);
+        const data = await res.json();
+        if (mySeq !== availSeq) return; // a newer selection has fired
+        availOk = !!data.available;
+        if (data.available) {
+          const nights = data.nights || Math.round((selEnd - selStart) / 86400000);
+          const totalFmt = (data.total || 0).toLocaleString("en-US", { style: "currency", currency: data.currency || currency });
+          setHint(`✓ Available — ${nights} night${nights > 1 ? "s" : ""} · ${totalFmt}`, "ok");
+          // Refresh total card with real price (may include rate overrides)
+          totalLabel.textContent = `${nights} night${nights > 1 ? "s" : ""}`;
+          totalPrice.textContent = totalFmt;
+          totalCard.hidden = false;
+        } else {
+          setHint("✗ Sorry — no availability for these dates. Try different ones.", "bad");
+        }
+      } catch {
+        if (mySeq !== availSeq) return;
+        availOk = null;
+        setHint("Couldn't verify availability right now — try again.", "bad");
+      }
     }
 
     function updateDatesPill() {
@@ -246,6 +283,11 @@ document.addEventListener("DOMContentLoaded", () => {
     guestsBtn.addEventListener("click", e => { e.stopPropagation(); togglePop(guestsBtn, guestsPop); });
     datesDone.addEventListener("click", closeAllPops);
     guestsDone.addEventListener("click", closeAllPops);
+    // Prevent clicks inside the popovers from reaching the document-level
+    // outside-click handler. Needed because the calendar re-renders mid-click,
+    // detaching e.target so wrap.contains() returns false and the pop closes.
+    datesPop.addEventListener("click",  e => e.stopPropagation());
+    guestsPop.addEventListener("click", e => e.stopPropagation());
     document.addEventListener("click", e => {
       if (!wrap.contains(e.target)) closeAllPops();
     });
@@ -288,6 +330,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!ciHidden.value || !coHidden.value) {
         showError("Please pick your check-in and check-out dates.");
+        togglePop(datesBtn, datesPop);
+        return;
+      }
+      if (availOk === false) {
+        showError("Those dates aren't available. Please pick a different range.");
         togglePop(datesBtn, datesPop);
         return;
       }
