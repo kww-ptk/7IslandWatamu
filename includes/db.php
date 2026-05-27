@@ -131,11 +131,31 @@ function expire_stale_holds(): void {
         "UPDATE holds SET status='expired' WHERE status='pending' AND expires_at < NOW() RETURNING id"
     );
     $stmt->execute();
-    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $hid) {
+    $expired_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (empty($expired_ids)) return;
+
+    foreach ($expired_ids as $hid) {
         db_query(
             "DELETE FROM availability_blocks WHERE hold_id = :hid AND block_type = 'hold'",
             [':hid' => $hid]
         );
+    }
+
+    // Notify each guest — lazy-load mail to avoid circular dependency
+    require_once __DIR__ . '/mail.php';
+    foreach ($expired_ids as $hid) {
+        $hold = db_query(
+            "SELECT h.*, u.name AS unit_name, r.name AS room_name
+             FROM holds h
+             JOIN units u ON u.id = h.unit_id
+             JOIN rooms r ON r.id = u.room_id
+             WHERE h.id = :id",
+            [':id' => $hid]
+        )->fetch();
+        if ($hold && !empty($hold['guest_email'])) {
+            send_hold_cancelled($hold, 'expired');
+        }
     }
 }
 

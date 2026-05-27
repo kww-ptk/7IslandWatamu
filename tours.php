@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/db.php';
 
-$pageTitle    = 'Safari &amp; Excursion — Seven Islands Resort, Watamu';
+$pageTitle    = 'Safari & Excursion — Seven Islands Resort, Watamu';
 $metaDesc     = 'Explore Kenya from Seven Islands Resort — classic safaris to Tsavo and the Masai Mara, custom journeys, and day excursions along the Watamu coast.';
 $activeNav    = 'tours';
 $canonicalUrl = site_url('tours.php');

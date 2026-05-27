@@ -12,15 +12,24 @@ $jsonLd       = json_encode([
     'description' => $metaDesc,
     'url'         => $canonicalUrl,
     'mainEntity'  => [
-        '@type'       => 'LodgingBusiness',
-        'name'        => 'Seven Islands Resort',
-        'url'         => site_url(),
-        'description' => $metaDesc,
+        '@type'        => 'LodgingBusiness',
+        'name'         => 'Seven Islands Resort',
+        'url'          => site_url(),
+        'description'  => $metaDesc,
         'foundingDate' => '1994',
-        'address'     => [
+        'telephone'    => '+2540713326336',
+        'email'        => 'reservation@sevenislandswatamu.com',
+        'address'      => [
             '@type'           => 'PostalAddress',
+            'streetAddress'   => 'Jacaranda Road, P.O. Box 424',
             'addressLocality' => 'Watamu',
+            'postalCode'      => '80202',
             'addressCountry'  => 'KE',
+        ],
+        'geo' => [
+            '@type'     => 'GeoCoordinates',
+            'latitude'  => -3.3567,
+            'longitude' => 40.0167,
         ],
     ],
 ]);

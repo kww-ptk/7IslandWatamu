@@ -11,6 +11,14 @@ expire_stale_holds();
 $success = '';
 $error   = '';
 
+// Flash message from tokenized email action (hold-action.php redirect)
+if (!empty($_SESSION['hold_flash'])) {
+    $flash = $_SESSION['hold_flash'];
+    unset($_SESSION['hold_flash']);
+    if ($flash['type'] === 'success') $success = $flash['msg'];
+    else                               $error   = $flash['msg'];
+}
+
 // ── POST: confirm or cancel a hold ──────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();

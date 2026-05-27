@@ -9,22 +9,57 @@ $headerSolid  = false;
 $canonicalUrl = site_url('index.php');
 $ogImage      = site_url('assets/img/7islands_resort_watamu1.jpg');
 $jsonLd       = json_encode([
-    '@context' => 'https://schema.org',
-    '@type'    => 'LodgingBusiness',
-    'name'     => 'Seven Islands Resort',
-    'url'      => site_url(),
-    'description' => 'Award-winning all-inclusive seafront resort in Watamu, Kenya.',
-    'address'  => [
+    '@context'   => 'https://schema.org',
+    '@type'      => 'LodgingBusiness',
+    'name'       => 'Seven Islands Resort',
+    'url'        => site_url(),
+    'description' => 'Award-winning all-inclusive seafront resort in Watamu, Kenya. Private beach, pools, spa, safaris, and warm Swahili hospitality on the Indian Ocean coast.',
+    'address'    => [
         '@type'           => 'PostalAddress',
         'streetAddress'   => 'Jacaranda Road, P.O. Box 424',
         'addressLocality' => 'Watamu',
+        'addressRegion'   => 'Coast',
+        'postalCode'      => '80202',
         'addressCountry'  => 'KE',
     ],
-    'telephone' => '+2540713326336',
-    'email'     => 'reservation@sevenislandswatamu.com',
-    'image'     => site_url('assets/img/7islands_resort_watamu1.jpg'),
+    'geo' => [
+        '@type'     => 'GeoCoordinates',
+        'latitude'  => -3.3567,
+        'longitude' => 40.0167,
+    ],
+    'telephone'  => '+2540713326336',
+    'email'      => 'reservation@sevenislandswatamu.com',
+    'image'      => site_url('assets/img/7islands_resort_watamu1.jpg'),
     'priceRange' => '$$$',
-    'starRating' => ['@type' => 'Rating', 'ratingValue' => '5'],
+    'starRating' => ['@type' => 'Rating', 'ratingValue' => '4'],
+    'aggregateRating' => [
+        '@type'       => 'AggregateRating',
+        'ratingValue' => '4.5',
+        'reviewCount' => '1859',
+        'bestRating'  => '5',
+        'worstRating' => '1',
+    ],
+    'openingHoursSpecification' => [[
+        '@type'     => 'OpeningHoursSpecification',
+        'dayOfWeek' => ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+        'opens'     => '00:00',
+        'closes'    => '23:59',
+    ]],
+    'amenityFeature' => [
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Private Beach',    'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Swimming Pool',    'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Kids Pool',        'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Spa',              'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Free WiFi',        'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Restaurant',       'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Beach Bar',        'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Gym',              'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Kids Club',        'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Safari & Excursions', 'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'All-Inclusive',    'value' => true],
+        ['@type' => 'LocationFeatureSpecification', 'name' => 'Ocean View',       'value' => true],
+    ],
+    'hasMap' => 'https://www.google.com/maps/search/Seven+Islands+Resort+Watamu+Kenya',
 ]);
 
 // Fetch published rooms for carousel (graceful fallback if DB unavailable)

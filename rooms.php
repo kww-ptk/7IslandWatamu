@@ -2,11 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/db.php';
 
-$pageTitle    = 'Rooms &amp; Suites — Seven Islands Resort, Watamu';
+$pageTitle    = 'Rooms & Suites — Seven Islands Resort, Watamu';
 $metaDesc     = 'Browse all rooms and suites at Seven Islands Resort in Watamu, Kenya — from classic rooms to luxury ocean suites, all fully inclusive.';
 $activeNav    = 'rooms';
 $canonicalUrl = site_url('rooms.php');
-include __DIR__ . '/includes/header.php';
 
 $rooms = db_query(
     'SELECT r.*,
@@ -15,6 +14,30 @@ $rooms = db_query(
      WHERE r.is_published = TRUE
      ORDER BY r.sort_order ASC'
 )->fetchAll();
+
+$jsonLd = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'ItemList',
+    'name'        => 'Rooms & Suites — Seven Islands Resort',
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'itemListElement' => array_values(array_map(function ($r, $i) {
+        return [
+            '@type'    => 'ListItem',
+            'position' => $i + 1,
+            'item'     => [
+                '@type'       => 'HotelRoom',
+                'name'        => $r['name'],
+                'description' => $r['short_desc'] ?? '',
+                'url'         => site_url('room.php?slug=' . urlencode($r['slug'])),
+                'occupancy'   => $r['capacity'] ? ['@type' => 'QuantitativeValue', 'maxValue' => (int)$r['capacity']] : null,
+                'floorSize'   => $r['size_sqm']  ? ['@type' => 'QuantitativeValue', 'value' => (int)$r['size_sqm'], 'unitCode' => 'MTK'] : null,
+            ],
+        ];
+    }, $rooms, array_keys($rooms))),
+]);
+
+include __DIR__ . '/includes/header.php';
 ?>
 
   <section class="page-hero" style="background:linear-gradient(rgba(11,98,115,.5),rgba(11,98,115,.62)),url('assets/img/7islands_resort_watamu14.webp') center/cover no-repeat;">

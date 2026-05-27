@@ -5,6 +5,20 @@ $pageTitle    = 'Travel Agency — Seven Islands Resort, Watamu';
 $metaDesc     = 'Travel agents and tour operators — register as a partner with Seven Islands Resort, Watamu. Competitive rates and dedicated support.';
 $activeNav    = 'agency';
 $canonicalUrl = site_url('agency.php');
+$jsonLd       = json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'WebPage',
+    'name'        => 'Travel Agency Partners — Seven Islands Resort',
+    'description' => $metaDesc,
+    'url'         => $canonicalUrl,
+    'mainEntity'  => [
+        '@type'       => 'LodgingBusiness',
+        'name'        => 'Seven Islands Resort',
+        'url'         => site_url(),
+        'description' => 'Partner with Seven Islands Resort, Watamu Kenya — competitive rates for travel agents and tour operators.',
+        'address'     => ['@type' => 'PostalAddress', 'addressLocality' => 'Watamu', 'addressCountry' => 'KE'],
+    ],
+]);
 include __DIR__ . '/includes/header.php';
 ?>
 

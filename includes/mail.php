@@ -71,14 +71,16 @@ function build_email_body(array $sub, string $site_url): string {
     return implode("\n", $lines);
 }
 
-function send_resend(string $to, string $subject, string $text, string $from, string $reply_to, string $api_key): void {
-    $payload = json_encode([
+function send_resend(string $to, string $subject, string $text, string $from, string $reply_to, string $api_key, string $html = ''): void {
+    $body = [
         'from'     => $from,
         'to'       => [$to],
         'reply_to' => $reply_to ?: null,
         'subject'  => $subject,
         'text'     => $text,
-    ]);
+    ];
+    if ($html !== '') $body['html'] = $html;
+    $payload = json_encode($body);
 
     $ctx = stream_context_create(['http' => [
         'method'        => 'POST',
@@ -109,15 +111,31 @@ function send_smtp(string $to, string $subject, string $body, string $headers, a
 // ── Hold notifications ──────────────────────────────────────────
 
 function send_hold_notification(array $hold): void {
-    $env    = parse_env();
-    $to     = setting('notify_email', 'reservation@sevenislandswatamu.com');
-    $from   = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
-    $site   = rtrim($env['SITE_URL'] ?? '', '/');
+    require_once __DIR__ . '/booking.php';
 
-    $subject = "[Hold Request] {$hold['room_name']} ({$hold['unit_name']}) — {$hold['guest_name']} — {$hold['check_in']} to {$hold['check_out']}";
-    $expires = isset($hold['expires_at']) ? date('d M Y H:i', strtotime($hold['expires_at'])) : '24 hours';
+    $env     = parse_env();
+    $to      = setting('notify_email', 'reservation@sevenislandswatamu.com');
+    $from    = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+    $site    = rtrim($env['SITE_URL'] ?? '', '/');
+    $holdId  = (int)$hold['id'];
+    $expires = isset($hold['expires_at']) ? date('d M Y H:i', strtotime($hold['expires_at'])) . ' (UTC+3)' : '24 hours';
 
-    $body = implode("\n", [
+    $subject = "[Hold Request] {$hold['room_name']} — {$hold['guest_name']} — {$hold['check_in']} to {$hold['check_out']}";
+
+    // Build action URLs if token secret is configured
+    $confirm_url = $site . '/admin/holds.php';
+    $decline_url = $site . '/admin/holds.php';
+    $has_tokens  = false;
+    $ct = make_hold_token($holdId, 'confirm');
+    $dt = make_hold_token($holdId, 'decline');
+    if ($ct && $dt) {
+        $confirm_url = $site . '/admin/hold-action.php?id=' . $holdId . '&action=confirm&t=' . urlencode($ct);
+        $decline_url = $site . '/admin/hold-action.php?id=' . $holdId . '&action=decline&t=' . urlencode($dt);
+        $has_tokens  = true;
+    }
+
+    // Plain-text fallback (all mail drivers)
+    $text_lines = [
         'NEW HOLD REQUEST — 24-HOUR SOFT HOLD',
         str_repeat('-', 40),
         "Guest:     {$hold['guest_name']}",
@@ -127,36 +145,202 @@ function send_hold_notification(array $hold): void {
         "Check-out: {$hold['check_out']}",
         "Expires:   {$expires}",
         '',
-        'Confirm or cancel within 24 hours — hold expires automatically.',
-        '',
-        "Manage holds: {$site}/admin/holds.php",
+    ];
+    if ($has_tokens) {
+        $text_lines[] = "CONFIRM: {$confirm_url}";
+        $text_lines[] = "DECLINE: {$decline_url}";
+    } else {
+        $text_lines[] = "Manage holds: {$site}/admin/holds.php";
+        $text_lines[] = '(Set BOOKING_TOKEN_SECRET in .env to enable one-click confirm/decline buttons.)';
+    }
+    $text = implode("\n", $text_lines);
+
+    // HTML email with action buttons
+    $html = _hold_notification_html([
+        'guest_name'  => $hold['guest_name'],
+        'guest_email' => $hold['guest_email'],
+        'room_name'   => $hold['room_name'],
+        'unit_name'   => $hold['unit_name'],
+        'check_in'    => $hold['check_in'],
+        'check_out'   => $hold['check_out'],
+        'expires'     => $expires,
+        'confirm_url' => $confirm_url,
+        'decline_url' => $decline_url,
+        'holds_url'   => $site . '/admin/holds.php',
+        'has_tokens'  => $has_tokens,
     ]);
 
-    _dispatch_mail($to, $subject, $body, $from, $hold['guest_email'] ?? '', $env);
+    _dispatch_mail($to, $subject, $text, $from, $hold['guest_email'] ?? '', $env, $html);
+}
+
+function _hold_notification_html(array $d): string {
+    $esc = fn(string $v) => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    $btn = fn(string $url, string $label, string $bg) =>
+        '<a href="' . $esc($url) . '" style="background:' . $bg . ';color:#fff;padding:14px 28px;border-radius:6px;'
+        . 'text-decoration:none;font-size:15px;font-weight:700;display:inline-block;margin:0 6px;mso-padding-alt:0">'
+        . $label . '</a>';
+
+    $action_block = $d['has_tokens']
+        ? '<div style="margin:32px 0;text-align:center">'
+            . $btn($d['confirm_url'], '&#10003; Confirm Hold', '#16a34a')
+            . $btn($d['decline_url'], '&#10007; Decline', '#dc2626')
+          . '</div>'
+        : '<div style="margin:24px 0;text-align:center">'
+            . $btn($d['holds_url'], 'Open Holds &amp; Bookings', '#0b6273')
+          . '</div>'
+          . '<p style="font-size:12px;color:#999;text-align:center">Set BOOKING_TOKEN_SECRET in .env to enable one-click email buttons.</p>';
+
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        . '<body style="margin:0;padding:0;background:#f0f4f5;font-family:Arial,Helvetica,sans-serif">'
+        . '<div style="max-width:600px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)">'
+          . '<div style="background:#0b6273;padding:24px 32px">'
+            . '<h1 style="margin:0;color:#fff;font-size:20px;font-weight:700">New Hold Request</h1>'
+            . '<p style="margin:6px 0 0;color:#b2d8de;font-size:14px">24-hour soft hold &mdash; please confirm or decline</p>'
+          . '</div>'
+          . '<div style="padding:32px">'
+            . '<table style="width:100%;border-collapse:collapse;margin-bottom:8px">'
+              . '<tr><td style="padding:8px 0;color:#777;font-size:13px;width:90px;vertical-align:top">Guest</td>'
+                  . '<td style="padding:8px 0;font-weight:700">' . $esc($d['guest_name']) . '</td></tr>'
+              . '<tr><td style="padding:8px 0;color:#777;font-size:13px">Email</td>'
+                  . '<td style="padding:8px 0"><a href="mailto:' . $esc($d['guest_email']) . '" style="color:#0b6273">'
+                  . $esc($d['guest_email']) . '</a></td></tr>'
+              . '<tr><td style="padding:8px 0;color:#777;font-size:13px">Room</td>'
+                  . '<td style="padding:8px 0">' . $esc($d['room_name']) . ' &middot; ' . $esc($d['unit_name']) . '</td></tr>'
+              . '<tr><td style="padding:8px 0;color:#777;font-size:13px">Check-in</td>'
+                  . '<td style="padding:8px 0;font-weight:600">' . $esc($d['check_in']) . '</td></tr>'
+              . '<tr><td style="padding:8px 0;color:#777;font-size:13px">Check-out</td>'
+                  . '<td style="padding:8px 0;font-weight:600">' . $esc($d['check_out']) . '</td></tr>'
+              . '<tr><td style="padding:8px 0;color:#777;font-size:13px">Expires</td>'
+                  . '<td style="padding:8px 0;color:#b45309;font-weight:600">' . $esc($d['expires']) . '</td></tr>'
+            . '</table>'
+            . $action_block
+            . '<p style="font-size:12px;color:#aaa;text-align:center;margin:24px 0 0">'
+              . 'Links require admin login &mdash; hold expires automatically if not actioned.<br>'
+              . '<a href="' . $esc($d['holds_url']) . '" style="color:#0b6273">Manage all holds &rarr;</a>'
+            . '</p>'
+          . '</div>'
+        . '</div>'
+        . '</body></html>';
 }
 
 function send_hold_confirmed(array $hold): void {
+    require_once __DIR__ . '/booking.php';
+
     $env  = parse_env();
     $from = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+    $site = rtrim($env['SITE_URL'] ?? '', '/');
+
+    $ref        = make_guest_ref((int)$hold['id']);
+    $manage_url = $ref ? $site . '/booking.php?ref=' . urlencode($ref) : '';
 
     $subject = "Booking Confirmed — {$hold['room_name']} — {$hold['check_in']} to {$hold['check_out']}";
-    $body = implode("\n", [
+
+    $text_lines = [
         "Dear {$hold['guest_name']},",
         '',
         'We are delighted to confirm your booking at Seven Islands Resort, Watamu.',
         '',
+        "Reference:  {$ref}",
+        "Room:       {$hold['room_name']}",
+        "Check-in:   {$hold['check_in']}",
+        "Check-out:  {$hold['check_out']}",
+        '',
+        'Our team will be in touch shortly with arrival details.',
+        '',
+    ];
+    if ($manage_url) {
+        $text_lines[] = 'View or manage your booking:';
+        $text_lines[] = $manage_url;
+        $text_lines[] = '';
+    }
+    $text_lines[] = 'Warm regards,';
+    $text_lines[] = 'Seven Islands Resort';
+    $text_lines[] = 'reservation@sevenislandswatamu.com';
+
+    $body = implode("\n", $text_lines);
+    $html = _hold_confirmed_html([
+        'guest_name' => $hold['guest_name'],
+        'room_name'  => $hold['room_name'],
+        'unit_name'  => $hold['unit_name'] ?? '',
+        'check_in'   => $hold['check_in'],
+        'check_out'  => $hold['check_out'],
+        'ref'        => $ref,
+        'manage_url' => $manage_url,
+        'site'       => $site,
+    ]);
+
+    _dispatch_mail($hold['guest_email'], $subject, $body, $from, $from, $env, $html);
+}
+
+function _hold_confirmed_html(array $d): string {
+    $esc  = fn(string $v) => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    $site = rtrim($d['site'] ?? '', '/');
+
+    $manage_block = '';
+    if ($d['manage_url']) {
+        $manage_block =
+            '<div style="margin:28px 0;text-align:center">'
+            . '<a href="' . $esc($d['manage_url']) . '" style="background:#0b6273;color:#fff;padding:14px 28px;'
+            . 'border-radius:6px;text-decoration:none;font-size:15px;font-weight:700;display:inline-block">'
+            . 'View Your Booking &rarr;</a>'
+            . '</div>';
+    }
+
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        . '<body style="margin:0;padding:0;background:#f0f4f5;font-family:Arial,Helvetica,sans-serif">'
+        . '<div style="max-width:600px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)">'
+          . '<div style="background:#0b6273;padding:24px 32px">'
+            . '<h1 style="margin:0;color:#fff;font-size:20px;font-weight:700">Booking Confirmed</h1>'
+            . '<p style="margin:6px 0 0;color:#b2d8de;font-size:14px">Seven Islands Resort, Watamu &mdash; Kenya</p>'
+          . '</div>'
+          . '<div style="padding:32px">'
+            . '<p style="margin:0 0 20px;font-size:15px">Dear <strong>' . $esc($d['guest_name']) . '</strong>,</p>'
+            . '<p style="margin:0 0 20px;font-size:15px;line-height:1.6">We are delighted to confirm your booking. Everything is set — we look forward to welcoming you!</p>'
+            . '<div style="background:#f0f9fa;border-radius:6px;padding:20px 24px;margin-bottom:8px">'
+              . '<table style="width:100%;border-collapse:collapse">'
+                . ($d['ref'] ? '<tr><td style="padding:7px 0;color:#777;font-size:13px;width:100px">Reference</td>'
+                    . '<td style="padding:7px 0;font-weight:700;font-family:monospace;font-size:14px;color:#0b6273">' . $esc($d['ref']) . '</td></tr>' : '')
+                . '<tr><td style="padding:7px 0;color:#777;font-size:13px">Room</td>'
+                    . '<td style="padding:7px 0;font-weight:600">' . $esc($d['room_name']) . '</td></tr>'
+                . '<tr><td style="padding:7px 0;color:#777;font-size:13px">Check-in</td>'
+                    . '<td style="padding:7px 0;font-weight:600">' . $esc($d['check_in']) . '</td></tr>'
+                . '<tr><td style="padding:7px 0;color:#777;font-size:13px">Check-out</td>'
+                    . '<td style="padding:7px 0;font-weight:600">' . $esc($d['check_out']) . '</td></tr>'
+              . '</table>'
+            . '</div>'
+            . $manage_block
+            . '<p style="font-size:13px;color:#777;line-height:1.6;margin-top:24px">Our team will be in touch shortly with arrival details. If you have any questions, please email us at <a href="mailto:reservation@sevenislandswatamu.com" style="color:#0b6273">reservation@sevenislandswatamu.com</a>.</p>'
+            . '<p style="font-size:14px;margin:24px 0 0">Warm regards,<br><strong>Seven Islands Resort</strong></p>'
+          . '</div>'
+          . '<div style="background:#f9fafb;padding:16px 32px;text-align:center;font-size:12px;color:#aaa">'
+            . '<a href="' . $esc($site) . '" style="color:#0b6273">sevenislandswatamu.com</a>'
+          . '</div>'
+        . '</div>'
+        . '</body></html>';
+}
+
+function send_admin_guest_cancelled(array $hold): void {
+    $env  = parse_env();
+    $to   = setting('notify_email', 'reservation@sevenislandswatamu.com');
+    $from = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+    $site = rtrim($env['SITE_URL'] ?? '', '/');
+
+    $subject = "[Guest Cancelled] {$hold['room_name']} — {$hold['guest_name']} — {$hold['check_in']} to {$hold['check_out']}";
+    $body = implode("\n", [
+        'A GUEST HAS CANCELLED THEIR OWN BOOKING',
+        str_repeat('-', 40),
+        "Guest:     {$hold['guest_name']}",
+        "Email:     {$hold['guest_email']}",
         "Room:      {$hold['room_name']}",
         "Check-in:  {$hold['check_in']}",
         "Check-out: {$hold['check_out']}",
         '',
-        'Our team will be in touch shortly with arrival details.',
+        'The dates have been freed and the guest has been notified.',
         '',
-        'Warm regards,',
-        'Seven Islands Resort',
-        'reservation@sevenislandswatamu.com',
+        "View holds: {$site}/admin/holds.php",
     ]);
 
-    _dispatch_mail($hold['guest_email'], $subject, $body, $from, $from, $env);
+    _dispatch_mail($to, $subject, $body, $from, $hold['guest_email'] ?? $from, $env);
 }
 
 function send_hold_cancelled(array $hold, string $reason = 'cancelled'): void {
@@ -187,14 +371,14 @@ function send_hold_cancelled(array $hold, string $reason = 'cancelled'): void {
     _dispatch_mail($hold['guest_email'], $subject, $body, $from, $from, $env);
 }
 
-function _dispatch_mail(string $to, string $subject, string $body, string $from, string $reply_to, array $env): void {
+function _dispatch_mail(string $to, string $subject, string $body, string $from, string $reply_to, array $env, string $html = ''): void {
     $headers  = "From: {$from}\r\n";
     $headers .= "Reply-To: {$reply_to}\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
     $headers .= "MIME-Version: 1.0\r\n";
 
     if (!empty($env['RESEND_API_KEY'])) {
-        send_resend($to, $subject, $body, $from, $reply_to, $env['RESEND_API_KEY']);
+        send_resend($to, $subject, $body, $from, $reply_to, $env['RESEND_API_KEY'], $html);
     } elseif (($env['MAIL_DRIVER'] ?? '') === 'smtp') {
         send_smtp($to, $subject, $body, $headers, $env);
     } else {

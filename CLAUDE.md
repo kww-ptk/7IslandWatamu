@@ -165,6 +165,60 @@ The admin panel is fully responsive. Key rules when editing admin CSS or layout:
 - **Never use fixed pixel widths** on admin layout elements — use percentages or grid
 - **Test on 375px width** (iPhone SE) as the minimum target
 
+## Holds & booking system (Phase 3a — built)
+
+### How the hold flow works end-to-end
+1. Guest picks dates on `room.php` → submits `includes/form-availability.php`
+2. `api/submit-enquiry.php` validates, calls `find_available_unit()`, calls `create_hold_with_block()`, calls `send_hold_notification()`
+3. Admin receives HTML email with **Confirm** and **Decline** buttons (HMAC-signed URLs)
+4. Clicking a button → `admin/hold-action.php` → verifies login + token → applies action → redirects to `admin/holds.php` with flash message
+5. On confirm: guest receives `send_hold_confirmed()` email
+6. On decline/expiry: guest receives `send_hold_cancelled()` email
+
+### Hold expiry
+- **Lazy expiry:** `expire_stale_holds()` (in `db.php`) runs automatically inside `find_available_unit()` and on `admin/holds.php` page load. It expires holds, frees blocks, and emails guests.
+- **Cron expiry:** `bin/ical-expire-holds.php` — run every 5 min on Render Cron (`*/5 * * * *`). Ensures expiry happens even when no admin is active.
+- Do NOT call `expire_stale_holds()` from public pages — it is already called inside `find_available_unit()`.
+
+### Token security (email action buttons)
+- Tokens: `hash_hmac('sha256', "$holdId:$action", BOOKING_TOKEN_SECRET)` via `includes/booking.php`
+- `BOOKING_TOKEN_SECRET` must be set in `.env` (generate: `openssl rand -hex 32`)
+- If secret is missing, email falls back to a plain "Manage holds" link — no crash
+- Tokens require admin login — token alone is not enough; it is anti-CSRF, not anti-auth
+- Token is valid as long as the hold is in a state where the action is allowed (pending→confirm, pending/confirmed→decline)
+
+### Key files
+| File | Purpose |
+|------|---------|
+| `includes/booking.php` | `make_hold_token()` / `verify_hold_token()` |
+| `admin/hold-action.php` | One-click confirm/decline from email |
+| `admin/holds.php` | Admin hold list — confirm/cancel via form, reads session flash |
+| `includes/mail.php` | `send_hold_notification()` (HTML + text), `send_hold_confirmed()`, `send_hold_cancelled()` |
+| `includes/db.php` | `create_hold_with_block()`, `find_available_unit()`, `expire_stale_holds()` |
+| `bin/ical-expire-holds.php` | Cron wrapper for expiry |
+| `api/submit-enquiry.php` | Handles availability-mode submission, creates hold |
+
+### env vars required for holds
+```
+BOOKING_TOKEN_SECRET=   # openssl rand -hex 32 — for email action buttons
+SITE_URL=               # base URL for email links (must be set in production)
+MAIL_FROM=              # sender address
+RESEND_API_KEY=         # Resend key for HTML emails
+```
+
+### iCal export/import
+- Export: `api/ical.php?unit=<id>&token=<feed_token>` — serve .ics per unit
+- Import: `api/sync-ical.php?secret=<ICAL_SYNC_SECRET>` — pull OTA feeds, insert blocks
+- Feed tokens are stored in `units.feed_token` — visible in `admin/gantt.php`
+- "Sync Now" button in Gantt triggers import for all configured feeds
+
+### SEO best practices (enforced)
+- Every public page sets `$pageTitle`, `$metaDesc`, `$canonicalUrl` BEFORE including `header.php`
+- `$pageTitle` must use plain `&` not `&amp;` — `header.php` runs it through `e()` (htmlspecialchars)
+- `$jsonLd` must be valid JSON — use `json_encode()`, never hand-build JSON strings
+- Dynamic pages (room.php, tour.php) pull SEO fields from DB (`seo_title`, `seo_description`)
+- Sitemap is at `sitemap.php` — dynamically includes all published rooms and tours
+
 ## Security rules (never break these)
 - PDO prepared statements only — no string-concatenated SQL
 - `password_hash` / `password_verify` for all passwords
@@ -172,3 +226,5 @@ The admin panel is fully responsive. Key rules when editing admin CSS or layout:
 - CSRF token on every admin POST
 - `require_login()` first line of every admin file
 - `.env` is gitignored — never commit credentials
+- HMAC tokens for email actions — always use `hash_equals()`, never `===`
+- Never output hold tokens in HTML pages — only in emails sent server-side

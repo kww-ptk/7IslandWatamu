@@ -51,7 +51,13 @@ $navItems = [
   <meta property="og:image"       content="<?= e($ogImage) ?>">
   <meta property="og:site_name"   content="Seven Islands Resort">
   <meta property="og:locale"      content="en_US">
-  <meta name="twitter:card"       content="summary_large_image">
+  <?php if ($canonicalUrl): ?>
+  <meta property="og:url"         content="<?= e($canonicalUrl) ?>">
+  <?php endif; ?>
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="<?= e($ogTitle) ?>">
+  <meta name="twitter:description" content="<?= e($ogDesc) ?>">
+  <meta name="twitter:image"       content="<?= e($ogImage) ?>">
   <?php if ($canonicalUrl): ?>
   <link rel="canonical" href="<?= e($canonicalUrl) ?>">
   <?php endif; ?>

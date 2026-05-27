@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/includes/db.php';
-$pageTitle    = 'SPA &amp; Wellness — Seven Islands Resort, Watamu';
+$pageTitle    = 'SPA & Wellness — Seven Islands Resort, Watamu';
 $metaDesc     = 'Relax and restore at the Seven Islands Resort spa — beachside massages, wellness treatments and a tranquil pool overlooking the Indian Ocean.';
 $activeNav    = 'spa';
 $canonicalUrl = site_url('spa.php');

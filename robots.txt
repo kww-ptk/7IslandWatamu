@@ -4,5 +4,6 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /bin/
 Disallow: /logs/
+Disallow: /booking.php
 
 Sitemap: https://sevenislandswatamu.com/sitemap.php
