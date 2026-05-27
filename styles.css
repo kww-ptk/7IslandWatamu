@@ -1623,3 +1623,155 @@ input:focus-visible,
   color: #0b6273; text-decoration: underline; white-space: nowrap;
 }
 .avail-hold-note { font-size: 10px; color: #aaa; text-align: center; margin-top: 6px; }
+
+/* ── Search bar ──────────────────────────────────────────────── */
+.search-strip {
+  background: #f0f4f5;
+  border-bottom: 1px solid #d1dde0;
+  padding: 18px 0;
+}
+.search-strip__inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.search-strip__heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
+  margin: 0 0 4px;
+  flex: 0 0 100%;
+}
+
+.search-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.search-bar__group {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+.search-bar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 130px;
+  position: relative;
+}
+.search-bar__label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.search-bar__input,
+.search-bar__guests-btn {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search-bar__input:focus {
+  outline: none;
+  border-color: #0b6273;
+  box-shadow: 0 0 0 3px rgba(11,98,115,.15);
+}
+/* Flatpickr alt-input inherits these via the class it attaches */
+.search-bar__field .flatpickr-input.form-control,
+.search-bar__field .flatpickr-input[readonly] {
+  cursor: pointer;
+}
+.search-bar__field--guests { min-width: 160px; }
+.search-bar__guests-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  height: 100%;
+}
+.search-bar__guests-btn:focus {
+  outline: none;
+  border-color: #0b6273;
+  box-shadow: 0 0 0 3px rgba(11,98,115,.15);
+}
+.search-bar__caret { flex-shrink: 0; color: #6b7280; }
+.search-bar__guests-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 300;
+  min-width: 220px;
+}
+.search-bar__submit {
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+/* ── Availability badges on rooms.php search results ── */
+.room-avail-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.room-avail-badge--available { background: #dcfce7; color: #166534; }
+.room-avail-badge--sold_out  { background: #fee2e2; color: #991b1b; }
+.room-avail-badge--small     { background: #f3f4f6; color: #6b7280; }
+
+.other-room--dimmed { opacity: .55; pointer-events: none; }
+.other-room--dimmed a { pointer-events: none; }
+
+.search-results-bar {
+  background: #e8f4f6;
+  border-bottom: 1px solid #b2d8de;
+  padding: 11px 0;
+}
+.search-results-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.search-results-bar__text { font-size: 13px; color: #1a2830; margin: 0; }
+.search-results-bar__clear { font-size: 13px; color: #0b6273; text-decoration: none; white-space: nowrap; }
+.search-results-bar__clear:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+  .search-strip { padding: 14px 0; }
+  .search-strip__heading { display: none; }
+  .search-bar { flex-direction: column; align-items: stretch; }
+  .search-bar__group { flex-direction: column; }
+  .search-bar__field { min-width: auto; }
+  .search-bar__field--guests { min-width: auto; }
+  .search-bar__guests-pop { min-width: auto; right: 0; left: 0; }
+  .search-bar__submit { width: 100%; text-align: center; }
+  .search-results-bar__inner { flex-direction: column; align-items: flex-start; gap: 6px; }
+}

@@ -7,6 +7,7 @@ $metaDesc     = 'Discover Seven Islands Resort — a seafront all-inclusive retr
 $activeNav    = 'home';
 $headerSolid  = false;
 $canonicalUrl = site_url('index.php');
+$extraScripts = ['assets/js/search-bar.js'];
 $ogImage      = site_url('assets/img/7islands_resort_watamu1.jpg');
 $jsonLd       = json_encode([
     '@context'   => 'https://schema.org',
@@ -155,6 +156,15 @@ include __DIR__ . '/includes/header.php';
     </div>
     <a class="hero__scroll" href="#resort" aria-label="Scroll down">&#8595;</a>
   </section>
+
+  <!-- Quick availability search — separate from the hero enquiry form -->
+  <div class="search-strip">
+    <div class="container search-strip__inner">
+      <p class="search-strip__heading">Check room availability</p>
+      <?php include __DIR__ . '/includes/search-bar.php'; ?>
+    </div>
+  </div>
+
   <section class="section resort" id="resort">
     <div class="container">
       <div class="resort__grid">
