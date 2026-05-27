@@ -18,16 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type      = in_array($_POST['block_type'] ?? '', ['booked','blocked']) ? $_POST['block_type'] : 'blocked';
         $notes     = trim($_POST['notes'] ?? '');
 
-        if ($unit_id && $date_from && $date_to && $date_from < $date_to) {
+        // date_to from modal is the last blocked night (inclusive) — add 1 day for exclusive DB storage
+        $date_to_excl = $date_to ? date('Y-m-d', strtotime($date_to . ' +1 day')) : '';
+        if ($unit_id && $date_from && $date_to_excl && $date_from < $date_to_excl) {
             db_query(
                 "INSERT INTO availability_blocks (unit_id, date_from, date_to, block_type, notes)
                  VALUES (:uid, :df, :dt, :type, :notes)",
-                [':uid' => $unit_id, ':df' => $date_from, ':dt' => $date_to,
+                [':uid' => $unit_id, ':df' => $date_from, ':dt' => $date_to_excl,
                  ':type' => $type, ':notes' => $notes]
             );
             $msg = 'Block created.';
         } else {
-            $err = 'Invalid dates or unit — check-out must be after check-in.';
+            $err = 'Invalid dates or unit — last blocked night must be on or after first blocked night.';
         }
     }
 
@@ -195,6 +197,23 @@ include __DIR__ . '/_layout.php';
 .g-modal__box { background: #fff; border-radius: 8px; padding: 24px; width: 100%; max-width: 420px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
 .g-modal__box h2 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
 .g-modal__actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+/* Custom date picker */
+.dp { position: relative; }
+.dp__display { display: block; width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; cursor: pointer; background: #fff; color: var(--muted); user-select: none; box-sizing: border-box; }
+.dp__display.has-val { color: var(--text, #1a2730); }
+.dp__display:hover { border-color: var(--brand); }
+.dp__pop { position: absolute; z-index: 300; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.18); min-width: 240px; top: calc(100% + 4px); left: 0; }
+.dp__pop.is-hidden { display: none; }
+.dp__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dp__mlabel { font-size: 13px; font-weight: 600; }
+.dp__nav { background: none; border: none; font-size: 18px; cursor: pointer; padding: 2px 6px; color: var(--brand); line-height: 1; border-radius: 4px; }
+.dp__nav:hover { background: #e8f4f6; }
+.dp__daynames { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; font-size: 10px; color: var(--muted); font-weight: 600; margin-bottom: 4px; gap: 2px; }
+.dp__grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.dp__cell { text-align: center; padding: 5px 2px; font-size: 12px; cursor: pointer; border-radius: 3px; line-height: 1.4; }
+.dp__cell:hover:not(.dp__cell--blank) { background: #e8f4f6; color: var(--brand); }
+.dp__cell--sel { background: var(--brand) !important; color: #fff !important; font-weight: 600; }
+.dp__cell--blank { cursor: default; }
 </style>
 
 <div class="page-header">
@@ -473,8 +492,22 @@ include __DIR__ . '/_layout.php';
         <input type="text" id="m_unit_name" disabled style="background:#f4f6f8">
       </div>
       <div class="form-row">
-        <div class="field"><label>Check-in</label><input type="date" name="date_from" id="m_date_from" required></div>
-        <div class="field"><label>Check-out (exclusive)</label><input type="date" name="date_to" id="m_date_to" required></div>
+        <div class="field">
+          <label>From (first blocked night)</label>
+          <div class="dp" id="dpFromWrap">
+            <div class="dp__display" id="dpFromDisplay" tabindex="0">Pick a date</div>
+            <input type="hidden" name="date_from" id="m_date_from">
+            <div class="dp__pop is-hidden" id="dpFromPop"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>To (last blocked night)</label>
+          <div class="dp" id="dpToWrap">
+            <div class="dp__display" id="dpToDisplay" tabindex="0">Pick a date</div>
+            <input type="hidden" name="date_to" id="m_date_to">
+            <div class="dp__pop is-hidden" id="dpToPop"></div>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label>Type</label>
@@ -517,7 +550,7 @@ const unitNames = {<?php foreach ($units as $u) echo (int)$u['id'] . ':"' . adds
 const blockModal  = document.getElementById('blockModal');
 const deleteModal = document.getElementById('deleteModal');
 const closeModal  = m => m.classList.add('is-hidden');
-document.getElementById('blockModalClose').onclick  = () => closeModal(blockModal);
+document.getElementById('blockModalClose').onclick  = () => { closeModal(blockModal); dpFrom.clear(); dpTo.clear(); };
 document.getElementById('deleteModalClose').onclick = () => closeModal(deleteModal);
 [blockModal, deleteModal].forEach(m => m.addEventListener('click', e => { if(e.target===m) closeModal(m); }));
 
@@ -549,16 +582,13 @@ document.addEventListener('mouseup', () => {
   if (!selStart) return;
   const lo = selStart <= selCurrent ? selStart : selCurrent;
   const hi = selStart <= selCurrent ? selCurrent : selStart;
-  // date_to is exclusive: add 1 day
-  const hiDate = new Date(hi); hiDate.setDate(hiDate.getDate() + 1);
-  const hiExcl = hiDate.toISOString().split('T')[0];
 
   document.querySelectorAll('.gantt-day-cell.is-selecting').forEach(c => c.classList.remove('is-selecting'));
 
   document.getElementById('m_unit_id').value   = selUnit;
   document.getElementById('m_unit_name').value = unitNames[selUnit] || ('Unit ' + selUnit);
-  document.getElementById('m_date_from').value = lo;
-  document.getElementById('m_date_to').value   = hiExcl;
+  dpFrom.setValue(lo);
+  dpTo.setValue(hi);
   blockModal.classList.remove('is-hidden');
 
   selUnit = selStart = selCurrent = null;
@@ -595,6 +625,97 @@ if (syncBtn) {
       .finally(() => { syncBtn.disabled = false; syncBtn.textContent = '⟳ Sync iCal'; });
   });
 }
+
+// ── Mini date-picker ─────────────────────────────────────────────
+function makePicker(popId, hiddenId, displayId) {
+  const pop     = document.getElementById(popId);
+  const hidden  = document.getElementById(hiddenId);
+  const display = document.getElementById(displayId);
+  const MONTHS  = ['January','February','March','April','May','June',
+                   'July','August','September','October','November','December'];
+  const now = new Date();
+  let viewYear  = now.getFullYear();
+  let viewMonth = now.getMonth();
+  let selected  = null;
+
+  function toYmd(d) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth()+1).padStart(2,'0') + '-' +
+      String(d.getDate()).padStart(2,'0');
+  }
+  function fmtDisplay(s) {
+    const d = new Date(s + 'T00:00');
+    return d.getDate() + ' ' + MONTHS[d.getMonth()].slice(0,3) + ' ' + d.getFullYear();
+  }
+
+  function render() {
+    const first  = new Date(viewYear, viewMonth, 1);
+    const last   = new Date(viewYear, viewMonth + 1, 0);
+    const blanks = (first.getDay() + 6) % 7;
+    let html = `<div class="dp__head">
+      <button type="button" class="dp__nav" data-dir="-1">&#8249;</button>
+      <span class="dp__mlabel">${MONTHS[viewMonth]} ${viewYear}</span>
+      <button type="button" class="dp__nav" data-dir="1">&#8250;</button>
+    </div>
+    <div class="dp__daynames">
+      <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+    </div>
+    <div class="dp__grid">`;
+    for (let i = 0; i < blanks; i++) html += `<div class="dp__cell dp__cell--blank"></div>`;
+    for (let d = 1; d <= last.getDate(); d++) {
+      const key = toYmd(new Date(viewYear, viewMonth, d));
+      html += `<div class="dp__cell${key === selected ? ' dp__cell--sel' : ''}" data-date="${key}">${d}</div>`;
+    }
+    html += `</div>`;
+    pop.innerHTML = html;
+
+    pop.querySelectorAll('.dp__nav').forEach(btn => btn.addEventListener('click', e => {
+      e.stopPropagation();
+      viewMonth += parseInt(btn.dataset.dir);
+      if (viewMonth < 0)  { viewMonth = 11; viewYear--; }
+      if (viewMonth > 11) { viewMonth = 0;  viewYear++; }
+      render();
+    }));
+    pop.querySelectorAll('.dp__cell[data-date]').forEach(cell => cell.addEventListener('click', e => {
+      e.stopPropagation();
+      selected = cell.dataset.date;
+      hidden.value = selected;
+      display.textContent = fmtDisplay(selected);
+      display.classList.add('has-val');
+      pop.classList.add('is-hidden');
+      render();
+    }));
+  }
+
+  display.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.dp__pop').forEach(p => { if (p !== pop) p.classList.add('is-hidden'); });
+    pop.classList.toggle('is-hidden');
+    if (!pop.classList.contains('is-hidden')) render();
+  });
+  document.addEventListener('click', () => pop.classList.add('is-hidden'));
+
+  return {
+    setValue(s) {
+      selected = s;
+      hidden.value = s;
+      display.textContent = fmtDisplay(s);
+      display.classList.add('has-val');
+      const d = new Date(s + 'T00:00');
+      viewYear = d.getFullYear();
+      viewMonth = d.getMonth();
+    },
+    clear() {
+      selected = null;
+      hidden.value = '';
+      display.textContent = 'Pick a date';
+      display.classList.remove('has-val');
+    }
+  };
+}
+
+const dpFrom = makePicker('dpFromPop', 'm_date_from', 'dpFromDisplay');
+const dpTo   = makePicker('dpToPop',   'm_date_to',   'dpToDisplay');
 </script>
 
 <?php include __DIR__ . '/_layout_end.php'; ?>
