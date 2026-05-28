@@ -162,25 +162,25 @@ include __DIR__ . '/includes/header.php';
           <strong>Thank you for your enquiry!</strong>
           <p>We have received your message and will reply within 24 hours.</p>
         </div>
-      </form>
 
-      <!-- Calendar popup for date picking -->
-      <div class="hero-cal-pop" id="heroCalPop" hidden aria-modal="true" role="dialog" aria-label="Select dates">
-        <div class="avail-nav">
-          <button type="button" class="avail-nav__btn" id="heroCalPrev">&#8249;</button>
-          <span class="avail-nav__label" id="heroCalMonth"></span>
-          <button type="button" class="avail-nav__btn" id="heroCalNext">&#8250;</button>
+        <!-- Calendar popup — inside the form so position:absolute anchors correctly -->
+        <div class="hero-cal-pop" id="heroCalPop" hidden aria-modal="true" role="dialog" aria-label="Select dates">
+          <div class="avail-nav">
+            <button type="button" class="avail-nav__btn" id="heroCalPrev">&#8249;</button>
+            <span class="avail-nav__label" id="heroCalMonth"></span>
+            <button type="button" class="avail-nav__btn" id="heroCalNext">&#8250;</button>
+          </div>
+          <div class="avail-day-names">
+            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+          </div>
+          <div class="avail-grid" id="heroCalGrid"></div>
+          <div class="avail-hint" id="heroCalHint">Select check-in date</div>
+          <div class="hero-cal-actions">
+            <button type="button" class="hero-cal-clear" id="heroCalClear">Clear</button>
+            <button type="button" class="hero-cal-done" id="heroCalDone">Done</button>
+          </div>
         </div>
-        <div class="avail-day-names">
-          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-        </div>
-        <div class="avail-grid" id="heroCalGrid"></div>
-        <div class="avail-hint" id="heroCalHint">Select check-in date</div>
-        <div class="hero-cal-actions">
-          <button type="button" class="hero-cal-clear" id="heroCalClear">Clear</button>
-          <button type="button" class="hero-cal-done" id="heroCalDone">Done</button>
-        </div>
-      </div>
+      </form>
 
       <?php else: ?>
       <!-- ── AVAILABILITY MODE: search form → rooms.php ── -->
