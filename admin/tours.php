@@ -4,6 +4,18 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_login();
 
+// Handle bulk delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete_tours'])) {
+    verify_csrf();
+    $ids = array_filter(array_map('intval', explode(',', $_POST['selected_ids'] ?? '')));
+    foreach ($ids as $id) {
+        db_query('DELETE FROM tours WHERE id = :id', [':id' => $id]);
+    }
+    header('Location: /admin/tours.php');
+    exit;
+}
+
+// Handle single delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_tour'])) {
     verify_csrf();
     $id = (int)$_POST['tour_id'];
@@ -47,16 +59,30 @@ include __DIR__ . '/_layout.php';
   <a href="/admin/tour-edit.php" class="btn-primary btn-sm">+ Add Tour</a>
 </div>
 
+<!-- Bulk delete form (outside table) -->
+<form method="POST" action="/admin/tours.php" id="bulkToursForm">
+  <?= csrf_field() ?>
+  <input type="hidden" name="bulk_delete_tours" value="1">
+  <input type="hidden" name="selected_ids" id="bulkToursIds" value="">
+</form>
+
 <div class="card">
   <div class="card__head">
     <span class="card__title">All Tours</span>
-    <span class="text-muted" style="font-size:12px">Drag rows to reorder</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="bulkToursBar" style="display:none;align-items:center;gap:8px">
+        <span id="bulkToursCount" class="text-muted" style="font-size:13px"></span>
+        <button type="button" class="btn-sm btn-danger" id="bulkToursDelete">Delete Selected</button>
+      </span>
+      <span class="text-muted" style="font-size:12px">Drag rows to reorder</span>
+    </div>
   </div>
   <div class="card__body">
     <table class="data-table" id="toursTable">
       <thead>
         <tr>
           <th style="width:32px"></th>
+          <th style="width:32px"><input type="checkbox" id="selectAllTours" title="Select all"></th>
           <th style="width:60px">Photo</th>
           <th>Name</th>
           <th>Category</th>
@@ -69,6 +95,7 @@ include __DIR__ . '/_layout.php';
         <?php foreach ($tours as $tour): ?>
         <tr data-id="<?= e($tour['id']) ?>" class="draggable-row">
           <td style="cursor:grab;color:var(--muted);font-size:18px;text-align:center">&#8942;&#8942;</td>
+          <td><input type="checkbox" class="tour-cb" value="<?= e($tour['id']) ?>"></td>
           <td>
             <?php if ($tour['hero_img']): ?>
             <img src="<?= e(storage_url($tour['hero_img'])) ?>" class="room-thumb" alt="<?= e($tour['name']) ?>">
@@ -103,7 +130,7 @@ include __DIR__ . '/_layout.php';
         </tr>
         <?php endforeach; ?>
         <?php if (!$tours): ?>
-        <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">No tours yet. <a href="/admin/tour-edit.php">Add your first tour</a>.</td></tr>
+        <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">No tours yet. <a href="/admin/tour-edit.php">Add your first tour</a>.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
@@ -112,8 +139,46 @@ include __DIR__ . '/_layout.php';
 
 <script>
 (function () {
-  const tbody = document.getElementById('toursTbody');
+  const tbody     = document.getElementById('toursTbody');
+  const selectAll = document.getElementById('selectAllTours');
+  const bar       = document.getElementById('bulkToursBar');
+  const countEl   = document.getElementById('bulkToursCount');
+  const deleteBtn = document.getElementById('bulkToursDelete');
+  const idsInput  = document.getElementById('bulkToursIds');
+  const bulkForm  = document.getElementById('bulkToursForm');
   if (!tbody) return;
+
+  function getChecked() {
+    return [...tbody.querySelectorAll('.tour-cb:checked')];
+  }
+
+  function updateBar() {
+    const checked = getChecked();
+    bar.style.display = checked.length ? 'flex' : 'none';
+    countEl.textContent = checked.length + ' selected';
+  }
+
+  selectAll.addEventListener('change', () => {
+    tbody.querySelectorAll('.tour-cb').forEach(cb => cb.checked = selectAll.checked);
+    updateBar();
+  });
+
+  tbody.addEventListener('change', e => {
+    if (e.target.classList.contains('tour-cb')) {
+      selectAll.checked = [...tbody.querySelectorAll('.tour-cb')].every(cb => cb.checked);
+      updateBar();
+    }
+  });
+
+  deleteBtn.addEventListener('click', () => {
+    const checked = getChecked();
+    if (!checked.length) return;
+    if (!confirm('Delete ' + checked.length + ' tour(s)? This cannot be undone.')) return;
+    idsInput.value = checked.map(cb => cb.value).join(',');
+    bulkForm.submit();
+  });
+
+  // Drag to reorder
   let dragged = null;
   tbody.querySelectorAll('.draggable-row').forEach(row => {
     row.draggable = true;
@@ -129,6 +194,7 @@ include __DIR__ . '/_layout.php';
       }
     });
   });
+
   function saveOrder() {
     const ids = [...tbody.querySelectorAll('.draggable-row')].map(r => r.dataset.id);
     const fd = new FormData();

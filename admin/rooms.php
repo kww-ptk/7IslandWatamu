@@ -4,7 +4,18 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_login();
 
-// Handle delete via POST
+// Handle bulk delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_delete_rooms'])) {
+    verify_csrf();
+    $ids = array_filter(array_map('intval', explode(',', $_POST['selected_ids'] ?? '')));
+    foreach ($ids as $id) {
+        db_query('DELETE FROM rooms WHERE id = :id', [':id' => $id]);
+    }
+    header('Location: /admin/rooms.php');
+    exit;
+}
+
+// Handle single delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_room'])) {
     verify_csrf();
     $id = (int)$_POST['room_id'];
@@ -50,16 +61,30 @@ include __DIR__ . '/_layout.php';
   <a href="/admin/room-edit.php" class="btn-primary btn-sm">+ Add Room</a>
 </div>
 
+<!-- Bulk delete form (outside table) -->
+<form method="POST" action="/admin/rooms.php" id="bulkRoomsForm">
+  <?= csrf_field() ?>
+  <input type="hidden" name="bulk_delete_rooms" value="1">
+  <input type="hidden" name="selected_ids" id="bulkRoomsIds" value="">
+</form>
+
 <div class="card">
   <div class="card__head">
     <span class="card__title">All Rooms</span>
-    <span class="text-muted" style="font-size:12px">Drag rows to reorder</span>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="bulkRoomsBar" style="display:none;align-items:center;gap:8px">
+        <span id="bulkRoomsCount" class="text-muted" style="font-size:13px"></span>
+        <button type="button" class="btn-sm btn-danger" id="bulkRoomsDelete">Delete Selected</button>
+      </span>
+      <span class="text-muted" style="font-size:12px">Drag rows to reorder</span>
+    </div>
   </div>
   <div class="card__body">
     <table class="data-table" id="roomsTable">
       <thead>
         <tr>
           <th style="width:32px"></th>
+          <th style="width:32px"><input type="checkbox" id="selectAllRooms" title="Select all"></th>
           <th style="width:60px">Photo</th>
           <th>Name</th>
           <th>Slug</th>
@@ -72,6 +97,7 @@ include __DIR__ . '/_layout.php';
         <?php foreach ($rooms as $room): ?>
         <tr data-id="<?= e($room['id']) ?>" class="draggable-row">
           <td style="cursor:grab;color:var(--muted);font-size:18px;text-align:center">&#8942;&#8942;</td>
+          <td><input type="checkbox" class="room-cb" value="<?= e($room['id']) ?>"></td>
           <td>
             <?php if ($room['hero_img']): ?>
             <img src="<?= e(storage_url($room['hero_img'])) ?>" class="room-thumb" alt="<?= e($room['name']) ?>">
@@ -112,11 +138,47 @@ include __DIR__ . '/_layout.php';
 
 <script>
 (function () {
-  const tbody = document.getElementById('roomsTbody');
+  const tbody      = document.getElementById('roomsTbody');
+  const selectAll  = document.getElementById('selectAllRooms');
+  const bar        = document.getElementById('bulkRoomsBar');
+  const countEl    = document.getElementById('bulkRoomsCount');
+  const deleteBtn  = document.getElementById('bulkRoomsDelete');
+  const idsInput   = document.getElementById('bulkRoomsIds');
+  const bulkForm   = document.getElementById('bulkRoomsForm');
   if (!tbody) return;
 
-  let dragged = null;
+  function getChecked() {
+    return [...tbody.querySelectorAll('.room-cb:checked')];
+  }
 
+  function updateBar() {
+    const checked = getChecked();
+    bar.style.display = checked.length ? 'flex' : 'none';
+    countEl.textContent = checked.length + ' selected';
+  }
+
+  selectAll.addEventListener('change', () => {
+    tbody.querySelectorAll('.room-cb').forEach(cb => cb.checked = selectAll.checked);
+    updateBar();
+  });
+
+  tbody.addEventListener('change', e => {
+    if (e.target.classList.contains('room-cb')) {
+      selectAll.checked = [...tbody.querySelectorAll('.room-cb')].every(cb => cb.checked);
+      updateBar();
+    }
+  });
+
+  deleteBtn.addEventListener('click', () => {
+    const checked = getChecked();
+    if (!checked.length) return;
+    if (!confirm('Delete ' + checked.length + ' room(s)? This cannot be undone.')) return;
+    idsInput.value = checked.map(cb => cb.value).join(',');
+    bulkForm.submit();
+  });
+
+  // Drag to reorder
+  let dragged = null;
   tbody.querySelectorAll('.draggable-row').forEach(row => {
     row.draggable = true;
     row.addEventListener('dragstart', () => { dragged = row; row.style.opacity = '.4'; });
