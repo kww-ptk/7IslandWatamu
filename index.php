@@ -93,11 +93,11 @@ include __DIR__ . '/includes/header.php';
         <div class="hero-step" data-step="1">
           <div class="hero-search__field hero-search__field--date" id="heroCheckinField">
             <label>Check in</label>
-            <button type="button" class="hero-date-btn" id="heroCheckinBtn" data-cal-target="checkin">Select date</button>
+            <input type="text" class="hero-date-btn" id="heroCheckinBtn" placeholder="Select date" readonly autocomplete="off">
           </div>
           <div class="hero-search__field hero-search__field--date" id="heroCheckoutField">
             <label>Check out</label>
-            <button type="button" class="hero-date-btn" id="heroCheckoutBtn" data-cal-target="checkout">Select date</button>
+            <input type="text" class="hero-date-btn" id="heroCheckoutBtn" placeholder="Select date" readonly autocomplete="off">
           </div>
           <div class="hero-search__field hero-search__field--guests">
             <label>Guests</label>
@@ -163,23 +163,7 @@ include __DIR__ . '/includes/header.php';
           <p>We have received your message and will reply within 24 hours.</p>
         </div>
 
-        <!-- Calendar popup — inside the form so position:absolute anchors correctly -->
-        <div class="hero-cal-pop" id="heroCalPop" hidden aria-modal="true" role="dialog" aria-label="Select dates">
-          <div class="avail-nav">
-            <button type="button" class="avail-nav__btn" id="heroCalPrev">&#8249;</button>
-            <span class="avail-nav__label" id="heroCalMonth"></span>
-            <button type="button" class="avail-nav__btn" id="heroCalNext">&#8250;</button>
-          </div>
-          <div class="avail-day-names">
-            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
-          </div>
-          <div class="avail-grid" id="heroCalGrid"></div>
-          <div class="avail-hint" id="heroCalHint">Select check-in date</div>
-          <div class="hero-cal-actions">
-            <button type="button" class="hero-cal-clear" id="heroCalClear">Clear</button>
-            <button type="button" class="hero-cal-done" id="heroCalDone">Done</button>
-          </div>
-        </div>
+
       </form>
 
       <?php else: ?>

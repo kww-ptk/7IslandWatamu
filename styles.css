@@ -184,7 +184,7 @@ section, footer { scroll-margin-top: 90px; }
   position: relative;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;   /* flex-start so tall content never pushes above navbar */
   justify-content: center;
   color: var(--white);
   text-align: center;
@@ -196,7 +196,12 @@ section, footer { scroll-margin-top: 90px; }
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  min-height: 100vh;
   padding-top: 126px;
+  padding-bottom: 80px;
+  justify-content: center;
+  box-sizing: border-box;
 }
 .hero__text { font-size: 18px; letter-spacing: 0.5px; margin-bottom: 18px; }
 .hero__title {
@@ -297,7 +302,6 @@ section, footer { scroll-margin-top: 90px; }
 }
 .hero-step--done strong { color: var(--white); font-size: 19px; font-weight: 600; }
 .hero-step--done p { color: rgba(255, 255, 255, 0.82); font-size: 14px; line-height: 1.55; }
-/* hero-enq-error is defined in the hero-cal-pop block above */
 
 .hero__scroll {
   position: absolute; left: 50%; bottom: 36px; transform: translateX(-50%);
@@ -321,7 +325,6 @@ section, footer { scroll-margin-top: 90px; }
   .hero-enq-actions .hero-search__submit { width: 100%; margin-top: 0; padding: 16px; border-radius: 16px; }
   .hero-enq-right { align-items: stretch; width: 100%; }
   .hero-enq-back { padding: 12px 6px; }
-  .hero-cal-pop { width: calc(100vw - 40px); }
   .hero__scroll { display: none; }
 }
 
@@ -1623,12 +1626,11 @@ input:focus-visible,
 }
 .avail-hold-note { font-size: 10px; color: #aaa; text-align: center; margin-top: 6px; }
 
-/* ── Hero calendar popup ─────────────────────────────────────── */
+/* ── Hero date inputs (enquiry mode, uses flatpickr) ─────────── */
 .hero-date-btn {
   background: none;
   border: none;
   color: var(--white);
-  font-size: 15px;
   font-family: inherit;
   cursor: pointer;
   text-align: left;
@@ -1636,50 +1638,14 @@ input:focus-visible,
   width: 100%;
   opacity: 0.9;
   transition: opacity .15s;
+  /* input resets */
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  line-height: inherit;
 }
 .hero-date-btn:hover { opacity: 1; }
 .hero-date-btn--active { opacity: 1; font-weight: 600; }
-
-.hero-cal-pop {
-  position: fixed;   /* fixed escapes backdrop-filter stacking context */
-  z-index: 9999;
-  background: #fff;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-  width: 310px;
-  color: var(--text);
-}
-.hero-cal-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-.hero-cal-done {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 8px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-}
-.hero-cal-done:hover { background: var(--primary-hover); }
-.hero-cal-clear {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  padding: 0;
-}
-.hero-cal-clear:hover { color: var(--text); }
 
 /* Fix hero step-2 form: captcha margin + action bar padding */
 .hero-enq-captcha { margin: 14px auto; display: flex; justify-content: center; }

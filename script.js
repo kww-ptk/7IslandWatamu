@@ -253,160 +253,53 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initGuestsPicker();
 
-  // ── Hero calendar popup (enquiry mode on index.php) ──────────────────
-  function initHeroCalendar() {
-    const pop       = document.getElementById("heroCalPop");
-    const grid      = document.getElementById("heroCalGrid");
-    const monthLbl  = document.getElementById("heroCalMonth");
-    const hint      = document.getElementById("heroCalHint");
-    const prevBtn   = document.getElementById("heroCalPrev");
-    const nextBtn   = document.getElementById("heroCalNext");
-    const doneBtn   = document.getElementById("heroCalDone");
-    const clearBtn  = document.getElementById("heroCalClear");
-    const ciBtn     = document.getElementById("heroCheckinBtn");
-    const coBtn     = document.getElementById("heroCheckoutBtn");
-    const ciVal     = document.getElementById("enqCheckinVal");
-    const coVal     = document.getElementById("enqCheckoutVal");
-    if (!pop || !grid || !ciBtn || !coBtn) return;
+  // ── Hero date pickers (enquiry mode on index.php, uses flatpickr) ──────
+  function initHeroFlatpickr() {
+    const ciInput = document.getElementById("heroCheckinBtn");
+    const coInput = document.getElementById("heroCheckoutBtn");
+    const ciVal   = document.getElementById("enqCheckinVal");
+    const coVal   = document.getElementById("enqCheckoutVal");
+    if (!ciInput || !coInput || typeof flatpickr === "undefined") return;
 
-    const MONTHS = ["January","February","March","April","May","June",
-                    "July","August","September","October","November","December"];
-
-    const now = new Date();
-    let viewYear  = now.getFullYear();
-    let viewMonth = now.getMonth();
-    let selStart  = null; // Date
-    let selEnd    = null; // Date
-    let openFor   = null; // "checkin" | "checkout"
-
-    function ymd(d) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    function toYmd(d) {
       return d.getFullYear() + "-" +
         String(d.getMonth() + 1).padStart(2, "0") + "-" +
         String(d.getDate()).padStart(2, "0");
     }
-    function isPast(d) {
-      const t = new Date(); t.setHours(0,0,0,0); return d < t;
-    }
-    function inRange(d) {
-      if (!selStart || !selEnd) return false;
-      return d > selStart && d < selEnd;
-    }
-    function fmtDisplay(d) {
-      return d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
-    }
 
-    function render() {
-      monthLbl.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
-      const firstDay = new Date(viewYear, viewMonth, 1);
-      const lastDay  = new Date(viewYear, viewMonth + 1, 0);
-      const lead = (firstDay.getDay() + 6) % 7;
-      let html = "";
-      for (let i = 0; i < lead; i++) html += `<div class="avail-cell avail-cell--blank"></div>`;
-      for (let d = 1; d <= lastDay.getDate(); d++) {
-        const date = new Date(viewYear, viewMonth, d);
-        const key  = ymd(date);
-        let cls = "avail-cell";
-        if (isPast(date)) {
-          cls += " avail-cell--blocked";
-        } else {
-          if (selStart && ymd(date) === ymd(selStart)) cls += " avail-cell--start";
-          else if (selEnd && ymd(date) === ymd(selEnd)) cls += " avail-cell--end";
-          else if (inRange(date)) cls += " avail-cell--range";
-        }
-        html += `<div class="${cls}" data-date="${key}">${d}</div>`;
-      }
-      grid.innerHTML = html;
-
-      grid.querySelectorAll(".avail-cell:not(.avail-cell--blocked):not(.avail-cell--blank)").forEach(cell => {
-        cell.addEventListener("click", () => onDayClick(cell.dataset.date));
-        cell.addEventListener("mouseenter", () => {
-          if (!selStart || selEnd) return;
-          grid.querySelectorAll(".avail-cell[data-date]").forEach(c => {
-            const lo = ymd(selStart), hi = c.dataset.date;
-            c.classList.toggle("avail-cell--hover", lo < hi && c.dataset.date < hi && c.dataset.date > lo);
-          });
-        });
-      });
-      grid.addEventListener("mouseleave", () => {
-        grid.querySelectorAll(".avail-cell--hover").forEach(c => c.classList.remove("avail-cell--hover"));
-      });
-    }
-
-    function onDayClick(dateStr) {
-      const clicked = new Date(dateStr + "T00:00");
-      if (!selStart || (selStart && selEnd)) {
-        selStart = clicked; selEnd = null;
-        hint.textContent = "Now select check-out date";
-      } else {
-        if (clicked <= selStart) {
-          selStart = clicked;
-          hint.textContent = "Now select check-out date";
-        } else {
-          selEnd = clicked;
-          hint.textContent = `${fmtDisplay(selStart)} → ${fmtDisplay(selEnd)}`;
-        }
-      }
-      updateBtns();
-      render();
-    }
-
-    function updateBtns() {
-      ciBtn.textContent = selStart ? fmtDisplay(selStart) : "Select date";
-      coBtn.textContent = selEnd   ? fmtDisplay(selEnd)   : "Select date";
-      ciVal.value = selStart ? ymd(selStart) : "";
-      coVal.value = selEnd   ? ymd(selEnd)   : "";
-      // Highlight active field button
-      ciBtn.classList.toggle("hero-date-btn--active", !!selStart);
-      coBtn.classList.toggle("hero-date-btn--active", !!selEnd);
-    }
-
-    function positionPop() {
-      // Use fixed positioning so backdrop-filter stacking context can't trap it
-      const anchor = document.getElementById("enquiryForm");
-      if (!anchor) return;
-      const rect = anchor.getBoundingClientRect();
-      pop.style.top  = Math.round(rect.bottom + 8) + "px";
-      // Align to left edge of form, clamped so it doesn't run off-screen
-      const leftRaw  = Math.round(rect.left);
-      const maxLeft  = window.innerWidth - 326; // 310px + 16px breathing room
-      pop.style.left = Math.max(8, Math.min(leftRaw, maxLeft)) + "px";
-    }
-
-    function openPop(target) {
-      openFor = target;
-      positionPop();
-      pop.hidden = false;
-      // Reset hint based on current state
-      if (!selStart) {
-        hint.textContent = "Select check-in date";
-      } else if (!selEnd) {
-        hint.textContent = "Now select check-out date";
-      } else {
-        hint.textContent = `${fmtDisplay(selStart)} → ${fmtDisplay(selEnd)}`;
-      }
-      render();
-    }
-
-    function closePop() { pop.hidden = true; openFor = null; }
-
-    ciBtn.addEventListener("click", (e) => { e.stopPropagation(); openPop("checkin"); });
-    coBtn.addEventListener("click", (e) => { e.stopPropagation(); openPop("checkout"); });
-    doneBtn.addEventListener("click", closePop);
-    clearBtn.addEventListener("click", () => {
-      selStart = null; selEnd = null;
-      hint.textContent = "Select check-in date";
-      updateBtns(); render();
+    const coFp = flatpickr(coInput, {
+      dateFormat: "j M Y",
+      minDate: new Date(today.getTime() + 86400000),
+      allowInput: false,
+      disableMobile: true,
+      onChange(dates) {
+        if (coVal) coVal.value = dates.length ? toYmd(dates[0]) : "";
+        coInput.classList.toggle("hero-date-btn--active", !!dates.length);
+      },
     });
-    prevBtn.addEventListener("click", () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
-    nextBtn.addEventListener("click", () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
-    document.addEventListener("click", (e) => {
-      if (!pop.hidden && !pop.contains(e.target) && e.target !== ciBtn && e.target !== coBtn) closePop();
-    });
-    pop.addEventListener("click", (e) => e.stopPropagation());
 
-    render();
+    flatpickr(ciInput, {
+      dateFormat: "j M Y",
+      minDate: "today",
+      allowInput: false,
+      disableMobile: true,
+      onChange(dates) {
+        if (ciVal) ciVal.value = dates.length ? toYmd(dates[0]) : "";
+        ciInput.classList.toggle("hero-date-btn--active", !!dates.length);
+        if (!dates.length) return;
+        const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
+        coFp.set("minDate", next);
+        if (coFp.selectedDates[0] && coFp.selectedDates[0] <= dates[0]) {
+          coFp.clear();
+          if (coVal) coVal.value = "";
+          coInput.classList.remove("hero-date-btn--active");
+        }
+        coFp.open();
+      },
+    });
   }
-  initHeroCalendar();
+  initHeroFlatpickr();
 
   initSlider(
     document.querySelector("[data-tm-viewport]"),
@@ -537,9 +430,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("enquiryForm");
     if (!form) return;
     const steps = form.querySelectorAll(".hero-step");
-    const show = (n) => steps.forEach((s) => { s.hidden = s.dataset.step !== String(n); });
+    const scroll = document.querySelector(".hero__scroll");
+    const show = (n) => {
+      steps.forEach((s) => { s.hidden = s.dataset.step !== String(n); });
+      if (scroll) scroll.style.display = n === 3 ? "none" : "";
+    };
 
-    // Date validation now handled by initHeroCalendar — just wire up the step buttons
+    // Wire up the step buttons
     form.querySelector("[data-enq-next]").addEventListener("click", () => show(2));
     const back = form.querySelector("[data-enq-back]");
     if (back) back.addEventListener("click", () => show(1));
