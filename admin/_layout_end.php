@@ -3,6 +3,9 @@
 
 </div><!-- /.admin-wrap -->
 
+<script src="/assets/js/datepicker.js" defer></script>
+<script src="/assets/js/custom-select.js" defer></script>
+
 <script>
 (function () {
   var burger  = document.getElementById('sidebarBurger');

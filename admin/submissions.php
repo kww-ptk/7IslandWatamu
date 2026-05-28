@@ -151,8 +151,14 @@ include __DIR__ . '/_layout.php';
     <?php endforeach; ?>
   </select>
 
-  <input type="text" name="date_from" value="<?= e($date_from) ?>" placeholder="From date" class="js-datepicker" autocomplete="off">
-  <input type="text" name="date_to"   value="<?= e($date_to) ?>"   placeholder="To date"   class="js-datepicker" autocomplete="off">
+  <button type="button" class="dp-btn" data-dp-target="subDateFrom">
+    <?= $date_from ? e(date('d M Y', strtotime($date_from))) : 'From date' ?>
+  </button>
+  <input type="hidden" id="subDateFrom" name="date_from" value="<?= e($date_from) ?>">
+  <button type="button" class="dp-btn" data-dp-target="subDateTo">
+    <?= $date_to ? e(date('d M Y', strtotime($date_to))) : 'To date' ?>
+  </button>
+  <input type="hidden" id="subDateTo" name="date_to" value="<?= e($date_to) ?>">
   <input type="text" name="search"    value="<?= e($search) ?>"    placeholder="Search name or email…" style="min-width:200px">
 
   <button type="submit" class="btn-primary btn-sm">Search</button>
@@ -249,25 +255,14 @@ include __DIR__ . '/_layout.php';
   </div>
 </div>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script>
   (function () {
+    // Auto-submit the filter form when a date is picked via datepicker.js
+    // datepicker.js dispatches a "change" event on the hidden input when a date is selected
     var form = document.getElementById('filtersForm');
     if (!form) return;
-
-    // Auto-submit on dropdown change
-    form.querySelectorAll('.js-auto-submit').forEach(function (el) {
-      el.addEventListener('change', function () { form.submit(); });
-    });
-
-    // Date pickers — auto-submit when a date is picked or cleared
-    flatpickr('.js-datepicker', {
-      dateFormat: 'Y-m-d',
-      altInput: true,
-      altFormat: 'd M Y',
-      allowInput: true,
-      onChange: function () { form.submit(); },
+    form.querySelectorAll('input[type="hidden"][id^="subDate"]').forEach(function (inp) {
+      inp.addEventListener('change', function () { form.submit(); });
     });
   })();
 </script>

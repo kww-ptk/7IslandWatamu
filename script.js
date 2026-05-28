@@ -1,39 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Flatpickr — standalone single-date pickers and availability-mode hero
-  if (typeof flatpickr !== "undefined") {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-
-    // Standalone single-date pickers
-    flatpickr(".js-datepicker", {
-      dateFormat: "Y-m-d",
-      altInput: true,
-      altFormat: "d M Y",
-      minDate: "today",
-      allowInput: true,
-    });
-
-    // Linked check-in / check-out pairs on room.php enquiry form (.js-checkin / .js-checkout)
-    document.querySelectorAll(".js-checkin").forEach((ciEl) => {
-      const form = ciEl.closest("form");
-      const coEl = form && form.querySelector(".js-checkout");
-      if (!coEl) return;
-      const co = flatpickr(coEl, {
-        dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
-        minDate: new Date(today.getTime() + 86400000), allowInput: true,
-      });
-      flatpickr(ciEl, {
-        dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
-        minDate: "today", allowInput: true,
-        onChange: (dates) => {
-          if (!dates.length) return;
-          const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
-          co.set("minDate", next);
-          if (co.selectedDates[0] && co.selectedDates[0] <= dates[0]) co.setDate(next);
-        },
-      });
-    });
-
-  }
 
   // Room/Tour gallery carousel
   document.querySelectorAll("[data-gal-viewport]").forEach((viewport) => {

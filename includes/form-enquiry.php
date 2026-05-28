@@ -9,14 +9,16 @@ $room_name = $room['name'] ?? '';
 
   <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
 
-  <label class="booking-field">
+  <div class="booking-field">
     <span>Check in</span>
-    <input type="text" name="checkin" id="enqRoomCheckin" class="js-checkin" placeholder="Select date" autocomplete="off" required>
-  </label>
-  <label class="booking-field">
+    <button type="button" class="dp-btn" data-dp-role="ci" data-dp-pair="enqRoom" data-dp-target="enqRoomCheckin" data-dp-placeholder="Select date">Select date</button>
+    <input type="hidden" id="enqRoomCheckin" name="checkin">
+  </div>
+  <div class="booking-field">
     <span>Check out</span>
-    <input type="text" name="checkout" id="enqRoomCheckout" class="js-checkout" placeholder="Select date" autocomplete="off" required>
-  </label>
+    <button type="button" class="dp-btn" data-dp-role="co" data-dp-pair="enqRoom" data-dp-target="enqRoomCheckout" data-dp-placeholder="Select date">Select date</button>
+    <input type="hidden" id="enqRoomCheckout" name="checkout">
+  </div>
 
   <div class="booking-field booking-field--row">
     <span>Adult <small>(18+ years)</small></span>

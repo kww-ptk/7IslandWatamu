@@ -99,7 +99,8 @@ include __DIR__ . '/includes/header.php';
               </label>
               <label class="field">
                 <span>Preferred date</span>
-                <input type="text" name="subject" class="js-datepicker" placeholder="Select date" autocomplete="off">
+                <button type="button" class="dp-btn" data-dp-target="spaDateVal">Select date</button>
+                <input type="hidden" id="spaDateVal" name="subject">
               </label>
             </div>
             <label class="field">

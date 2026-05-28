@@ -196,6 +196,90 @@ The admin panel is fully responsive. Key rules when editing admin CSS or layout:
 - **Never use fixed pixel widths** on admin layout elements — use percentages or grid
 - **Test on 375px width** (iPhone SE) as the minimum target
 
+## UI Components — reusable date pickers & custom selects (ENFORCED SITEWIDE)
+
+> **Never use flatpickr, native `<input type="date">`, or native `<select>` visually.**
+> These two JS files are the only date/dropdown UI allowed across the entire app (public + admin).
+
+### Date picker — `assets/js/datepicker.js`
+
+Loaded via `includes/footer.php` (public) and `admin/_layout_end.php` (admin) with `defer`.
+No dependencies. Auto-initialises on all `.dp-btn` elements at DOMContentLoaded.
+
+**Single date** (e.g. preferred date, filter date):
+```html
+<button type="button" class="dp-btn" data-dp-target="myHiddenId">Select date</button>
+<input type="hidden" id="myHiddenId" name="my_field" value="">
+```
+
+**Date range pair** (check-in / check-out):
+```html
+<button type="button" class="dp-btn" data-dp-role="ci" data-dp-pair="groupName" data-dp-target="ciInputId">Select date</button>
+<input type="hidden" id="ciInputId" name="checkin" value="">
+
+<button type="button" class="dp-btn" data-dp-role="co" data-dp-pair="groupName" data-dp-target="coInputId">Select date</button>
+<input type="hidden" id="coInputId" name="checkout" value="">
+```
+
+**Data attributes:**
+| Attribute | Required | Purpose |
+|-----------|----------|---------|
+| `data-dp-target` | ✓ | ID of the `<input type="hidden">` to write the selected date (YYYY-MM-DD) |
+| `data-dp-role` | range only | `ci` = check-in, `co` = check-out |
+| `data-dp-pair` | range only | Group name that links a ci/co pair — must be identical on both buttons |
+| `data-dp-placeholder` | optional | Button label shown before a date is selected (defaults to "Select date") |
+
+**CSS classes applied to the button:**
+- `.dp-btn--active` — added when a date is selected (removes the placeholder opacity)
+
+**Pre-filling from PHP** (e.g. filter pages that read from `$_GET`):
+Set the hidden input `value` in PHP — the JS reads it on init and labels the button accordingly:
+```html
+<button type="button" class="dp-btn" data-dp-target="dateFrom">
+  <?= $date_from ? e(date('d M Y', strtotime($date_from))) : 'From date' ?>
+</button>
+<input type="hidden" id="dateFrom" name="date_from" value="<?= e($date_from) ?>">
+```
+
+**Auto-submit on date select** (admin filter forms):
+Listen for the `change` event on the hidden input — the datepicker dispatches it when a date is picked:
+```javascript
+document.getElementById('myHiddenId').addEventListener('change', function () {
+  document.getElementById('myForm').submit();
+});
+```
+
+---
+
+### Custom select — `assets/js/custom-select.js`
+
+Loaded via `includes/footer.php` (public) and `admin/_layout_end.php` (admin) with `defer`.
+Auto-initialises on **every `<select>`** at DOMContentLoaded — no HTML changes needed beyond writing a normal `<select>`.
+
+- The original `<select>` is hidden in the DOM but kept for form submission.
+- A `.cs-wrap > .cs-trigger + .cs-menu > .cs-item` structure is injected alongside it.
+- Keyboard: Enter/Space opens, ArrowUp/Down navigates, Escape closes.
+
+**To opt out** (rare — e.g. a `<select>` managed by other JS):
+```html
+<select data-cs-skip ...>
+```
+
+**Auto-submit** (filter forms): detected automatically if the `<select>` has:
+- `onchange="this.form.submit()"` attribute, **or**
+- `class="js-auto-submit"`
+
+No extra code needed — just write the `<select>` as normal.
+
+---
+
+### Styling reference
+- Public: `.dp-btn`, `.dp-pop`, `.cs-wrap`, `.cs-trigger`, `.cs-menu`, `.cs-item` — defined at the bottom of `styles.css`
+- Admin: same classes — defined at the bottom of `admin/assets/admin.css` using admin CSS variables (`--brand`, `--border`, `--text`, `--muted`, `--white`)
+- Admin filter bar context: `.filters .dp-btn` and `.filters .cs-trigger` use smaller padding (7px 12px, 13px font)
+
+---
+
 ## Holds & booking system (Phase 3a — built)
 
 ### How the hold flow works end-to-end
