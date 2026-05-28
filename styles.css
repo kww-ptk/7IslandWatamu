@@ -1626,19 +1626,19 @@ input:focus-visible,
 }
 .avail-hold-note { font-size: 10px; color: #aaa; text-align: center; margin-top: 6px; }
 
-/* ── Hero date inputs (enquiry mode, uses flatpickr) ─────────── */
+/* ── Hero date trigger buttons (enquiry + availability mode) ─── */
 .hero-date-btn {
   background: none;
   border: none;
   color: var(--white);
   font-family: inherit;
+  font-size: 16px;
   cursor: pointer;
   text-align: left;
   padding: 0;
   width: 100%;
   opacity: 0.9;
   transition: opacity .15s;
-  /* input resets */
   appearance: none;
   -webkit-appearance: none;
   outline: none;
@@ -1646,6 +1646,19 @@ input:focus-visible,
 }
 .hero-date-btn:hover { opacity: 1; }
 .hero-date-btn--active { opacity: 1; font-weight: 600; }
+
+/* ── Hero bk-cal popup (position:fixed escapes backdrop-filter) ─ */
+.hero-bk-pop {
+  position: fixed;
+  z-index: 9999;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  width: min(310px, calc(100vw - 32px));
+  color: var(--text);
+}
+.hero-bk-pop[hidden] { display: none; }
 
 /* Fix hero step-2 form: captcha margin + action bar padding */
 .hero-enq-captcha { margin: 14px auto; display: flex; justify-content: center; }

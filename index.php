@@ -93,11 +93,11 @@ include __DIR__ . '/includes/header.php';
         <div class="hero-step" data-step="1">
           <div class="hero-search__field hero-search__field--date" id="heroCheckinField">
             <label>Check in</label>
-            <input type="text" class="hero-date-btn" id="heroCheckinBtn" placeholder="Select date" readonly autocomplete="off">
+            <button type="button" class="hero-date-btn" id="heroCheckinBtn">Select date</button>
           </div>
           <div class="hero-search__field hero-search__field--date" id="heroCheckoutField">
             <label>Check out</label>
-            <input type="text" class="hero-date-btn" id="heroCheckoutBtn" placeholder="Select date" readonly autocomplete="off">
+            <button type="button" class="hero-date-btn" id="heroCheckoutBtn">Select date</button>
           </div>
           <div class="hero-search__field hero-search__field--guests">
             <label>Guests</label>
@@ -171,12 +171,14 @@ include __DIR__ . '/includes/header.php';
       <form class="hero-search hero-search--avail" id="availSearchForm" method="GET" action="rooms.php">
         <div class="hero-step" data-step="1">
           <div class="hero-search__field">
-            <label for="avCheckin">Check in</label>
-            <input type="text" id="avCheckin" name="check_in" class="js-av-checkin" placeholder="Select date" autocomplete="off" readonly>
+            <label>Check in</label>
+            <button type="button" class="hero-date-btn" id="avCheckinBtn">Select date</button>
+            <input type="hidden" id="avCheckinVal" name="check_in">
           </div>
           <div class="hero-search__field">
-            <label for="avCheckout">Check out</label>
-            <input type="text" id="avCheckout" name="check_out" class="js-av-checkout" placeholder="Select date" autocomplete="off" readonly>
+            <label>Check out</label>
+            <button type="button" class="hero-date-btn" id="avCheckoutBtn">Select date</button>
+            <input type="hidden" id="avCheckoutVal" name="check_out">
           </div>
           <div class="hero-search__field hero-search__field--guests">
             <label>Guests</label>
@@ -750,4 +752,23 @@ include __DIR__ . '/includes/header.php';
       </ul>
     </div>
   </section>
+<!-- ── Hero date-picker popup (position:fixed escapes backdrop-filter stacking context) ── -->
+<div class="hero-bk-pop" id="heroBkPop" hidden>
+  <div class="bk-cal">
+    <div class="bk-cal__head">
+      <button type="button" class="bk-cal__nav" id="heroBkPrev" aria-label="Previous month">&#8249;</button>
+      <span class="bk-cal__title" id="heroBkMonth"></span>
+      <button type="button" class="bk-cal__nav" id="heroBkNext" aria-label="Next month">&#8250;</button>
+    </div>
+    <div class="bk-cal__dow">
+      <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+    </div>
+    <div class="bk-cal__grid" id="heroBkGrid"></div>
+  </div>
+  <div class="bk-pop__footer">
+    <span class="bk-pop__hint" id="heroBkHint">Select your check-in date</span>
+    <button type="button" class="bk-pop__cta" id="heroBkDone">Done</button>
+  </div>
+</div>
+
 <?php include __DIR__ . '/includes/footer.php'; ?>

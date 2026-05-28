@@ -33,34 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    // Availability-mode hero search (index.php in availability mode)
-    const avCi = document.querySelector(".js-av-checkin");
-    const avCo = document.querySelector(".js-av-checkout");
-    if (avCi && avCo) {
-      const avCoFp = flatpickr(avCo, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M Y",
-        minDate: new Date(today.getTime() + 86400000),
-        allowInput: false,
-        disableMobile: true,
-      });
-      flatpickr(avCi, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M Y",
-        minDate: "today",
-        allowInput: false,
-        disableMobile: true,
-        onChange(dates) {
-          if (!dates.length) return;
-          const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
-          avCoFp.set("minDate", next);
-          if (avCoFp.selectedDates[0] && avCoFp.selectedDates[0] <= dates[0]) avCoFp.setDate(next);
-          avCoFp.open();
-        },
-      });
-    }
   }
 
   // Room/Tour gallery carousel
@@ -253,53 +225,168 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initGuestsPicker();
 
-  // ── Hero date pickers (enquiry mode on index.php, uses flatpickr) ──────
-  function initHeroFlatpickr() {
-    const ciInput = document.getElementById("heroCheckinBtn");
-    const coInput = document.getElementById("heroCheckoutBtn");
-    const ciVal   = document.getElementById("enqCheckinVal");
-    const coVal   = document.getElementById("enqCheckoutVal");
-    if (!ciInput || !coInput || typeof flatpickr === "undefined") return;
+  // ── Hero date pickers — bk-cal widget (enquiry + availability mode) ────
+  function initHeroCalendar() {
+    const pop      = document.getElementById("heroBkPop");
+    const grid     = document.getElementById("heroBkGrid");
+    const monthLbl = document.getElementById("heroBkMonth");
+    const prevBtn  = document.getElementById("heroBkPrev");
+    const nextBtn  = document.getElementById("heroBkNext");
+    const hintEl   = document.getElementById("heroBkHint");
+    const doneBtn  = document.getElementById("heroBkDone");
+    if (!pop || !grid) return;
+
+    // Support both enquiry mode (#heroCheckinBtn) and availability mode (#avCheckinBtn)
+    const ciBtn = document.getElementById("heroCheckinBtn") || document.getElementById("avCheckinBtn");
+    const coBtn = document.getElementById("heroCheckoutBtn") || document.getElementById("avCheckoutBtn");
+    const ciVal = document.getElementById("enqCheckinVal") || document.getElementById("avCheckinVal");
+    const coVal = document.getElementById("enqCheckoutVal") || document.getElementById("avCheckoutVal");
+    if (!ciBtn || !coBtn) return;
 
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    function toYmd(d) {
-      return d.getFullYear() + "-" +
-        String(d.getMonth() + 1).padStart(2, "0") + "-" +
-        String(d.getDate()).padStart(2, "0");
+    let viewYear  = today.getFullYear();
+    let viewMonth = today.getMonth();
+    let selStart  = null, selEnd = null;
+    let picking   = null; // "ci" | "co"
+
+    function ymd(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+    function parseYmd(s) { return new Date(s + "T00:00"); }
+    function fmtDisp(d) {
+      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
     }
 
-    const coFp = flatpickr(coInput, {
-      dateFormat: "j M Y",
-      minDate: new Date(today.getTime() + 86400000),
-      allowInput: false,
-      disableMobile: true,
-      onChange(dates) {
-        if (coVal) coVal.value = dates.length ? toYmd(dates[0]) : "";
-        coInput.classList.toggle("hero-date-btn--active", !!dates.length);
-      },
+    function updateBtns() {
+      ciBtn.textContent = selStart ? fmtDisp(selStart) : "Select date";
+      ciBtn.classList.toggle("hero-date-btn--active", !!selStart);
+      if (ciVal) ciVal.value = selStart ? ymd(selStart) : "";
+
+      coBtn.textContent = selEnd ? fmtDisp(selEnd) : "Select date";
+      coBtn.classList.toggle("hero-date-btn--active", !!selEnd);
+      if (coVal) coVal.value = selEnd ? ymd(selEnd) : "";
+    }
+
+    function renderCal() {
+      const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      monthLbl.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      const firstDay = new Date(viewYear, viewMonth, 1);
+      const lastDay  = new Date(viewYear, viewMonth + 1, 0);
+      const leading  = (firstDay.getDay() + 6) % 7; // Mon-first
+
+      let html = "";
+      for (let i = 0; i < leading; i++) html += `<div class="bk-cell bk-cell--blank"></div>`;
+
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(viewYear, viewMonth, d);
+        const key  = ymd(date);
+        let cls = "bk-cell";
+
+        if (date < today || (picking === "co" && selStart && date <= selStart)) {
+          cls += " bk-cell--blocked";
+        } else if (selStart && key === ymd(selStart)) {
+          cls += " bk-cell--start";
+        } else if (selEnd && key === ymd(selEnd)) {
+          cls += " bk-cell--end";
+        } else if (selStart && selEnd && date > selStart && date < selEnd) {
+          cls += " bk-cell--in-range";
+        }
+        html += `<div class="${cls}" data-date="${key}">${d}</div>`;
+      }
+      grid.innerHTML = html;
+
+      grid.querySelectorAll(".bk-cell:not(.bk-cell--blocked):not(.bk-cell--blank)").forEach(cell => {
+        cell.addEventListener("click", () => onDayClick(cell.dataset.date));
+        cell.addEventListener("mouseenter", () => onCellHover(cell.dataset.date));
+      });
+    }
+
+    function onCellHover(dateStr) {
+      if (selEnd || !selStart || picking !== "co") return;
+      const start = ymd(selStart);
+      grid.querySelectorAll(".bk-cell[data-date]").forEach(c => {
+        c.classList.toggle("bk-cell--hover-range", c.dataset.date > start && c.dataset.date < dateStr);
+      });
+    }
+
+    function clearHover() {
+      grid.querySelectorAll(".bk-cell--hover-range").forEach(c => c.classList.remove("bk-cell--hover-range"));
+    }
+    grid.addEventListener("mouseleave", clearHover);
+
+    function onDayClick(dateStr) {
+      const clicked = parseYmd(dateStr);
+      if (picking === "ci") {
+        selStart = clicked;
+        if (selEnd && selEnd <= selStart) selEnd = null;
+        picking = "co";
+        hintEl.textContent = "Now select your check-out date";
+      } else {
+        selEnd = clicked;
+        hintEl.textContent = "Click Done to confirm your dates";
+      }
+      clearHover();
+      renderCal();
+      updateBtns();
+    }
+
+    function positionPop(trigger) {
+      const r    = trigger.getBoundingClientRect();
+      const popW = Math.min(310, window.innerWidth - 32);
+      let left = r.left;
+      if (left + popW > window.innerWidth - 16) left = window.innerWidth - popW - 16;
+      if (left < 16) left = 16;
+      pop.style.left = `${left}px`;
+      pop.style.top  = `${r.bottom + 8}px`;
+    }
+
+    function openPop(triggerEl, mode) {
+      // If opening checkout with no check-in set, switch to check-in mode
+      if (mode === "co" && !selStart) mode = "ci";
+      picking = mode;
+      pop.hidden = false;
+      positionPop(triggerEl);
+      hintEl.textContent = mode === "ci"
+        ? (selStart ? "Change your check-in date" : "Select your check-in date")
+        : "Select your check-out date";
+      renderCal();
+    }
+
+    function closePop() { pop.hidden = true; picking = null; }
+
+    ciBtn.addEventListener("click", e => { e.stopPropagation(); openPop(ciBtn, "ci"); });
+    coBtn.addEventListener("click", e => { e.stopPropagation(); openPop(coBtn, "co"); });
+    doneBtn.addEventListener("click", closePop);
+    pop.addEventListener("click", e => e.stopPropagation());
+
+    document.addEventListener("click", e => {
+      if (!pop.hidden && !pop.contains(e.target)) closePop();
+    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+    window.addEventListener("scroll", () => {
+      if (!pop.hidden) {
+        const trigger = picking === "ci" ? ciBtn : coBtn;
+        positionPop(trigger);
+      }
+    }, { passive: true });
+    window.addEventListener("resize", () => {
+      if (!pop.hidden) {
+        const trigger = picking === "ci" ? ciBtn : coBtn;
+        positionPop(trigger);
+      }
     });
 
-    flatpickr(ciInput, {
-      dateFormat: "j M Y",
-      minDate: "today",
-      allowInput: false,
-      disableMobile: true,
-      onChange(dates) {
-        if (ciVal) ciVal.value = dates.length ? toYmd(dates[0]) : "";
-        ciInput.classList.toggle("hero-date-btn--active", !!dates.length);
-        if (!dates.length) return;
-        const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
-        coFp.set("minDate", next);
-        if (coFp.selectedDates[0] && coFp.selectedDates[0] <= dates[0]) {
-          coFp.clear();
-          if (coVal) coVal.value = "";
-          coInput.classList.remove("hero-date-btn--active");
-        }
-        coFp.open();
-      },
+    prevBtn.addEventListener("click", () => {
+      viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      renderCal();
+    });
+    nextBtn.addEventListener("click", () => {
+      viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      renderCal();
     });
   }
-  initHeroFlatpickr();
+  initHeroCalendar();
 
   initSlider(
     document.querySelector("[data-tm-viewport]"),
