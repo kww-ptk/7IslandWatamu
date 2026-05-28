@@ -1655,7 +1655,7 @@ input:focus-visible,
   -webkit-appearance: none;
   outline: none;
   line-height: inherit;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
 }
