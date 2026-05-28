@@ -360,8 +360,21 @@ document.addEventListener("DOMContentLoaded", () => {
       coBtn.classList.toggle("hero-date-btn--active", !!selEnd);
     }
 
+    function positionPop() {
+      // Use fixed positioning so backdrop-filter stacking context can't trap it
+      const anchor = document.getElementById("enquiryForm");
+      if (!anchor) return;
+      const rect = anchor.getBoundingClientRect();
+      pop.style.top  = Math.round(rect.bottom + 8) + "px";
+      // Align to left edge of form, clamped so it doesn't run off-screen
+      const leftRaw  = Math.round(rect.left);
+      const maxLeft  = window.innerWidth - 326; // 310px + 16px breathing room
+      pop.style.left = Math.max(8, Math.min(leftRaw, maxLeft)) + "px";
+    }
+
     function openPop(target) {
       openFor = target;
+      positionPop();
       pop.hidden = false;
       // Reset hint based on current state
       if (!selStart) {

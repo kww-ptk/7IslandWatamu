@@ -321,7 +321,7 @@ section, footer { scroll-margin-top: 90px; }
   .hero-enq-actions .hero-search__submit { width: 100%; margin-top: 0; padding: 16px; border-radius: 16px; }
   .hero-enq-right { align-items: stretch; width: 100%; }
   .hero-enq-back { padding: 12px 6px; }
-  .hero-cal-pop { width: calc(100vw - 40px); left: 50%; transform: translateX(-50%); }
+  .hero-cal-pop { width: calc(100vw - 40px); }
   .hero__scroll { display: none; }
 }
 
@@ -1641,10 +1641,8 @@ input:focus-visible,
 .hero-date-btn--active { opacity: 1; font-weight: 600; }
 
 .hero-cal-pop {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 0;
-  z-index: 300;
+  position: fixed;   /* fixed escapes backdrop-filter stacking context */
+  z-index: 9999;
   background: #fff;
   border-radius: 16px;
   padding: 18px;
