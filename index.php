@@ -63,6 +63,8 @@ $jsonLd       = json_encode([
     'hasMap' => 'https://www.google.com/maps/search/Seven+Islands+Resort+Watamu+Kenya',
 ]);
 
+$form_mode = setting('form_mode', 'enquiry');
+
 // Fetch published rooms for carousel (graceful fallback if DB unavailable)
 $rooms = [];
 try {
@@ -78,18 +80,24 @@ include __DIR__ . '/includes/header.php';
     <div class="container hero__inner">
       <p class="hero__text">Rated #1 all-inclusive resort in Watamu, Kenya</p>
       <h1 class="hero__title">7 Islands Resort, Watamu, Kenya</h1>
+
+      <?php if ($form_mode === 'enquiry'): ?>
+      <!-- ── ENQUIRY MODE: 2-step form with calendar picker ── -->
       <form class="hero-search" id="enquiryForm" novalidate>
         <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
-        <input type="hidden" name="adults" value="1">
-        <input type="hidden" name="children" value="0">
+        <input type="hidden" name="adults"   id="enqAdults"   value="1">
+        <input type="hidden" name="children" id="enqChildren" value="0">
+        <input type="hidden" name="checkin"  id="enqCheckinVal">
+        <input type="hidden" name="checkout" id="enqCheckoutVal">
+
         <div class="hero-step" data-step="1">
-          <div class="hero-search__field">
-            <label for="enqCheckin">Check in</label>
-            <input type="text" id="enqCheckin" name="checkin" class="js-checkin" placeholder="Select date" autocomplete="off">
+          <div class="hero-search__field hero-search__field--date" id="heroCheckinField">
+            <label>Check in</label>
+            <button type="button" class="hero-date-btn" id="heroCheckinBtn" data-cal-target="checkin">Select date</button>
           </div>
-          <div class="hero-search__field">
-            <label for="enqCheckout">Check out</label>
-            <input type="text" id="enqCheckout" name="checkout" class="js-checkout" placeholder="Select date" autocomplete="off">
+          <div class="hero-search__field hero-search__field--date" id="heroCheckoutField">
+            <label>Check out</label>
+            <button type="button" class="hero-date-btn" id="heroCheckoutBtn" data-cal-target="checkout">Select date</button>
           </div>
           <div class="hero-search__field hero-search__field--guests">
             <label>Guests</label>
@@ -139,12 +147,14 @@ include __DIR__ . '/includes/header.php';
             </div>
           </div>
           <?php if (captcha_site_key()): ?>
-          <div class="h-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
+          <div class="h-captcha hero-enq-captcha" data-sitekey="<?= e(captcha_site_key()) ?>"></div>
           <?php endif; ?>
           <div class="hero-enq-actions">
-            <p class="hero-enq-error" data-enq-error hidden></p>
             <button type="button" class="hero-enq-back" data-enq-back>&#8592; Back</button>
-            <button type="submit" class="hero-search__submit" data-enq-send>Send Enquiry <span aria-hidden="true">&rsaquo;</span></button>
+            <div class="hero-enq-right">
+              <p class="hero-enq-error" data-enq-error hidden></p>
+              <button type="submit" class="hero-search__submit" data-enq-send>Send Enquiry <span aria-hidden="true">&rsaquo;</span></button>
+            </div>
           </div>
         </div>
 
@@ -153,17 +163,72 @@ include __DIR__ . '/includes/header.php';
           <p>We have received your message and will reply within 24 hours.</p>
         </div>
       </form>
+
+      <!-- Calendar popup for date picking -->
+      <div class="hero-cal-pop" id="heroCalPop" hidden aria-modal="true" role="dialog" aria-label="Select dates">
+        <div class="avail-nav">
+          <button type="button" class="avail-nav__btn" id="heroCalPrev">&#8249;</button>
+          <span class="avail-nav__label" id="heroCalMonth"></span>
+          <button type="button" class="avail-nav__btn" id="heroCalNext">&#8250;</button>
+        </div>
+        <div class="avail-day-names">
+          <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+        </div>
+        <div class="avail-grid" id="heroCalGrid"></div>
+        <div class="avail-hint" id="heroCalHint">Select check-in date</div>
+        <div class="hero-cal-actions">
+          <button type="button" class="hero-cal-clear" id="heroCalClear">Clear</button>
+          <button type="button" class="hero-cal-done" id="heroCalDone">Done</button>
+        </div>
+      </div>
+
+      <?php else: ?>
+      <!-- ── AVAILABILITY MODE: search form → rooms.php ── -->
+      <form class="hero-search hero-search--avail" id="availSearchForm" method="GET" action="rooms.php">
+        <div class="hero-step" data-step="1">
+          <div class="hero-search__field">
+            <label for="avCheckin">Check in</label>
+            <input type="text" id="avCheckin" name="check_in" class="js-av-checkin" placeholder="Select date" autocomplete="off" readonly>
+          </div>
+          <div class="hero-search__field">
+            <label for="avCheckout">Check out</label>
+            <input type="text" id="avCheckout" name="check_out" class="js-av-checkout" placeholder="Select date" autocomplete="off" readonly>
+          </div>
+          <div class="hero-search__field hero-search__field--guests">
+            <label>Guests</label>
+            <button type="button" class="hero-search__guests" data-guests-toggle aria-expanded="false">
+              <span data-guests-summary>2 Adults</span>
+              <i class="hero-search__caret">&#9662;</i>
+            </button>
+            <div class="guests-popover" data-guests-popover hidden>
+              <div class="guests-row">
+                <span class="guests-row__label">Adult</span>
+                <div class="guests-stepper">
+                  <button type="button" data-step="adult" data-dir="-1" aria-label="Decrease adults">&minus;</button>
+                  <span data-count="adult">2</span>
+                  <button type="button" data-step="adult" data-dir="1" aria-label="Increase adults">+</button>
+                </div>
+              </div>
+              <div class="guests-row">
+                <span class="guests-row__label">Children</span>
+                <div class="guests-stepper">
+                  <button type="button" data-step="child" data-dir="-1" aria-label="Decrease children">&minus;</button>
+                  <span data-count="child">0</span>
+                  <button type="button" data-step="child" data-dir="1" aria-label="Increase children">+</button>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="adults"   id="avAdults"   value="2">
+            <input type="hidden" name="children" id="avChildren" value="0">
+          </div>
+          <button type="submit" class="hero-search__submit">Search Rooms <span aria-hidden="true">&rsaquo;</span></button>
+        </div>
+      </form>
+      <?php endif; ?>
+
     </div>
     <a class="hero__scroll" href="#resort" aria-label="Scroll down">&#8595;</a>
   </section>
-
-  <!-- Quick availability search — separate from the hero enquiry form -->
-  <div class="search-strip">
-    <div class="container search-strip__inner">
-      <p class="search-strip__heading">Check room availability</p>
-      <?php include __DIR__ . '/includes/search-bar.php'; ?>
-    </div>
-  </div>
 
   <section class="section resort" id="resort">
     <div class="container">

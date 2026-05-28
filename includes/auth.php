@@ -36,9 +36,30 @@ function current_admin(): array|false {
     session_init();
     if (empty($_SESSION['admin_id'])) return false;
     return db_query(
-        'SELECT id, email, created_at FROM admin_users WHERE id = :id',
+        'SELECT id, name, email, role, created_at FROM admin_users WHERE id = :id',
         [':id' => $_SESSION['admin_id']]
     )->fetch();
+}
+
+function is_super_admin(): bool {
+    $admin = current_admin();
+    return $admin && ($admin['role'] ?? 'staff') === 'super_admin';
+}
+
+function require_super_admin(): void {
+    require_login();
+    if (!is_super_admin()) {
+        http_response_code(403);
+        echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Access denied</title>
+              <link rel="stylesheet" href="/admin/assets/admin.css"></head><body class="admin-body">
+              <div style="display:flex;align-items:center;justify-content:center;height:100vh">
+              <div style="text-align:center">
+                <h2 style="color:var(--danger,#dc2626)">Access denied</h2>
+                <p style="color:var(--muted)">Super admin access required.</p>
+                <a href="/admin/dashboard.php" style="color:var(--primary)">← Back to dashboard</a>
+              </div></div></body></html>';
+        exit;
+    }
 }
 
 function login(string $email, string $password): bool {

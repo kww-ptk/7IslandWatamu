@@ -11,6 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     $action = $_POST['action'] ?? '';
 
+    // Super-admin-only actions
+    if (in_array($action, ['save_general', 'export_holds']) && !is_super_admin()) {
+        $error = 'Super admin access required for this action.';
+        $action = ''; // skip processing
+    }
+
     if ($action === 'export_holds') {
         require_once __DIR__ . '/../includes/booking.php';
         $holds = db_query(

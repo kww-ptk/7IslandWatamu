@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Flatpickr — replace native date pickers site-wide
+  // Flatpickr — standalone single-date pickers and availability-mode hero
   if (typeof flatpickr !== "undefined") {
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
@@ -12,26 +12,18 @@ document.addEventListener("DOMContentLoaded", () => {
       allowInput: true,
     });
 
-    // Linked check-in / check-out pairs (scoped per form)
+    // Linked check-in / check-out pairs on room.php enquiry form (.js-checkin / .js-checkout)
     document.querySelectorAll(".js-checkin").forEach((ciEl) => {
       const form = ciEl.closest("form");
       const coEl = form && form.querySelector(".js-checkout");
       if (!coEl) return;
-
       const co = flatpickr(coEl, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M Y",
-        minDate: new Date(today.getTime() + 86400000),
-        allowInput: true,
+        dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
+        minDate: new Date(today.getTime() + 86400000), allowInput: true,
       });
-
       flatpickr(ciEl, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d M Y",
-        minDate: "today",
-        allowInput: true,
+        dateFormat: "Y-m-d", altInput: true, altFormat: "d M Y",
+        minDate: "today", allowInput: true,
         onChange: (dates) => {
           if (!dates.length) return;
           const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
@@ -40,6 +32,35 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       });
     });
+
+    // Availability-mode hero search (index.php in availability mode)
+    const avCi = document.querySelector(".js-av-checkin");
+    const avCo = document.querySelector(".js-av-checkout");
+    if (avCi && avCo) {
+      const avCoFp = flatpickr(avCo, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        minDate: new Date(today.getTime() + 86400000),
+        allowInput: false,
+        disableMobile: true,
+      });
+      flatpickr(avCi, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        minDate: "today",
+        allowInput: false,
+        disableMobile: true,
+        onChange(dates) {
+          if (!dates.length) return;
+          const next = new Date(dates[0]); next.setDate(next.getDate() + 1);
+          avCoFp.set("minDate", next);
+          if (avCoFp.selectedDates[0] && avCoFp.selectedDates[0] <= dates[0]) avCoFp.setDate(next);
+          avCoFp.open();
+        },
+      });
+    }
   }
 
   // Room/Tour gallery carousel
@@ -195,10 +216,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const parts = [`${counts.adult} Adult${counts.adult !== 1 ? "s" : ""}`];
       if (counts.child > 0) parts.push(`${counts.child} Child${counts.child !== 1 ? "ren" : ""}`);
       summary.textContent = parts.join(", ");
+      // Sync named hidden inputs in the current form
       const aInput = heroForm?.querySelector('[name="adults"]');
       const cInput = heroForm?.querySelector('[name="children"]');
       if (aInput) aInput.value = counts.adult;
       if (cInput) cInput.value = counts.child;
+      // Also sync availability-mode dedicated hidden inputs
+      const avA = document.getElementById("avAdults");
+      const avC = document.getElementById("avChildren");
+      if (avA) avA.value = counts.adult;
+      if (avC) avC.value = counts.child;
     };
 
     toggle.addEventListener("click", (e) => {
@@ -225,6 +252,148 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   }
   initGuestsPicker();
+
+  // ── Hero calendar popup (enquiry mode on index.php) ──────────────────
+  function initHeroCalendar() {
+    const pop       = document.getElementById("heroCalPop");
+    const grid      = document.getElementById("heroCalGrid");
+    const monthLbl  = document.getElementById("heroCalMonth");
+    const hint      = document.getElementById("heroCalHint");
+    const prevBtn   = document.getElementById("heroCalPrev");
+    const nextBtn   = document.getElementById("heroCalNext");
+    const doneBtn   = document.getElementById("heroCalDone");
+    const clearBtn  = document.getElementById("heroCalClear");
+    const ciBtn     = document.getElementById("heroCheckinBtn");
+    const coBtn     = document.getElementById("heroCheckoutBtn");
+    const ciVal     = document.getElementById("enqCheckinVal");
+    const coVal     = document.getElementById("enqCheckoutVal");
+    if (!pop || !grid || !ciBtn || !coBtn) return;
+
+    const MONTHS = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+
+    const now = new Date();
+    let viewYear  = now.getFullYear();
+    let viewMonth = now.getMonth();
+    let selStart  = null; // Date
+    let selEnd    = null; // Date
+    let openFor   = null; // "checkin" | "checkout"
+
+    function ymd(d) {
+      return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+    }
+    function isPast(d) {
+      const t = new Date(); t.setHours(0,0,0,0); return d < t;
+    }
+    function inRange(d) {
+      if (!selStart || !selEnd) return false;
+      return d > selStart && d < selEnd;
+    }
+    function fmtDisplay(d) {
+      return d.toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" });
+    }
+
+    function render() {
+      monthLbl.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+      const firstDay = new Date(viewYear, viewMonth, 1);
+      const lastDay  = new Date(viewYear, viewMonth + 1, 0);
+      const lead = (firstDay.getDay() + 6) % 7;
+      let html = "";
+      for (let i = 0; i < lead; i++) html += `<div class="avail-cell avail-cell--blank"></div>`;
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(viewYear, viewMonth, d);
+        const key  = ymd(date);
+        let cls = "avail-cell";
+        if (isPast(date)) {
+          cls += " avail-cell--blocked";
+        } else {
+          if (selStart && ymd(date) === ymd(selStart)) cls += " avail-cell--start";
+          else if (selEnd && ymd(date) === ymd(selEnd)) cls += " avail-cell--end";
+          else if (inRange(date)) cls += " avail-cell--range";
+        }
+        html += `<div class="${cls}" data-date="${key}">${d}</div>`;
+      }
+      grid.innerHTML = html;
+
+      grid.querySelectorAll(".avail-cell:not(.avail-cell--blocked):not(.avail-cell--blank)").forEach(cell => {
+        cell.addEventListener("click", () => onDayClick(cell.dataset.date));
+        cell.addEventListener("mouseenter", () => {
+          if (!selStart || selEnd) return;
+          grid.querySelectorAll(".avail-cell[data-date]").forEach(c => {
+            const lo = ymd(selStart), hi = c.dataset.date;
+            c.classList.toggle("avail-cell--hover", lo < hi && c.dataset.date < hi && c.dataset.date > lo);
+          });
+        });
+      });
+      grid.addEventListener("mouseleave", () => {
+        grid.querySelectorAll(".avail-cell--hover").forEach(c => c.classList.remove("avail-cell--hover"));
+      });
+    }
+
+    function onDayClick(dateStr) {
+      const clicked = new Date(dateStr + "T00:00");
+      if (!selStart || (selStart && selEnd)) {
+        selStart = clicked; selEnd = null;
+        hint.textContent = "Now select check-out date";
+      } else {
+        if (clicked <= selStart) {
+          selStart = clicked;
+          hint.textContent = "Now select check-out date";
+        } else {
+          selEnd = clicked;
+          hint.textContent = `${fmtDisplay(selStart)} → ${fmtDisplay(selEnd)}`;
+        }
+      }
+      updateBtns();
+      render();
+    }
+
+    function updateBtns() {
+      ciBtn.textContent = selStart ? fmtDisplay(selStart) : "Select date";
+      coBtn.textContent = selEnd   ? fmtDisplay(selEnd)   : "Select date";
+      ciVal.value = selStart ? ymd(selStart) : "";
+      coVal.value = selEnd   ? ymd(selEnd)   : "";
+      // Highlight active field button
+      ciBtn.classList.toggle("hero-date-btn--active", !!selStart);
+      coBtn.classList.toggle("hero-date-btn--active", !!selEnd);
+    }
+
+    function openPop(target) {
+      openFor = target;
+      pop.hidden = false;
+      // Reset hint based on current state
+      if (!selStart) {
+        hint.textContent = "Select check-in date";
+      } else if (!selEnd) {
+        hint.textContent = "Now select check-out date";
+      } else {
+        hint.textContent = `${fmtDisplay(selStart)} → ${fmtDisplay(selEnd)}`;
+      }
+      render();
+    }
+
+    function closePop() { pop.hidden = true; openFor = null; }
+
+    ciBtn.addEventListener("click", (e) => { e.stopPropagation(); openPop("checkin"); });
+    coBtn.addEventListener("click", (e) => { e.stopPropagation(); openPop("checkout"); });
+    doneBtn.addEventListener("click", closePop);
+    clearBtn.addEventListener("click", () => {
+      selStart = null; selEnd = null;
+      hint.textContent = "Select check-in date";
+      updateBtns(); render();
+    });
+    prevBtn.addEventListener("click", () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
+    nextBtn.addEventListener("click", () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
+    document.addEventListener("click", (e) => {
+      if (!pop.hidden && !pop.contains(e.target) && e.target !== ciBtn && e.target !== coBtn) closePop();
+    });
+    pop.addEventListener("click", (e) => e.stopPropagation());
+
+    render();
+  }
+  initHeroCalendar();
 
   initSlider(
     document.querySelector("[data-tm-viewport]"),
@@ -357,19 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const steps = form.querySelectorAll(".hero-step");
     const show = (n) => steps.forEach((s) => { s.hidden = s.dataset.step !== String(n); });
 
-    const ci = form.querySelector("#enqCheckin");
-    const co = form.querySelector("#enqCheckout");
-    if (ci && co) {
-      ci.addEventListener("change", () => {
-        if (!ci.value) return;
-        const next = new Date(ci.value);
-        next.setDate(next.getDate() + 1);
-        const min = next.toISOString().slice(0, 10);
-        co.min = min;
-        if (co.value && co.value <= ci.value) co.value = min;
-      });
-    }
-
+    // Date validation now handled by initHeroCalendar — just wire up the step buttons
     form.querySelector("[data-enq-next]").addEventListener("click", () => show(2));
     const back = form.querySelector("[data-enq-back]");
     if (back) back.addEventListener("click", () => show(1));

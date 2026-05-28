@@ -16,7 +16,7 @@ This is the **template project** — future hotels clone this repo and update `.
 - No PHP framework — vanilla PHP only
 - PostgreSQL not MySQL — spec says MySQL but we use PostgreSQL for Render compatibility
 - PDO prepared statements only — no raw string SQL
-- Admin is a single shared login (v1) — schema ready for multi-user later
+- Admin multi-user is live (Phase 4) — roles: `super_admin` (full access) / `staff` (manage bookings, no user/settings admin)
 
 ## Spec
 Full implementation plan: `2026-05-24-admin-dashboard-design.md` (in Downloads).
@@ -78,6 +78,37 @@ Build in this order — each phase depends on the previous.
 ### Migration for Phase 3
 ```
 psql $DATABASE_URL -f db/migrations/add_availability.sql
+```
+
+---
+
+## Phase 4 tasks — UX polish & admin users (2026-05-28)
+
+### Issues fixed
+- Task 19b — Homepage duplicate form removed: `form_mode` now controls which hero form shows
+  - `enquiry` mode → 2-step enquiry form only (no search strip below)
+  - `availability` mode → single search form (dates → rooms.php), no enquiry step
+- Task 20b — Hero form date pickers now use the same calendar grid UI as room.php (custom avail-grid widget, no flatpickr)
+- Task 21b — Hero enquiry form (step 2) layout fixed: proper bottom padding, captcha centred, error aligned right
+- Task 22b — Admin multi-user accounts: `admin/users.php` — create, delete, change role
+  - Roles: `super_admin` (full access) / `staff` (bookings/rooms/tours, no user management)
+  - Run migration: `psql $DATABASE_URL -f db/migrations/add_admin_roles.sql`
+  - Users link appears in sidebar for super_admins only
+- Task 23b — Sitemap confirmed working at `/sitemap.php`; `robots.txt` already references it
+  - Submit to Google Search Console: `https://sevenislandswatamu.com/sitemap.php`
+
+### Admin multi-user — how roles work
+| Page | Staff | Super admin |
+|------|-------|-------------|
+| Dashboard, submissions, holds | ✓ | ✓ |
+| Rooms, tours, gantt | ✓ | ✓ |
+| Settings (general + password) | own password only | ✓ |
+| Users page | — | ✓ |
+| Export data | — | ✓ |
+
+### Migration required for Phase 4
+```
+psql $DATABASE_URL -f db/migrations/add_admin_roles.sql
 ```
 
 ---
