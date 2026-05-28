@@ -35,10 +35,23 @@ function require_login(): void {
 function current_admin(): array|false {
     session_init();
     if (empty($_SESSION['admin_id'])) return false;
-    return db_query(
-        'SELECT id, name, email, role, created_at FROM admin_users WHERE id = :id',
-        [':id' => $_SESSION['admin_id']]
-    )->fetch();
+    try {
+        return db_query(
+            'SELECT id, name, email, role, created_at FROM admin_users WHERE id = :id',
+            [':id' => $_SESSION['admin_id']]
+        )->fetch();
+    } catch (\PDOException) {
+        // Migration not yet run — fall back to pre-Phase4 columns
+        $row = db_query(
+            'SELECT id, email, created_at FROM admin_users WHERE id = :id',
+            [':id' => $_SESSION['admin_id']]
+        )->fetch();
+        if ($row) {
+            $row['name'] = null;
+            $row['role'] = 'super_admin'; // treat all existing accounts as super_admin
+        }
+        return $row ?: false;
+    }
 }
 
 function is_super_admin(): bool {
