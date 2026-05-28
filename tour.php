@@ -127,14 +127,20 @@ include __DIR__ . '/includes/header.php';
             <span>Phone</span>
             <input type="tel" name="phone" placeholder="Your phone">
           </label>
-          <label class="booking-field">
-            <span>Preferred dates</span>
-            <input type="text" name="checkin" placeholder="e.g. July 10–14, 2026">
-          </label>
-          <label class="booking-field">
+          <div class="booking-field">
+            <span>Check in</span>
+            <button type="button" class="dp-btn" data-dp-role="ci" data-dp-pair="tourDates" data-dp-target="tourCheckin" data-dp-placeholder="Select date">Select date</button>
+            <input type="hidden" id="tourCheckin" name="checkin">
+          </div>
+          <div class="booking-field">
+            <span>Check out</span>
+            <button type="button" class="dp-btn" data-dp-role="co" data-dp-pair="tourDates" data-dp-target="tourCheckout" data-dp-placeholder="Select date">Select date</button>
+            <input type="hidden" id="tourCheckout" name="checkout">
+          </div>
+          <div class="booking-field">
             <span>Message</span>
             <textarea name="message" rows="3" placeholder="Any questions or special requests?"></textarea>
-          </label>
+          </div>
 
           <div class="form-feedback" id="tourEnquiryFeedback" hidden></div>
 

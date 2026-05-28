@@ -51,10 +51,10 @@ $room_name = $room['name'] ?? '';
     <span>Phone</span>
     <input type="tel" name="phone" placeholder="Your phone">
   </label>
-  <label class="booking-field">
+  <div class="booking-field">
     <span>Message</span>
     <textarea name="message" rows="3" placeholder="Any special requests?"></textarea>
-  </label>
+  </div>
 
   <div class="form-feedback" id="roomEnquiryFeedback" hidden></div>
 

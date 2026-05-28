@@ -956,6 +956,11 @@ section, footer { scroll-margin-top: 90px; }
   color: var(--accent); cursor: pointer;
 }
 .booking-field input::placeholder { color: var(--accent); opacity: 1; }
+.booking-field textarea {
+  border: 0; background: none; font: inherit; font-size: 15px;
+  color: var(--accent); resize: none; width: 100%; outline: none; padding: 0;
+}
+.booking-field textarea::placeholder { color: var(--accent); opacity: 1; }
 .booking-field i { position: absolute; right: 0; bottom: 16px; font-size: 10px; color: var(--text-light); font-style: normal; }
 .booking-field--row { flex-direction: row; align-items: center; justify-content: space-between; }
 .booking-field--row > span { margin-bottom: 0; }
