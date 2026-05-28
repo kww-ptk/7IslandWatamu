@@ -139,7 +139,7 @@ include __DIR__ . '/includes/header.php';
           </div>
           <div class="booking-field">
             <span>Message</span>
-            <textarea name="message" rows="3" placeholder="Any questions or special requests?"></textarea>
+            <textarea name="message" rows="3" placeholder="Tell us your dates, group size, and any special requests"></textarea>
           </div>
 
           <div class="form-feedback" id="tourEnquiryFeedback" hidden></div>

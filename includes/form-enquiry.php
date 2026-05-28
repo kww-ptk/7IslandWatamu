@@ -53,7 +53,7 @@ $room_name = $room['name'] ?? '';
   </label>
   <div class="booking-field">
     <span>Message</span>
-    <textarea name="message" rows="3" placeholder="Any special requests?"></textarea>
+    <textarea name="message" rows="3" placeholder="Tell us your dates, group size, and any special requests"></textarea>
   </div>
 
   <div class="form-feedback" id="roomEnquiryFeedback" hidden></div>

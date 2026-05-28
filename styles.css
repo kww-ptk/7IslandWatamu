@@ -241,8 +241,12 @@ section, footer { scroll-margin-top: 90px; }
 }
 .hero-search__field input::placeholder { color: var(--white); opacity: 0.85; }
 .hero-search__caret {
-  position: absolute; right: 24px; bottom: 16px;
-  font-size: 10px; color: rgba(255, 255, 255, 0.7); font-style: normal;
+  position: absolute; right: 24px; bottom: 19px;
+  font-size: 0;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid rgba(255, 255, 255, 0.75);
 }
 .hero-search__guests {
   border: 0; background: none; font: inherit; font-size: 16px;
@@ -275,7 +279,7 @@ section, footer { scroll-margin-top: 90px; }
   border: 0; cursor: pointer;
   background: var(--primary); color: var(--white);
   font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-  padding: 0 40px; border-radius: var(--radius-pill);
+  padding: 0 40px 0 52px; border-radius: var(--radius-pill);
   transition: background 0.3s var(--ease);
 }
 .hero-search__submit span { font-size: 16px; }
@@ -957,10 +961,13 @@ section, footer { scroll-margin-top: 90px; }
 }
 .booking-field input::placeholder { color: var(--accent); opacity: 1; }
 .booking-field textarea {
-  border: 0; background: none; font: inherit; font-size: 15px;
-  color: var(--accent); resize: none; width: 100%; outline: none; padding: 0;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--white); font: inherit; font-size: 15px;
+  color: var(--accent); resize: vertical; width: 100%; outline: none;
+  padding: 13px 15px; transition: border-color 0.25s var(--ease);
 }
-.booking-field textarea::placeholder { color: var(--accent); opacity: 1; }
+.booking-field textarea:focus { border-color: var(--primary); }
+.booking-field textarea::placeholder { color: #b6bfc4; opacity: 1; }
 .booking-field i { position: absolute; right: 0; bottom: 16px; font-size: 10px; color: var(--text-light); font-style: normal; }
 .booking-field--row { flex-direction: row; align-items: center; justify-content: space-between; }
 .booking-field--row > span { margin-bottom: 0; }
@@ -1648,6 +1655,18 @@ input:focus-visible,
   -webkit-appearance: none;
   outline: none;
   line-height: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-date-btn::after {
+  content: '';
+  display: inline-block;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
 }
 .hero-date-btn:hover { opacity: 1; }
 .hero-date-btn--active { opacity: 1; font-weight: 600; }
