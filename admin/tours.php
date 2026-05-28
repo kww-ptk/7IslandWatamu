@@ -4,6 +4,14 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_login();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_tour'])) {
+    verify_csrf();
+    $id = (int)$_POST['tour_id'];
+    db_query('DELETE FROM tours WHERE id = :id', [':id' => $id]);
+    header('Location: /admin/tours.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_publish'])) {
     verify_csrf();
     $id  = (int)$_POST['tour_id'];
@@ -85,6 +93,12 @@ include __DIR__ . '/_layout.php';
           <td style="white-space:nowrap">
             <a href="/admin/tour-edit.php?id=<?= e($tour['id']) ?>" class="btn-sm btn-outline">Edit</a>
             <a href="/tour.php?slug=<?= e($tour['slug']) ?>" class="btn-sm btn-outline" target="_blank">View</a>
+            <form method="POST" action="/admin/tours.php" style="display:inline" onsubmit="return confirm('Delete <?= e(addslashes($tour['name'])) ?>? This cannot be undone.')">
+              <?= csrf_field() ?>
+              <input type="hidden" name="delete_tour" value="1">
+              <input type="hidden" name="tour_id" value="<?= e($tour['id']) ?>">
+              <button type="submit" class="btn-sm btn-danger">Delete</button>
+            </form>
           </td>
         </tr>
         <?php endforeach; ?>

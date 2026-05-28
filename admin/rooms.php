@@ -4,6 +4,15 @@ require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/db.php';
 require_login();
 
+// Handle delete via POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_room'])) {
+    verify_csrf();
+    $id = (int)$_POST['room_id'];
+    db_query('DELETE FROM rooms WHERE id = :id', [':id' => $id]);
+    header('Location: /admin/rooms.php');
+    exit;
+}
+
 // Handle publish toggle via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_publish'])) {
     verify_csrf();
@@ -87,6 +96,12 @@ include __DIR__ . '/_layout.php';
           <td style="white-space:nowrap">
             <a href="/admin/room-edit.php?id=<?= e($room['id']) ?>" class="btn-sm btn-outline">Edit</a>
             <a href="/room.php?slug=<?= e($room['slug']) ?>" class="btn-sm btn-outline" target="_blank">View</a>
+            <form method="POST" action="/admin/rooms.php" style="display:inline" onsubmit="return confirm('Delete <?= e(addslashes($room['name'])) ?>? This cannot be undone.')">
+              <?= csrf_field() ?>
+              <input type="hidden" name="delete_room" value="1">
+              <input type="hidden" name="room_id" value="<?= e($room['id']) ?>">
+              <button type="submit" class="btn-sm btn-danger">Delete</button>
+            </form>
           </td>
         </tr>
         <?php endforeach; ?>
