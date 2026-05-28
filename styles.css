@@ -198,8 +198,8 @@ section, footer { scroll-margin-top: 90px; }
   align-items: center;
   width: 100%;
   min-height: 100vh;
-  padding-top: 126px;
-  padding-bottom: 80px;
+  padding-top: 170px;    /* 78px top-bar + 49px nav-row + 43px breathing room */
+  padding-bottom: 100px;
   justify-content: center;
   box-sizing: border-box;
 }

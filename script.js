@@ -433,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const scroll = document.querySelector(".hero__scroll");
     const show = (n) => {
       steps.forEach((s) => { s.hidden = s.dataset.step !== String(n); });
-      if (scroll) scroll.style.display = n === 3 ? "none" : "";
+      if (scroll) scroll.style.display = n === 1 ? "" : "none";
     };
 
     // Wire up the step buttons
