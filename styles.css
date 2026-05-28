@@ -1719,7 +1719,8 @@ input:focus-visible,
   letter-spacing: .06em;
 }
 .search-bar__input,
-.search-bar__guests-btn {
+.search-bar__guests-btn,
+.search-bar__date-btn {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 10px 12px;
@@ -1731,16 +1732,20 @@ input:focus-visible,
   box-sizing: border-box;
   transition: border-color .15s, box-shadow .15s;
 }
-.search-bar__input:focus {
+.search-bar__input:focus,
+.search-bar__date-btn:focus {
   outline: none;
   border-color: #0b6273;
   box-shadow: 0 0 0 3px rgba(11,98,115,.15);
 }
-/* Flatpickr alt-input inherits these via the class it attaches */
-.search-bar__field .flatpickr-input.form-control,
-.search-bar__field .flatpickr-input[readonly] {
+.search-bar__date-btn {
+  text-align: left;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  color: #9ca3af; /* placeholder colour when no date selected */
 }
+.search-bar__date-btn--active { color: #1a1a1a; }
 .search-bar__field--guests { min-width: 160px; }
 .search-bar__guests-btn {
   display: flex;

@@ -14,17 +14,19 @@ if ($_sb_children > 0) $_sb_summary .= ', ' . $_sb_children . ' Child' . ($_sb_c
   <div class="search-bar__group">
 
     <div class="search-bar__field">
-      <label class="search-bar__label" for="sbCheckin">Check in</label>
-      <input class="search-bar__input js-sb-checkin" type="text" id="sbCheckin"
-             name="check_in" placeholder="Arrival date" autocomplete="off"
-             value="<?= $_sb_checkin ?>" readonly>
+      <label class="search-bar__label">Check in</label>
+      <button type="button" class="search-bar__date-btn<?= $_sb_checkin ? ' search-bar__date-btn--active' : '' ?>" id="sbCheckinBtn">
+        <?= $_sb_checkin ? e(date('d M Y', strtotime($_sb_checkin))) : 'Arrival date' ?>
+      </button>
+      <input type="hidden" id="sbCheckinVal" name="check_in" value="<?= $_sb_checkin ?>">
     </div>
 
     <div class="search-bar__field">
-      <label class="search-bar__label" for="sbCheckout">Check out</label>
-      <input class="search-bar__input js-sb-checkout" type="text" id="sbCheckout"
-             name="check_out" placeholder="Departure date" autocomplete="off"
-             value="<?= $_sb_checkout ?>" readonly>
+      <label class="search-bar__label">Check out</label>
+      <button type="button" class="search-bar__date-btn<?= $_sb_checkout ? ' search-bar__date-btn--active' : '' ?>" id="sbCheckoutBtn">
+        <?= $_sb_checkout ? e(date('d M Y', strtotime($_sb_checkout))) : 'Departure date' ?>
+      </button>
+      <input type="hidden" id="sbCheckoutVal" name="check_out" value="<?= $_sb_checkout ?>">
     </div>
 
     <div class="search-bar__field search-bar__field--guests">
@@ -66,4 +68,23 @@ if ($_sb_children > 0) $_sb_summary .= ', ' . $_sb_children . ' Child' . ($_sb_c
   <button type="submit" class="search-bar__submit btn btn--primary">
     Search Rooms <span aria-hidden="true">&rsaquo;</span>
   </button>
+
+  <!-- ── bk-cal popup (position:fixed) ── -->
+  <div class="hero-bk-pop" id="sbBkPop" hidden>
+    <div class="bk-cal">
+      <div class="bk-cal__head">
+        <button type="button" class="bk-cal__nav" id="sbBkPrev" aria-label="Previous month">&#8249;</button>
+        <span class="bk-cal__title" id="sbBkMonth"></span>
+        <button type="button" class="bk-cal__nav" id="sbBkNext" aria-label="Next month">&#8250;</button>
+      </div>
+      <div class="bk-cal__dow">
+        <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+      </div>
+      <div class="bk-cal__grid" id="sbBkGrid"></div>
+    </div>
+    <div class="bk-pop__footer">
+      <span class="bk-pop__hint" id="sbBkHint">Select your check-in date</span>
+      <button type="button" class="bk-pop__cta" id="sbBkDone">Done</button>
+    </div>
+  </div>
 </form>

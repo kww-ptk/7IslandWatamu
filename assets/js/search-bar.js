@@ -1,42 +1,175 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ---- Flatpickr for search bar date inputs ----
-  // Uses .js-sb-checkin / .js-sb-checkout — separate from .js-checkin / .js-checkout
-  // used by the hero enquiry form (no conflict).
-  const ciEl = document.querySelector(".js-sb-checkin");
-  const coEl = document.querySelector(".js-sb-checkout");
+  // ---- Search bar bk-cal date picker ----
+  function initSbCalendar() {
+    const pop      = document.getElementById("sbBkPop");
+    const grid     = document.getElementById("sbBkGrid");
+    const monthLbl = document.getElementById("sbBkMonth");
+    const prevBtn  = document.getElementById("sbBkPrev");
+    const nextBtn  = document.getElementById("sbBkNext");
+    const hintEl   = document.getElementById("sbBkHint");
+    const doneBtn  = document.getElementById("sbBkDone");
+    if (!pop || !grid) return;
 
-  if (ciEl && coEl && typeof flatpickr !== "undefined") {
-    const co = flatpickr(coEl, {
-      dateFormat: "Y-m-d",
-      altInput: true,
-      altFormat: "d M Y",
-      minDate: new Date(Date.now() + 86400000),
-      allowInput: false,
-      defaultDate: coEl.value || null,
-      disableMobile: true,
+    const ciBtn = document.getElementById("sbCheckinBtn");
+    const coBtn = document.getElementById("sbCheckoutBtn");
+    const ciVal = document.getElementById("sbCheckinVal");
+    const coVal = document.getElementById("sbCheckoutVal");
+    if (!ciBtn || !coBtn) return;
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let viewYear  = today.getFullYear();
+    let viewMonth = today.getMonth();
+    let selStart  = null, selEnd = null;
+    let picking   = null; // "ci" | "co"
+
+    // Pre-fill from server-rendered hidden inputs (already validated YYYY-MM-DD)
+    if (ciVal?.value) {
+      selStart = new Date(ciVal.value + "T00:00");
+      viewYear  = selStart.getFullYear();
+      viewMonth = selStart.getMonth();
+    }
+    if (coVal?.value) selEnd = new Date(coVal.value + "T00:00");
+
+    function ymd(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+    function parseYmd(s) { return new Date(s + "T00:00"); }
+    function fmtDisp(d) {
+      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function updateBtns() {
+      if (selStart) {
+        ciBtn.textContent = fmtDisp(selStart);
+        ciBtn.classList.add("search-bar__date-btn--active");
+        if (ciVal) ciVal.value = ymd(selStart);
+      } else {
+        ciBtn.textContent = "Arrival date";
+        ciBtn.classList.remove("search-bar__date-btn--active");
+        if (ciVal) ciVal.value = "";
+      }
+      if (selEnd) {
+        coBtn.textContent = fmtDisp(selEnd);
+        coBtn.classList.add("search-bar__date-btn--active");
+        if (coVal) coVal.value = ymd(selEnd);
+      } else {
+        coBtn.textContent = "Departure date";
+        coBtn.classList.remove("search-bar__date-btn--active");
+        if (coVal) coVal.value = "";
+      }
+    }
+
+    function renderCal() {
+      const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      monthLbl.textContent = `${MONTHS[viewMonth]} ${viewYear}`;
+
+      const firstDay = new Date(viewYear, viewMonth, 1);
+      const lastDay  = new Date(viewYear, viewMonth + 1, 0);
+      const leading  = (firstDay.getDay() + 6) % 7; // Mon-first
+
+      let html = "";
+      for (let i = 0; i < leading; i++) html += `<div class="bk-cell bk-cell--blank"></div>`;
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(viewYear, viewMonth, d);
+        const key  = ymd(date);
+        let cls = "bk-cell";
+        if (date < today || (picking === "co" && selStart && date <= selStart)) {
+          cls += " bk-cell--blocked";
+        } else if (selStart && key === ymd(selStart)) {
+          cls += " bk-cell--start";
+        } else if (selEnd && key === ymd(selEnd)) {
+          cls += " bk-cell--end";
+        } else if (selStart && selEnd && date > selStart && date < selEnd) {
+          cls += " bk-cell--in-range";
+        }
+        html += `<div class="${cls}" data-date="${key}">${d}</div>`;
+      }
+      grid.innerHTML = html;
+
+      grid.querySelectorAll(".bk-cell:not(.bk-cell--blocked):not(.bk-cell--blank)").forEach(cell => {
+        cell.addEventListener("click", () => onDayClick(cell.dataset.date));
+        cell.addEventListener("mouseenter", () => onCellHover(cell.dataset.date));
+      });
+    }
+
+    function onCellHover(dateStr) {
+      if (selEnd || !selStart || picking !== "co") return;
+      const start = ymd(selStart);
+      grid.querySelectorAll(".bk-cell[data-date]").forEach(c => {
+        c.classList.toggle("bk-cell--hover-range", c.dataset.date > start && c.dataset.date < dateStr);
+      });
+    }
+
+    function clearHover() {
+      grid.querySelectorAll(".bk-cell--hover-range").forEach(c => c.classList.remove("bk-cell--hover-range"));
+    }
+    grid.addEventListener("mouseleave", clearHover);
+
+    function onDayClick(dateStr) {
+      const clicked = parseYmd(dateStr);
+      if (picking === "ci") {
+        selStart = clicked;
+        if (selEnd && selEnd <= selStart) selEnd = null;
+        picking = "co";
+        hintEl.textContent = "Now select your check-out date";
+      } else {
+        selEnd = clicked;
+        hintEl.textContent = "Click Done to confirm your dates";
+      }
+      clearHover();
+      renderCal();
+      updateBtns();
+    }
+
+    function positionPop(trigger) {
+      const r    = trigger.getBoundingClientRect();
+      const popW = Math.min(310, window.innerWidth - 32);
+      let left = r.left;
+      if (left + popW > window.innerWidth - 16) left = window.innerWidth - popW - 16;
+      if (left < 16) left = 16;
+      pop.style.left = `${left}px`;
+      pop.style.top  = `${r.bottom + 8}px`;
+    }
+
+    function openPop(triggerEl, mode) {
+      if (mode === "co" && !selStart) mode = "ci";
+      picking = mode;
+      pop.hidden = false;
+      positionPop(triggerEl);
+      hintEl.textContent = mode === "ci"
+        ? (selStart ? "Change your check-in date" : "Select your check-in date")
+        : "Select your check-out date";
+      renderCal();
+    }
+
+    function closePop() { pop.hidden = true; picking = null; }
+
+    ciBtn.addEventListener("click", e => { e.stopPropagation(); openPop(ciBtn, "ci"); });
+    coBtn.addEventListener("click", e => { e.stopPropagation(); openPop(coBtn, "co"); });
+    doneBtn.addEventListener("click", closePop);
+    pop.addEventListener("click", e => e.stopPropagation());
+
+    document.addEventListener("click", e => {
+      if (!pop.hidden && !pop.contains(e.target)) closePop();
+    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+    window.addEventListener("scroll", () => {
+      if (!pop.hidden) positionPop(picking === "ci" ? ciBtn : coBtn);
+    }, { passive: true });
+    window.addEventListener("resize", () => {
+      if (!pop.hidden) positionPop(picking === "ci" ? ciBtn : coBtn);
     });
 
-    flatpickr(ciEl, {
-      dateFormat: "Y-m-d",
-      altInput: true,
-      altFormat: "d M Y",
-      minDate: "today",
-      allowInput: false,
-      defaultDate: ciEl.value || null,
-      disableMobile: true,
-      onChange(dates) {
-        if (!dates.length) return;
-        const next = new Date(dates[0]);
-        next.setDate(next.getDate() + 1);
-        co.set("minDate", next);
-        if (co.selectedDates[0] && co.selectedDates[0] <= dates[0]) {
-          co.setDate(next);
-        }
-        // Automatically open check-out picker after check-in is selected
-        co.open();
-      },
+    prevBtn.addEventListener("click", () => {
+      viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      renderCal();
+    });
+    nextBtn.addEventListener("click", () => {
+      viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      renderCal();
     });
   }
+  initSbCalendar();
 
   // ---- Guests picker ----
   const toggle  = document.getElementById("sbGuestsToggle");
