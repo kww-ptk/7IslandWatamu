@@ -28,6 +28,9 @@ if (!$hero_img && !empty($images)) $hero_img = $images[0]['filename'];
 $features   = json_decode($room['features_json'] ?? '[]', true) ?: [];
 // Per-room override takes precedence over the global setting
 $form_mode  = !empty($room['form_mode']) ? $room['form_mode'] : setting('form_mode', 'enquiry');
+// Availability mode needs at least one bookable unit — without units the calendar
+// would accept dates then reject every booking, so fall back to the enquiry form.
+$can_book   = $form_mode === 'availability' && count(fetch_units_by_room((int)$room['id'])) > 0;
 
 $pageTitle     = $room['seo_title']       ?: e($room['name']) . ' — Seven Islands Resort, Watamu';
 $metaDesc      = $room['seo_description'] ?: ($room['short_desc'] ?? '');
@@ -167,7 +170,7 @@ include __DIR__ . '/includes/header.php';
           <?= e($room['price_unit']) ?>
         </p>
         <h3 class="booking-card__title">Book This Room</h3>
-        <?php if ($form_mode === 'availability'): ?>
+        <?php if ($can_book): ?>
           <?php include __DIR__ . '/includes/form-availability.php'; ?>
         <?php else: ?>
           <?php include __DIR__ . '/includes/form-enquiry.php'; ?>

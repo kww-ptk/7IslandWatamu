@@ -62,6 +62,12 @@ $tour      = $tourSlug ? fetch_tour_by_slug($tourSlug) : false;
 $form_mode = ($room && !empty($room['form_mode']))
     ? $room['form_mode']
     : setting('form_mode', 'enquiry');
+// Availability mode is only valid when the room has bookable units. Without them,
+// fall back to a normal enquiry so the guest isn't blocked by a calendar that can
+// never succeed — mirrors the display guard in room.php.
+if ($form_mode === 'availability' && $room && count(fetch_units_by_room((int)$room['id'])) === 0) {
+    $form_mode = 'enquiry';
+}
 $unit      = false;
 
 if ($form_mode === 'availability' && $room) {
