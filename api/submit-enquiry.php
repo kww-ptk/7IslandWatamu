@@ -142,6 +142,14 @@ if ($form_mode === 'availability' && $unit) {
         [':id' => $hold['hold_id']]
     )->fetch();
     if ($hold_row) send_hold_notification($hold_row);
+    send_guest_acknowledgement([
+        'kind'        => 'hold',
+        'guest_name'  => $name,
+        'guest_email' => $email,
+        'room_name'   => $room ? $room['name'] : '',
+        'check_in'    => $checkin,
+        'check_out'   => $checkout,
+    ]);
     echo json_encode(['ok' => true, 'id' => $id, 'mode' => 'hold']);
 } else {
     send_notification([
@@ -159,5 +167,14 @@ if ($form_mode === 'availability' && $unit) {
         'guests_children' => $data['children'] ?? 0,
         'created_at' => date('Y-m-d H:i:s'),
     ] + $tracking);
+    send_guest_acknowledgement([
+        'kind'        => 'enquiry',
+        'guest_name'  => $name,
+        'guest_email' => $email,
+        'room_name'   => $room ? $room['name'] : ($tour ? 'Tour: ' . $tour['name'] : ''),
+        'check_in'    => $checkin,
+        'check_out'   => $checkout,
+        'message'     => $data['message'] ?? '',
+    ]);
     echo json_encode(['ok' => true, 'id' => $id, 'mode' => 'enquiry']);
 }
