@@ -1,0 +1,22 @@
+# Legacy WordPress (/eng/...) → new site. 301 so Google moves ranking
+# to the new pages and the old indexed URLs stop returning 404.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Old WP page slug → closest new page
+  RewriteRule ^eng/resort-kenya/?$          /about.php   [R=301,L]
+  RewriteRule ^eng/watamu-beach/?$          /about.php   [R=301,L]
+  RewriteRule ^eng/kenya-holiday/?$         /about.php   [R=301,L]
+  RewriteRule ^eng/kenya-resort/?$          /spa.php     [R=301,L]
+  RewriteRule ^eng/watamu-safari/?$         /tours.php   [R=301,L]
+  RewriteRule ^eng/watamu-boutique/?$       /rooms.php   [R=301,L]
+  RewriteRule ^eng/resort-watamu-contact/?$ /contact.php [R=301,L]
+
+  # Pages with no equivalent on the new site → homepage
+  RewriteRule ^eng/golf-watamu-kenya/?$     /            [R=301,L]
+  RewriteRule ^eng/papa-remo-village/?$     /            [R=301,L]
+  RewriteRule ^eng/blog/?$                  /            [R=301,L]
+
+  # Catch-all: /eng, /eng/, and every other /eng/... (incl. old WP assets) → homepage
+  RewriteRule ^eng(/.*)?$                   /            [R=301,L]
+</IfModule>
