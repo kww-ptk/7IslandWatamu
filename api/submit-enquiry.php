@@ -141,6 +141,7 @@ if ($form_mode === 'availability' && $unit) {
     send_notification([
         'id'         => $id,
         'type'       => 'enquiry',
+        'label'      => $tour ? 'Tour Enquiry' : ($room ? 'Booking Enquiry' : 'General Enquiry'),
         'room_name'  => $room ? $room['name'] : ($tour ? 'Tour: ' . $tour['name'] : ''),
         'guest_name' => $name,
         'guest_email'=> $email,

@@ -657,7 +657,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const feedback = document.getElementById("contactFeedback");
     contactForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      submitForm("/api/submit-contact.php", collectFields(contactForm), contactForm, feedback,
+      const data = collectFields(contactForm);
+      data.form_label = "Contact Message";
+      submitForm("/api/submit-contact.php", data, contactForm, feedback,
         "Thank you for your message! We will get back to you as soon as possible.");
     });
   }
@@ -679,7 +681,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const feedback = document.getElementById("spaContactFeedback");
     spaContactForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      submitForm("/api/submit-contact.php", collectFields(spaContactForm), spaContactForm, feedback,
+      const data = collectFields(spaContactForm);
+      data.form_label = "Spa Booking Request";
+      submitForm("/api/submit-contact.php", data, spaContactForm, feedback,
         "Thank you! We have received your request and our spa team will confirm your booking shortly.");
     });
   }
@@ -690,7 +694,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const feedback = document.getElementById("toursContactFeedback");
     toursContactForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      submitForm("/api/submit-contact.php", collectFields(toursContactForm), toursContactForm, feedback,
+      const data = collectFields(toursContactForm);
+      data.form_label = "Tours Enquiry";
+      submitForm("/api/submit-contact.php", data, toursContactForm, feedback,
         "Thank you! We have received your enquiry and will reply within 24 hours.");
     });
   }

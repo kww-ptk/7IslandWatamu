@@ -88,12 +88,18 @@ db_query(
 
 $id = (int)db()->lastInsertId();
 
+// Which form sent this (spa / tours / contact) — whitelisted so it can't be spoofed into the email.
+$allowed_labels = ['Spa Booking Request', 'Tours Enquiry', 'Contact Message'];
+$label = in_array($data['form_label'] ?? '', $allowed_labels, true) ? $data['form_label'] : 'Contact Message';
+
 send_notification([
     'id'          => $id,
     'type'        => 'contact',
+    'label'       => $label,
     'guest_name'  => $name,
     'guest_email' => $email,
     'guest_phone' => $data['phone'] ?? '',
+    'subject'     => trim($data['subject'] ?? ''),
     'message'     => $message,
     'created_at'  => date('Y-m-d H:i:s'),
 ] + $tracking);

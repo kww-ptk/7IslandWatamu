@@ -96,10 +96,14 @@ $id = (int)db()->lastInsertId();
 send_notification([
     'id'          => $id,
     'type'        => 'agency',
+    'label'       => 'Travel Agency Enquiry',
     'guest_name'  => $name,
     'guest_email' => $email,
     'guest_phone' => $data['phone'] ?? '',
-    'message'     => $message . "\n\nAgency: {$agency}\nIATA: {$payload['iata']}\nCountry: {$payload['country']}",
+    'agency_name' => $agency,
+    'iata'        => $payload['iata'],
+    'country'     => $payload['country'],
+    'message'     => $message,
     'created_at'  => date('Y-m-d H:i:s'),
 ] + $tracking);
 

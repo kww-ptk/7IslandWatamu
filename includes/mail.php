@@ -4,56 +4,69 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 
 function send_notification(array $sub): void {
-    $env        = parse_env();
-    $to         = setting('notify_email', 'reservation@sevenislandswatamu.com');
-    $from       = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
-    $driver     = $env['MAIL_DRIVER'] ?? 'mail';
-    $site_url   = rtrim($env['SITE_URL'] ?? '', '/');
+    $env       = parse_env();
+    $to        = setting('notify_email', 'reservation@sevenislandswatamu.com');
+    $from      = $env['MAIL_FROM'] ?? 'noreply@sevenislandswatamu.com';
+    $site_url  = rtrim($env['SITE_URL'] ?? '', '/');
 
-    $type       = ucfirst($sub['type'] ?? 'enquiry');
-    $guest      = $sub['guest_name']  ?? 'Guest';
-    $room_name  = $sub['room_name']   ?? '';
-    $date       = date('d M Y', strtotime($sub['created_at'] ?? 'now'));
+    $label     = notification_label($sub);
+    $guest     = $sub['guest_name'] ?? 'Guest';
+    $room_name = $sub['room_name']  ?? '';
+    $date      = date('d M Y', strtotime($sub['created_at'] ?? 'now'));
 
     $subject = $room_name
-        ? "[{$type}] {$room_name} — {$guest} — {$date}"
-        : "[{$type}] {$guest} — {$date}";
+        ? "[{$label}] {$room_name} — {$guest} — {$date}"
+        : "[{$label}] {$guest} — {$date}";
 
-    $body = build_email_body($sub, $site_url);
+    $text = build_email_body($sub, $site_url);
+    $html = build_email_html($sub, $site_url);
 
-    $headers  = "From: {$from}\r\n";
-    $headers .= "Reply-To: {$sub['guest_email']}\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $headers .= "MIME-Version: 1.0\r\n";
+    _dispatch_mail($to, $subject, $text, $from, $sub['guest_email'] ?? $from, $env, $html);
+}
 
-    if (!empty($env['RESEND_API_KEY'])) {
-        send_resend($to, $subject, $body, $from, $sub['guest_email'] ?? '', $env['RESEND_API_KEY']);
-    } elseif ($driver === 'smtp') {
-        send_smtp($to, $subject, $body, $headers, $env);
-    } else {
-        if (!mail($to, $subject, $body, $headers)) {
-            log_mail_error("mail() failed for submission #{$sub['id']}");
-        }
-    }
+// Human-friendly heading for a submission, used in subject line + email header.
+function notification_label(array $sub): string {
+    if (!empty($sub['label'])) return $sub['label'];
+    $type = $sub['type'] ?? 'enquiry';
+    return match ($type) {
+        'agency'  => 'Travel Agency Enquiry',
+        'contact' => 'Contact Message',
+        'enquiry' => !empty($sub['room_name']) ? 'Booking Enquiry' : 'General Enquiry',
+        default   => ucfirst($type) . ' Submission',
+    };
+}
+
+// The contact-type "subject" field means different things per form.
+function subject_label(array $sub): string {
+    $label = strtolower($sub['label'] ?? '');
+    if (str_contains($label, 'spa'))  return 'Preferred date';
+    if (str_contains($label, 'tour')) return 'Interested in';
+    return 'Subject';
 }
 
 function build_email_body(array $sub, string $site_url): string {
     $lines = [];
-    $lines[] = strtoupper($sub['type'] ?? 'ENQUIRY') . ' SUBMISSION';
+    $lines[] = strtoupper(notification_label($sub));
     $lines[] = str_repeat('-', 40);
     $lines[] = 'Name:    ' . ($sub['guest_name']  ?? '');
     $lines[] = 'Email:   ' . ($sub['guest_email'] ?? '');
-    $lines[] = 'Phone:   ' . ($sub['guest_phone'] ?? '');
+    if (!empty($sub['guest_phone'])) $lines[] = 'Phone:   ' . $sub['guest_phone'];
 
-    if (!empty($sub['room_name']))      $lines[] = 'Room:    ' . $sub['room_name'];
-    if (!empty($sub['check_in']))       $lines[] = 'Check-in:  ' . $sub['check_in'];
-    if (!empty($sub['check_out']))      $lines[] = 'Check-out: ' . $sub['check_out'];
-    if (!empty($sub['guests_adults']))  $lines[] = 'Adults:  ' . $sub['guests_adults'];
+    if (!empty($sub['room_name']))       $lines[] = 'Room:    ' . $sub['room_name'];
+    if (!empty($sub['subject']))         $lines[] = subject_label($sub) . ': ' . $sub['subject'];
+    if (!empty($sub['agency_name']))     $lines[] = 'Agency:  ' . $sub['agency_name'];
+    if (!empty($sub['iata']))            $lines[] = 'IATA:    ' . $sub['iata'];
+    if (!empty($sub['country']))         $lines[] = 'Country: ' . $sub['country'];
+    if (!empty($sub['check_in']))        $lines[] = 'Check-in:  ' . $sub['check_in'];
+    if (!empty($sub['check_out']))       $lines[] = 'Check-out: ' . $sub['check_out'];
+    if (!empty($sub['guests_adults']))   $lines[] = 'Adults:  ' . $sub['guests_adults'];
     if (!empty($sub['guests_children'])) $lines[] = 'Children: ' . $sub['guests_children'];
 
-    $lines[] = '';
-    $lines[] = 'Message:';
-    $lines[] = $sub['message'] ?? '';
+    if (!empty($sub['message'])) {
+        $lines[] = '';
+        $lines[] = 'Message:';
+        $lines[] = $sub['message'];
+    }
     $lines[] = '';
     $lines[] = str_repeat('-', 40);
     $lines[] = 'TRACKING';
@@ -69,6 +82,113 @@ function build_email_body(array $sub, string $site_url): string {
     }
 
     return implode("\n", $lines);
+}
+
+function _email_row(string $key, string $val, array $opt = []): string {
+    if ($val === '') return '';
+    $esc     = fn(string $v) => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    $display = !empty($opt['raw']) ? $val : $esc($val);
+    $weight  = !empty($opt['bold']) ? ';font-weight:700' : '';
+    return '<tr>'
+        . '<td style="padding:7px 0;color:#777;font-size:13px;width:120px;vertical-align:top">' . $esc($key) . '</td>'
+        . '<td style="padding:7px 0;font-size:14px;color:#222' . $weight . '">' . $display . '</td>'
+        . '</tr>';
+}
+
+function _email_track(string $key, string $val): string {
+    if ($val === '') return '';
+    $esc = fn(string $v) => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    return '<tr>'
+        . '<td style="padding:3px 0;color:#bbb;font-size:11px;width:110px;vertical-align:top">' . $esc($key) . '</td>'
+        . '<td style="padding:3px 0;color:#999;font-size:11px;word-break:break-all">' . $esc($val) . '</td>'
+        . '</tr>';
+}
+
+function build_email_html(array $sub, string $site_url): string {
+    $esc     = fn(string $v) => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    $label   = notification_label($sub);
+    $created = date('d M Y \a\t H:i', strtotime($sub['created_at'] ?? 'now'));
+
+    // Guest details
+    $guest_rows  = _email_row('Name', (string)($sub['guest_name'] ?? ''), ['bold' => true]);
+    if (!empty($sub['guest_email'])) {
+        $guest_rows .= _email_row('Email',
+            '<a href="mailto:' . $esc($sub['guest_email']) . '" style="color:#0b6273;text-decoration:none">' . $esc($sub['guest_email']) . '</a>',
+            ['raw' => true]);
+    }
+    $guest_rows .= _email_row('Phone', (string)($sub['guest_phone'] ?? ''));
+
+    // Context details (only the rows that apply to this submission type)
+    $detail_rows  = _email_row('Room',                 (string)($sub['room_name']   ?? ''));
+    $detail_rows .= _email_row(subject_label($sub),    (string)($sub['subject']     ?? ''));
+    $detail_rows .= _email_row('Agency',               (string)($sub['agency_name'] ?? ''));
+    $detail_rows .= _email_row('IATA',                 (string)($sub['iata']        ?? ''));
+    $detail_rows .= _email_row('Country',              (string)($sub['country']     ?? ''));
+    $detail_rows .= _email_row('Check-in',             (string)($sub['check_in']    ?? ''));
+    $detail_rows .= _email_row('Check-out',            (string)($sub['check_out']   ?? ''));
+    if (!empty($sub['guests_adults']))   $detail_rows .= _email_row('Adults',   (string)$sub['guests_adults']);
+    if (!empty($sub['guests_children'])) $detail_rows .= _email_row('Children', (string)$sub['guests_children']);
+
+    $detail_block = $detail_rows
+        ? '<div style="background:#f0f9fa;border-radius:6px;padding:18px 22px;margin:20px 0">'
+            . '<p style="margin:0 0 10px;font-size:12px;font-weight:700;text-transform:uppercase;color:#0b6273;letter-spacing:.5px">Details</p>'
+            . '<table style="width:100%;border-collapse:collapse">' . $detail_rows . '</table>'
+          . '</div>'
+        : '';
+
+    // Message
+    $message_block = '';
+    if (!empty($sub['message'])) {
+        $message_block =
+            '<div style="margin:20px 0">'
+            . '<p style="margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;color:#777;letter-spacing:.5px">Message</p>'
+            . '<div style="background:#f9fafb;border-left:3px solid #0b6273;padding:14px 18px;border-radius:0 4px 4px 0;font-size:14px;color:#333;line-height:1.7">'
+            . nl2br($esc($sub['message']))
+            . '</div></div>';
+    }
+
+    // Call to action
+    $cta_block = '';
+    if (!empty($sub['id']) && $site_url) {
+        $cta_block =
+            '<div style="margin:28px 0;text-align:center">'
+            . '<a href="' . $esc($site_url . '/admin/submission-view.php?id=' . $sub['id']) . '" '
+            . 'style="background:#0b6273;color:#fff;padding:13px 26px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:700;display:inline-block">'
+            . 'View in Dashboard &rarr;</a></div>';
+    }
+
+    // Tracking (subtle)
+    $track_rows  = _email_track('Source page',  (string)($sub['source_page']  ?? ''));
+    $track_rows .= _email_track('Referrer',     (string)($sub['referrer']     ?? ''));
+    $track_rows .= _email_track('UTM source',   (string)($sub['utm_source']   ?? ''));
+    $track_rows .= _email_track('UTM medium',   (string)($sub['utm_medium']   ?? ''));
+    $track_rows .= _email_track('UTM campaign', (string)($sub['utm_campaign'] ?? ''));
+    $track_block = '<div style="border-top:1px solid #eee;margin-top:24px;padding-top:16px">'
+        . '<p style="margin:0 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;color:#bbb;letter-spacing:.5px">Tracking</p>'
+        . ($track_rows
+            ? '<table style="width:100%;border-collapse:collapse">' . $track_rows . '</table>'
+            : '<p style="margin:0;font-size:11px;color:#ccc">No tracking data captured.</p>')
+        . '</div>';
+
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+        . '<body style="margin:0;padding:0;background:#f0f4f5;font-family:Arial,Helvetica,sans-serif">'
+        . '<div style="max-width:600px;margin:32px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1)">'
+          . '<div style="background:#0b6273;padding:24px 32px">'
+            . '<h1 style="margin:0;color:#fff;font-size:20px;font-weight:700">' . $esc($label) . '</h1>'
+            . '<p style="margin:6px 0 0;color:#b2d8de;font-size:14px">New submission &middot; ' . $esc($created) . '</p>'
+          . '</div>'
+          . '<div style="padding:32px">'
+            . '<p style="margin:0 0 8px;font-size:12px;font-weight:700;text-transform:uppercase;color:#777;letter-spacing:.5px">Guest</p>'
+            . '<table style="width:100%;border-collapse:collapse">' . $guest_rows . '</table>'
+            . $detail_block
+            . $message_block
+            . $cta_block
+            . $track_block
+          . '</div>'
+          . '<div style="background:#f9fafb;padding:16px 32px;text-align:center;font-size:12px;color:#aaa">'
+            . '<a href="' . $esc($site_url ?: '#') . '" style="color:#0b6273;text-decoration:none">sevenislandswatamu.com</a>'
+          . '</div>'
+        . '</div></body></html>';
 }
 
 function send_resend(string $to, string $subject, string $text, string $from, string $reply_to, string $api_key, string $html = ''): void {
