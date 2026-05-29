@@ -3,20 +3,23 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+  # Absolute https targets: TLS terminates at Render's edge so Apache sees
+  # http; hardcoding the canonical https host gives a single clean 301 hop.
+
   # Old WP page slug → closest new page
-  RewriteRule ^eng/resort-kenya/?$          /about.php   [R=301,L]
-  RewriteRule ^eng/watamu-beach/?$          /about.php   [R=301,L]
-  RewriteRule ^eng/kenya-holiday/?$         /about.php   [R=301,L]
-  RewriteRule ^eng/kenya-resort/?$          /spa.php     [R=301,L]
-  RewriteRule ^eng/watamu-safari/?$         /tours.php   [R=301,L]
-  RewriteRule ^eng/watamu-boutique/?$       /rooms.php   [R=301,L]
-  RewriteRule ^eng/resort-watamu-contact/?$ /contact.php [R=301,L]
+  RewriteRule ^eng/resort-kenya/?$          https://sevenislandswatamu.com/about.php   [R=301,L]
+  RewriteRule ^eng/watamu-beach/?$          https://sevenislandswatamu.com/about.php   [R=301,L]
+  RewriteRule ^eng/kenya-holiday/?$         https://sevenislandswatamu.com/about.php   [R=301,L]
+  RewriteRule ^eng/kenya-resort/?$          https://sevenislandswatamu.com/spa.php     [R=301,L]
+  RewriteRule ^eng/watamu-safari/?$         https://sevenislandswatamu.com/tours.php   [R=301,L]
+  RewriteRule ^eng/watamu-boutique/?$       https://sevenislandswatamu.com/rooms.php   [R=301,L]
+  RewriteRule ^eng/resort-watamu-contact/?$ https://sevenislandswatamu.com/contact.php [R=301,L]
 
   # Pages with no equivalent on the new site → homepage
-  RewriteRule ^eng/golf-watamu-kenya/?$     /            [R=301,L]
-  RewriteRule ^eng/papa-remo-village/?$     /            [R=301,L]
-  RewriteRule ^eng/blog/?$                  /            [R=301,L]
+  RewriteRule ^eng/golf-watamu-kenya/?$     https://sevenislandswatamu.com/            [R=301,L]
+  RewriteRule ^eng/papa-remo-village/?$     https://sevenislandswatamu.com/            [R=301,L]
+  RewriteRule ^eng/blog/?$                  https://sevenislandswatamu.com/            [R=301,L]
 
   # Catch-all: /eng, /eng/, and every other /eng/... (incl. old WP assets) → homepage
-  RewriteRule ^eng(/.*)?$                   /            [R=301,L]
+  RewriteRule ^eng(/.*)?$                   https://sevenislandswatamu.com/            [R=301,L]
 </IfModule>
