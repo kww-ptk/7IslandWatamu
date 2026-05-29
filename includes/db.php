@@ -94,10 +94,21 @@ function fetch_tour_images(int $tour_id): array {
     )->fetchAll();
 }
 
+// Canonical public base URL (no trailing slash). Prefers the SITE_URL env var so
+// production always advertises one canonical domain; falls back to the request
+// host (correct on any domain) and finally the resort's default domain.
+function canonical_base(): string {
+    $env = parse_env();
+    if (!empty($env['SITE_URL'])) return rtrim($env['SITE_URL'], '/');
+    if (!empty($_SERVER['HTTP_HOST'])) {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        return $scheme . '://' . $_SERVER['HTTP_HOST'];
+    }
+    return 'https://sevenislandswatamu.com';
+}
+
 function site_url(string $path = ''): string {
-    $env  = parse_env();
-    $base = rtrim($env['APP_URL'] ?? 'https://sevenislandswatamu.com', '/');
-    return $base . ($path ? '/' . ltrim($path, '/') : '');
+    return canonical_base() . ($path ? '/' . ltrim($path, '/') : '');
 }
 
 function setting(string $key, string $default = ''): string {

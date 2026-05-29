@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/db.php';
 header('Content-Type: application/xml; charset=UTF-8');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
-$base = rtrim(parse_env()['APP_URL'] ?? 'https://sevenislandswatamu.com', '/');
+$base = canonical_base();
 
 $staticPages = [
     ['loc' => '/',            'changefreq' => 'weekly',  'priority' => '1.0'],
