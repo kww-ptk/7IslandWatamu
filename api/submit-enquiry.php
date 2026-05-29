@@ -123,12 +123,17 @@ $id = (int)db()->lastInsertId();
 
 // Availability mode: create hold + block dates
 if ($form_mode === 'availability' && $unit) {
-    $hold_id = create_hold_with_block($unit['id'], $id, $checkin, $checkout, $name, $email);
+    $hold = create_hold_with_block($room['id'], $id, $checkin, $checkout, $name, $email);
+    if (!$hold) {
+        // Dates were taken between the availability check and the hold (race).
+        http_response_code(409);
+        exit(json_encode(['ok' => false, 'error' => 'Those dates were just taken. Please try different dates or contact us directly.']));
+    }
     $hold_row = db_query(
         "SELECT h.*, u.name AS unit_name, r.name AS room_name
          FROM holds h JOIN units u ON u.id = h.unit_id JOIN rooms r ON r.id = u.room_id
          WHERE h.id = :id",
-        [':id' => $hold_id]
+        [':id' => $hold['hold_id']]
     )->fetch();
     if ($hold_row) send_hold_notification($hold_row);
     echo json_encode(['ok' => true, 'id' => $id, 'mode' => 'hold']);

@@ -176,33 +176,78 @@ function find_available_unit(int $room_id, string $check_in, string $check_out):
     )->fetch();
 }
 
+/**
+ * Atomically pick a free unit for the room and create a 24h hold + block on it.
+ * Returns ['unit' => unitRow, 'hold_id' => int] on success, or false if no unit
+ * is available for the dates.
+ *
+ * Concurrency: the availability check and the block insert run inside one
+ * transaction that locks the room's unit rows (FOR UPDATE). Without this, two
+ * simultaneous requests for the last free unit can both pass an availability
+ * check and both create a hold — a double-booking. Locking serialises competing
+ * booking attempts for the same room; the ORDER BY id keeps lock order
+ * consistent so two transactions can't deadlock each other. The unit is
+ * re-selected inside the lock, so the choice is authoritative even if a sibling
+ * unit was taken since the caller's pre-check.
+ */
 function create_hold_with_block(
-    int $unit_id, int $submission_id,
+    int $room_id, int $submission_id,
     string $check_in, string $check_out,
     string $guest_name, string $guest_email
-): int {
-    $stmt = db()->prepare(
-        "INSERT INTO holds (submission_id, unit_id, check_in, check_out, guest_name, guest_email, expires_at)
-         VALUES (:sub, :unit, :ci, :co, :name, :email, NOW() + INTERVAL '24 hours')
-         RETURNING id"
-    );
-    $stmt->execute([
-        ':sub'   => $submission_id,
-        ':unit'  => $unit_id,
-        ':ci'    => $check_in,
-        ':co'    => $check_out,
-        ':name'  => $guest_name,
-        ':email' => $guest_email,
-    ]);
-    $hold_id = (int)$stmt->fetchColumn();
+): array|false {
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare(
+            "SELECT id FROM units WHERE room_id = :rid AND is_active = TRUE ORDER BY id FOR UPDATE"
+        )->execute([':rid' => $room_id]);
 
-    db_query(
-        "INSERT INTO availability_blocks (unit_id, date_from, date_to, block_type, hold_id)
-         VALUES (:unit, :df, :dt, 'hold', :hold)",
-        [':unit' => $unit_id, ':df' => $check_in, ':dt' => $check_out, ':hold' => $hold_id]
-    );
+        $sel = $pdo->prepare(
+            "SELECT u.* FROM units u
+             WHERE u.room_id = :rid AND u.is_active = TRUE
+               AND NOT EXISTS (
+                   SELECT 1 FROM availability_blocks ab
+                   WHERE ab.unit_id = u.id
+                     AND ab.date_from < :co
+                     AND ab.date_to   > :ci
+               )
+             ORDER BY u.sort_order ASC
+             LIMIT 1"
+        );
+        $sel->execute([':rid' => $room_id, ':ci' => $check_in, ':co' => $check_out]);
+        $unit = $sel->fetch();
 
-    return $hold_id;
+        if (!$unit) {
+            $pdo->commit();
+            return false;
+        }
+
+        $ins = $pdo->prepare(
+            "INSERT INTO holds (submission_id, unit_id, check_in, check_out, guest_name, guest_email, expires_at)
+             VALUES (:sub, :unit, :ci, :co, :name, :email, NOW() + INTERVAL '24 hours')
+             RETURNING id"
+        );
+        $ins->execute([
+            ':sub'   => $submission_id,
+            ':unit'  => $unit['id'],
+            ':ci'    => $check_in,
+            ':co'    => $check_out,
+            ':name'  => $guest_name,
+            ':email' => $guest_email,
+        ]);
+        $hold_id = (int)$ins->fetchColumn();
+
+        $pdo->prepare(
+            "INSERT INTO availability_blocks (unit_id, date_from, date_to, block_type, hold_id)
+             VALUES (:unit, :df, :dt, 'hold', :hold)"
+        )->execute([':unit' => $unit['id'], ':df' => $check_in, ':dt' => $check_out, ':hold' => $hold_id]);
+
+        $pdo->commit();
+        return ['unit' => $unit, 'hold_id' => $hold_id];
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
 }
 
 /**
